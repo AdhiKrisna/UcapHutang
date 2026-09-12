@@ -21,10 +21,10 @@ final class CoreFlowTests: XCTestCase {
     }
 
     func testMissingSemanticFieldsStayEmpty() async throws {
-        let service = HybridQwenExtractionService()
-        let draft = try await service.extract(
-            DraftExtractionRequest(flow: .personal, transcript: "catat ini dulu")
-        )
+        let service = QwenDraftExtractionService()
+        let transcript = "catat ini dulu"
+        let result = try await service.extract(flow: .personal, transcript: transcript, referenceDate: Date())
+        let draft = DraftMapper.makeDraft(flow: .personal, transcript: transcript, result: result, createdAt: Date())
         XCTAssertEqual(draft.type, .unknown)
         XCTAssertEqual(draft.title, "")
         XCTAssertEqual(draft.participants.first?.name, "")

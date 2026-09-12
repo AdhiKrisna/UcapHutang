@@ -2,13 +2,20 @@ import SwiftUI
 
 struct CatatView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @State private var viewModel: CatatViewModel
+    private let router: AppRouter
 
     let flow: CaptureFlow
 
     init(flow: CaptureFlow, container: AppContainer) {
         self.flow = flow
-        _viewModel = State(initialValue: CatatViewModel(flow: flow, container: container))
+        self.router = container.router
+        _viewModel = State(initialValue: CatatViewModel(
+            flow: flow,
+            speech: container.makeSpeechTranscriber(),
+            capture: container.capture
+        ))
     }
 
     var body: some View {
@@ -17,27 +24,33 @@ struct CatatView: View {
                 Spacer()
 
                 VStack(spacing: 24) {
-                    Button { viewModel.handleMicTap() } label: {
+                    Button {
+                        Task { await viewModel.handleMicTap() }
+                    } label: {
                         recordingControl
                     }
                     .disabled(viewModel.isProcessing)
+                    .accessibilityLabel(viewModel.recordButtonLabel)
+                    .accessibilityValue(viewModel.stageHeadline)
 
-                    if isListening {
-                        Button("Ulangi") { viewModel.restartRecording() }
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 10)
-                            .background(AppColors.surface)
-                            .clipShape(Capsule())
-                            .overlay(Capsule().stroke(AppColors.border))
+                    if viewModel.isListening {
+                        Button("Ulangi") {
+                            Task { await viewModel.restartRecording() }
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(AppColors.surface)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(AppColors.border))
 
-                        Text(viewModel.liveTranscript.isEmpty ? viewModel.stageHeadline : viewModel.liveTranscript)
-                            .font(viewModel.liveTranscript.isEmpty ? .body : .body.weight(.medium))
-                            .foregroundStyle(viewModel.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
+                        Text(viewModel.speech.liveTranscript.isEmpty ? viewModel.stageHeadline : viewModel.speech.liveTranscript)
+                            .font(viewModel.speech.liveTranscript.isEmpty ? .body : .body.weight(.medium))
+                            .foregroundStyle(viewModel.speech.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 300)
-                            .animation(.easeInOut(duration: 0.2), value: viewModel.liveTranscript)
+                            .animation(.easeInOut(duration: 0.2), value: viewModel.speech.liveTranscript)
                     } else if !viewModel.isProcessing {
                         Text("Tip: \(tipText)")
                             .font(.body)
@@ -45,9 +58,34 @@ struct CatatView: View {
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 300)
                     }
+
+                    if let permissionMessage = viewModel.permissionMessage {
+                        VStack(spacing: 8) {
+                            Text(permissionMessage)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                            Button("Buka Pengaturan") {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    openURL(url)
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .frame(minHeight: 44)
+                        }
+                        .frame(maxWidth: 300)
+                    }
                 }
 
                 Spacer()
+
+                if !viewModel.speech.usesOnDeviceRecognition {
+                    Text("Ucapan diproses oleh server Apple.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 12)
+                }
             }
             .padding(.horizontal, 24)
             .navigationTitle(flow.title)
@@ -64,25 +102,16 @@ struct CatatView: View {
             )) { Button("OK", role: .cancel) {} } message: {
                 Text(viewModel.errorMessage ?? "Terjadi kesalahan.")
             }
-            .onChange(of: viewModel.speechRecognizer.errorMessage) { _, message in
-                if let message { viewModel.errorMessage = message }
-            }
-            .onChange(of: viewModel.speechRecognizer.state) { _, state in
+            .onChange(of: viewModel.speech.state) { _, state in
                 viewModel.handleSpeechStateChange(state)
             }
-            // Temporary until P4 replaces this with "close + banner".
-            .navigationDestination(item: $viewModel.createdDraftID) { draftID in
-                ReviewDetailView(
-                    draftID: draftID,
-                    repository: viewModel.container.repository,
-                    contacts: viewModel.container.contacts
-                )
+            .onChange(of: viewModel.savedDraftID) { _, draftID in
+                guard draftID != nil else { return }
+                router.showSavedToReviewBanner()
+                AccessibilityNotification.Announcement("Tersimpan ke Review").post()
+                dismiss()
             }
         }
-    }
-
-    private var isListening: Bool {
-        viewModel.isStartingRecording || viewModel.speechRecognizer.isRecording
     }
 
     private var recordingControl: some View {
@@ -93,13 +122,13 @@ struct CatatView: View {
                     style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 7])
                 )
                 .frame(width: 250, height: 250)
-            if viewModel.isProcessing || viewModel.speechRecognizer.state == .finalizing {
+            if viewModel.isProcessing || viewModel.speech.state == .finalizing {
                 ProgressView().tint(AppColors.textPrimary).scaleEffect(1.3)
             } else {
                 VStack(spacing: 12) {
-                    Image(systemName: isListening ? "stop.fill" : "play.fill")
+                    Image(systemName: viewModel.isListening ? "stop.fill" : "play.fill")
                         .font(.system(size: 34, weight: .bold))
-                    Text(isListening ? "Tekan untuk\nberhenti" : "Tekan untuk catat\nvia suara")
+                    Text(viewModel.isListening ? "Tekan untuk\nberhenti" : "Tekan untuk catat\nvia suara")
                         .font(.title3.weight(.bold))
                         .multilineTextAlignment(.center)
                 }

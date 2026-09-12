@@ -3,19 +3,11 @@ import Speech
 import AVFoundation
 import Observation
 
-public enum SpeechRecognizerState: Equatable, Sendable {
-    case idle
-    case listening
-    case finalizing
-    case failed(String)
-}
-
 @Observable
-public final class SpeechRecognizer {
-    public var state: SpeechRecognizerState = .idle
-    public var isRecording = false
-    public var errorMessage: String?
-    public var audioLevel: Float = 0.0
+final class SpeechRecognizer: SpeechTranscribing {
+    private(set) var state: SpeechRecognizerState = .idle
+    private(set) var liveTranscript = ""
+    private(set) var audioLevel: Float = 0.0
 
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "id-ID")) ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     @ObservationIgnored private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -25,124 +17,52 @@ public final class SpeechRecognizer {
     @ObservationIgnored private var activeTranscript: String = ""
     @ObservationIgnored private var transcriptContinuation: CheckedContinuation<String, Never>?
 
-    public init() {}
+    private static let vocabulary = [
+        "nalangin", "nalagin", "talangin", "bayarin", "nombokin", "tombokin",
+        "ngutang", "piutang", "hutang", "pinjem", "minjem", "minjemin",
+        "split bill", "splitbill", "patungan", "bagi rata", "urunan",
+        "gacoan", "ramen", "kopi", "bensin", "konser", "tiket",
+        "ribu", "juta", "jt", "rb", "k"
+    ]
 
-    public func startRecording(onTranscript: @escaping @MainActor (String) -> Void) {
-        errorMessage = nil
+    init() {}
+
+    var usesOnDeviceRecognition: Bool {
+        speechRecognizer?.supportsOnDeviceRecognition ?? false
+    }
+
+    func start() async throws {
+        liveTranscript = ""
         activeTranscript = ""
 
-        AVAudioApplication.requestRecordPermission { [weak self] microphoneGranted in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                guard microphoneGranted else {
-                    self.setError("Izin mikrofon ditolak. Buka Settings untuk mengaktifkan.")
-                    return
-                }
-                self.requestSpeechAuthorization(onTranscript: onTranscript)
+        let microphoneGranted = await AVAudioApplication.requestRecordPermission()
+        guard microphoneGranted else {
+            throw SpeechPermissionError.microphoneDenied
+        }
+
+        let status = await withCheckedContinuation { (continuation: CheckedContinuation<SFSpeechRecognizerAuthorizationStatus, Never>) in
+            SFSpeechRecognizer.requestAuthorization { @Sendable status in
+                continuation.resume(returning: status)
             }
         }
+        switch status {
+        case .authorized:
+            break
+        case .denied:
+            throw SpeechPermissionError.speechDenied
+        case .restricted:
+            throw SpeechPermissionError.restricted
+        case .notDetermined:
+            throw SpeechRecognitionError.authorizationNotDetermined
+        @unknown default:
+            throw SpeechRecognitionError.authorizationUnknown
+        }
+
+        try beginRecognition()
     }
 
-    private func requestSpeechAuthorization(onTranscript: @escaping @MainActor (String) -> Void) {
-        SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                switch authStatus {
-                case .authorized:
-                    self.performStartRecording(onTranscript: onTranscript)
-                case .denied:
-                    self.setError("Izin Speech Recognition ditolak. Buka Settings untuk mengaktifkan.")
-                case .restricted:
-                    self.setError("Speech Recognition dibatasi pada perangkat ini.")
-                case .notDetermined:
-                    self.setError("Izin Speech Recognition belum ditentukan.")
-                @unknown default:
-                    self.setError("Status otorisasi Speech Recognition tidak dikenal.")
-                }
-            }
-        }
-    }
-
-    private func performStartRecording(onTranscript: @escaping @MainActor (String) -> Void) {
-        if recognitionTask != nil {
-            cancelRecording()
-        }
-
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        } catch {
-            setError("Gagal menginisialisasi AVAudioSession: \(error.localizedDescription)")
-            return
-        }
-
-        let request = SFSpeechAudioBufferRecognitionRequest()
-        request.shouldReportPartialResults = true
-        request.taskHint = .dictation
-
-        if #available(iOS 16.0, *) {
-            request.addsPunctuation = true
-        }
-
-        let baseVocabulary = [
-            "nalangin", "nalagin", "talangin", "bayarin", "nombokin", "tombokin",
-            "ngutang", "piutang", "hutang", "pinjem", "minjem", "minjemin",
-            "split bill", "splitbill", "patungan", "bagi rata", "urunan",
-            "gacoan", "ramen", "kopi", "bensin", "konser", "tiket",
-            "ribu", "juta", "jt", "rb", "k"
-        ]
-        request.contextualStrings = Array(baseVocabulary.prefix(100))
-        self.recognitionRequest = request
-
-        let inputNode = audioEngine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-
-        recognitionTask = speechRecognizer?.recognitionTask(with: request) { [weak self] result, error in
-            guard let self else { return }
-
-            if let result = result {
-                let text = result.bestTranscription.formattedString
-                self.activeTranscript = text
-                Task { @MainActor in
-                    onTranscript(text)
-                }
-
-                if result.isFinal {
-                    self.finishTaskAndCleanup(finalTranscript: text)
-                }
-            }
-
-            if let error = error {
-                if self.state == .finalizing {
-                    self.finishTaskAndCleanup(finalTranscript: self.activeTranscript)
-                } else if self.isRecording {
-                    self.setError("Speech recognition error: \(error.localizedDescription)")
-                    self.finishTaskAndCleanup(finalTranscript: self.activeTranscript)
-                }
-            }
-        }
-
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-            guard let self else { return }
-            self.recognitionRequest?.append(buffer)
-            self.processAudioLevel(from: buffer)
-        }
-        hasInstalledInputTap = true
-
-        audioEngine.prepare()
-        do {
-            try audioEngine.start()
-            isRecording = true
-            state = .listening
-        } catch {
-            removeInputTap()
-            setError("Gagal memulai AudioEngine: \(error.localizedDescription)")
-        }
-    }
-
-    public func finishRecording() async -> String {
-        guard isRecording || state == .listening else {
+    func finish() async -> String {
+        guard state == .listening else {
             return activeTranscript
         }
         state = .finalizing
@@ -163,7 +83,7 @@ public final class SpeechRecognizer {
         }
     }
 
-    public func cancelRecording() {
+    func cancel() {
         if audioEngine.isRunning {
             audioEngine.stop()
             recognitionRequest?.endAudio()
@@ -172,40 +92,103 @@ public final class SpeechRecognizer {
         recognitionTask?.cancel()
         recognitionTask = nil
         recognitionRequest = nil
-        isRecording = false
         state = .idle
         audioLevel = 0.0
 
-        if let cont = transcriptContinuation {
+        if let continuation = transcriptContinuation {
             transcriptContinuation = nil
-            cont.resume(returning: activeTranscript)
+            continuation.resume(returning: activeTranscript)
         }
 
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    private func beginRecognition() throws {
+        if recognitionTask != nil {
+            cancel()
+        }
+
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            throw SpeechRecognitionError.audioSession(error.localizedDescription)
+        }
+
+        let request = SFSpeechAudioBufferRecognitionRequest()
+        request.shouldReportPartialResults = true
+        request.taskHint = .dictation
+        request.addsPunctuation = true
+        request.requiresOnDeviceRecognition = usesOnDeviceRecognition
+        request.contextualStrings = Self.vocabulary
+        recognitionRequest = request
+
+        let inputNode = audioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+
+        recognitionTask = speechRecognizer?.recognitionTask(with: request) { [weak self] result, error in
+            guard let self else { return }
+
+            if let result {
+                let text = result.bestTranscription.formattedString
+                self.activeTranscript = text
+                Task { @MainActor in
+                    self.liveTranscript = text
+                }
+                if result.isFinal {
+                    self.finishTaskAndCleanup(finalTranscript: text)
+                }
+            }
+
+            if let error {
+                if self.state == .finalizing {
+                    self.finishTaskAndCleanup(finalTranscript: self.activeTranscript)
+                } else if self.state == .listening {
+                    self.finishTaskAndCleanup(finalTranscript: self.activeTranscript)
+                    self.state = .failed("Speech recognition error: \(error.localizedDescription)")
+                }
+            }
+        }
+
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+            guard let self else { return }
+            self.recognitionRequest?.append(buffer)
+            self.processAudioLevel(from: buffer)
+        }
+        hasInstalledInputTap = true
+
+        audioEngine.prepare()
+        do {
+            try audioEngine.start()
+            state = .listening
+        } catch {
+            removeInputTap()
+            throw SpeechRecognitionError.audioEngine(error.localizedDescription)
+        }
     }
 
     private func finishTaskAndCleanup(finalTranscript: String) {
         recognitionTask?.cancel()
         recognitionTask = nil
         recognitionRequest = nil
-        isRecording = false
         state = .idle
         audioLevel = 0.0
 
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
 
-        if let cont = transcriptContinuation {
+        if let continuation = transcriptContinuation {
             transcriptContinuation = nil
-            cont.resume(returning: finalTranscript)
+            continuation.resume(returning: finalTranscript)
         }
     }
 
     private func processAudioLevel(from buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
-        let channelDataArray = Array(UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength)))
+        let samples = Array(UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength)))
 
         var sum: Float = 0.0
-        for sample in channelDataArray {
+        for sample in samples {
             sum += sample * sample
         }
         let rms = sqrt(sum / Float(buffer.frameLength))
@@ -213,19 +196,12 @@ public final class SpeechRecognizer {
 
         let minDb: Float = -50.0
         let maxDb: Float = -5.0
-        let rawNormalized = max(0.0, min(1.0, (db - minDb) / (maxDb - minDb)))
+        let normalized = max(0.0, min(1.0, (db - minDb) / (maxDb - minDb)))
 
         Task { @MainActor [weak self] in
-            guard let self, self.isRecording else { return }
-            let smoothed = (self.audioLevel * 0.4) + (rawNormalized * 0.6)
-            self.audioLevel = smoothed
+            guard let self, self.state == .listening else { return }
+            self.audioLevel = (self.audioLevel * 0.4) + (normalized * 0.6)
         }
-    }
-
-    private func setError(_ message: String) {
-        errorMessage = message
-        state = .failed(message)
-        isRecording = false
     }
 
     private func removeInputTap() {

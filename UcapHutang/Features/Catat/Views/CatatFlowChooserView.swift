@@ -1,8 +1,11 @@
 import SwiftUI
 
 struct CatatFlowChooserView: View {
+    let router: AppRouter
     let onSelect: (CaptureFlow) -> Void
     private let readiness = MLXQwenClient.readiness()
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationStack {
@@ -47,6 +50,18 @@ struct CatatFlowChooserView: View {
             .padding()
             .navigationTitle("Catat")
             .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .top) {
+                if let bannerID = router.savedBannerID {
+                    SavedToReviewBanner(
+                        bannerID: bannerID,
+                        onOpen: { router.openReviewFromBanner() },
+                        onTimeout: { router.dismissSavedBanner() }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                }
+            }
+            .animation(reduceMotion ? nil : .default, value: router.savedBannerID)
         }
     }
 }

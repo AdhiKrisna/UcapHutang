@@ -7,20 +7,23 @@ struct IdentifiableUUID: Identifiable, Equatable {
 
 struct RootTabView: View {
     @Environment(AppContainer.self) private var container
-    @State private var selectedTab: AppTab = .review
     @State private var reviewDraftItem: IdentifiableUUID?
     @State private var selectedCaptureFlow: CaptureFlow?
+    @State private var pendingReviewCount = 0
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        @Bindable var router = container.router
+
+        TabView(selection: $router.selectedTab) {
             Tab("Review", systemImage: "doc.badge.clock", value: AppTab.review) {
                 ReviewListView(repository: container.repository) { draftID in
                     reviewDraftItem = IdentifiableUUID(draftID)
                 }
             }
+            .badge(pendingReviewCount)
 
             Tab("Catat", systemImage: "mic.fill", value: AppTab.capture) {
-                CatatFlowChooserView { flow in
+                CatatFlowChooserView(router: container.router) { flow in
                     selectedCaptureFlow = flow
                 }
             }
@@ -28,6 +31,13 @@ struct RootTabView: View {
             Tab("Riwayat", systemImage: "book.closed", value: AppTab.ledger) {
                 LedgerListView(repository: container.repository)
             }
+        }
+        .sensoryFeedback(.success, trigger: container.router.savedBannerID) { _, newValue in
+            newValue != nil
+        }
+        .task { await refreshPendingReviewCount() }
+        .onReceive(NotificationCenter.default.publisher(for: .transactionRepositoryDidChange)) { _ in
+            Task { await refreshPendingReviewCount() }
         }
         .sheet(item: $reviewDraftItem) { item in
             NavigationStack {
@@ -37,5 +47,9 @@ struct RootTabView: View {
         .sheet(item: $selectedCaptureFlow) { flow in
             CatatView(flow: flow, container: container)
         }
+    }
+
+    private func refreshPendingReviewCount() async {
+        pendingReviewCount = (try? await container.repository.pendingDraftCount()) ?? 0
     }
 }

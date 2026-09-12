@@ -5,19 +5,27 @@ import SwiftData
 @Observable
 final class AppContainer {
     let repository: any TransactionRepository
-    let extractionService: any DraftExtractionService
+    let extraction: any DraftExtracting
+    let capture: any VoiceCapturing
     let contacts: any ContactsProviding
+    let router: AppRouter
+    let makeSpeechTranscriber: @MainActor () -> any SpeechTranscribing
     let storageErrorMessage: String?
 
     init(
         repository: any TransactionRepository,
-        extractionService: any DraftExtractionService,
+        extraction: any DraftExtracting,
         contacts: any ContactsProviding,
+        router: AppRouter = AppRouter(),
+        makeSpeechTranscriber: @escaping @MainActor () -> any SpeechTranscribing = { SpeechRecognizer() },
         storageErrorMessage: String? = nil
     ) {
         self.repository = repository
-        self.extractionService = extractionService
+        self.extraction = extraction
+        self.capture = VoiceCapturePipeline(extraction: extraction, repository: repository)
         self.contacts = contacts
+        self.router = router
+        self.makeSpeechTranscriber = makeSpeechTranscriber
         self.storageErrorMessage = storageErrorMessage
     }
 
@@ -25,6 +33,7 @@ final class AppContainer {
         let schema = Schema(versionedSchema: SchemaV2.self)
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         let contacts = SystemContactsProvider()
+        let extraction = QwenDraftExtractionService(llmClient: MLXQwenClient())
         do {
             let container = try ModelContainer(
                 for: schema,
@@ -32,11 +41,9 @@ final class AppContainer {
                 configurations: config
             )
             let repo = SwiftDataTransactionRepository(modelContainer: container)
-            let extraction = HybridQwenExtractionService(llmClient: MLXQwenClient())
-            return AppContainer(repository: repo, extractionService: extraction, contacts: contacts)
+            return AppContainer(repository: repo, extraction: extraction, contacts: contacts)
         } catch {
             let fallbackRepo = InMemoryTransactionRepository()
-            let extraction = HybridQwenExtractionService(llmClient: MLXQwenClient())
             // SwiftData has no migration-specific error type. If a store file already exists,
             // the failure happened while opening/migrating existing data.
             let storeExists = FileManager.default.fileExists(atPath: config.url.path)
@@ -45,7 +52,7 @@ final class AppContainer {
                 : "Penyimpanan lokal tidak dapat dibuka. Demi mencegah kehilangan data, pencatatan dinonaktifkan sementara. Tutup lalu buka kembali aplikasi. Detail: \(error.localizedDescription)"
             return AppContainer(
                 repository: fallbackRepo,
-                extractionService: extraction,
+                extraction: extraction,
                 contacts: contacts,
                 storageErrorMessage: message
             )
