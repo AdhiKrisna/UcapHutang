@@ -1,0 +1,22 @@
+# Xcode user state
+xcuserdata/
+**/xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+DerivedData/
+build/
+*.ipa
+*.dSYM
+
+# macOS
+.DS_Store
+
+# Local on-device model assets (distributed via GitHub Releases)
+UcapHutang/Resources/Models/
+*.safetensors
+*.gguf
+Qwen3-*-4bit.zip
+
+# Local diagnostics
+*.xcresult

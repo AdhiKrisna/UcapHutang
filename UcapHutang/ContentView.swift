@@ -1,24 +1,23 @@
-//
-//  ContentView.swift
-//  UcapHutang
-//
-//  Created by Made Vidyatma Adhi Krisna on 11/09/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject private var container: AppContainer
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        if let message = container.storageErrorMessage {
+            ContentUnavailableView {
+                Label("Penyimpanan Tidak Tersedia", systemImage: "externaldrive.badge.exclamationmark")
+            } description: {
+                Text(message)
+            }
+            .padding()
+        } else {
+            RootTabView()
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(AppContainer.makeDefault())
 }
