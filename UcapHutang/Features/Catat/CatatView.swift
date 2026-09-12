@@ -6,9 +6,9 @@ struct CatatView: View {
 
     let flow: CaptureFlow
 
-    init(flow: CaptureFlow, onDraftCreated: @escaping (UUID) -> Void, container: AppContainer) {
+    init(flow: CaptureFlow, container: AppContainer) {
         self.flow = flow
-        _viewModel = StateObject(wrappedValue: CatatViewModel(flow: flow, onDraftCreated: onDraftCreated, container: container))
+        _viewModel = StateObject(wrappedValue: CatatViewModel(flow: flow, container: container))
     }
 
     var body: some View {
@@ -91,6 +91,9 @@ struct CatatView: View {
             }
             .onChange(of: viewModel.speechRecognizer.errorMessage) { _, message in
                 if let message { viewModel.errorMessage = message }
+            }
+            .navigationDestination(item: $viewModel.createdDraftID) { draftID in
+                ReviewDraftView(draftID: draftID, repository: viewModel.container.repository)
             }
         }
     }

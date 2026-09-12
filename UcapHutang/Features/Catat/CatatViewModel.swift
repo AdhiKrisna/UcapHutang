@@ -5,7 +5,7 @@ import Combine
 @MainActor
 final class CatatViewModel: ObservableObject {
     let flow: CaptureFlow
-    let onDraftCreated: (UUID) -> Void
+    @Published var createdDraftID: UUID?
     let container: AppContainer
     let speechRecognizer = SpeechRecognizer()
 
@@ -16,9 +16,8 @@ final class CatatViewModel: ObservableObject {
     private var activeProcessingID: UUID?
     private var processingTask: Task<Void, Never>?
 
-    init(flow: CaptureFlow, onDraftCreated: @escaping (UUID) -> Void, container: AppContainer) {
+    init(flow: CaptureFlow, container: AppContainer) {
         self.flow = flow
-        self.onDraftCreated = onDraftCreated
         self.container = container
     }
 
@@ -73,7 +72,7 @@ final class CatatViewModel: ObservableObject {
                 try Task.checkCancellation()
                 try await self.container.repository.saveDraft(draft)
                 try Task.checkCancellation()
-                self.onDraftCreated(draft.id)
+                self.createdDraftID = draft.id
             } catch {
                 guard !Task.isCancelled else { return }
                 self.errorMessage = error.localizedDescription

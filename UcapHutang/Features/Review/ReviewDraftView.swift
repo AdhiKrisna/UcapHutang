@@ -38,8 +38,7 @@ struct ReviewDraftView: View {
             }
         }
         }
-        .navigationTitle("Review Catatan")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
         .onChange(of: viewModel.didFinish) { _, finished in
             if finished { dismiss() }
