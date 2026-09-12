@@ -61,6 +61,8 @@ struct TransactionDraft: Identifiable, Codable, Hashable, Sendable {
     var title: String
     var totalAmount: Int64
     var splitMethod: SplitMethod?
+    /// Split Bill + equal method only: whether the user also takes a share.
+    var includesUser: Bool = true
     var participants: [TransactionParticipant]
     var notes: String?
     var rawTranscript: String
@@ -84,6 +86,8 @@ struct LedgerEntry: Identifiable, Codable, Hashable, Sendable {
     var title: String
     var notes: String?
     var sourceDraftID: UUID?
+    /// `nil` for legacy people that were saved before contact linking became mandatory.
+    var contactIdentifier: String?
 }
 
 struct PersonLedgerSummary: Identifiable, Hashable, Sendable {
@@ -92,4 +96,7 @@ struct PersonLedgerSummary: Identifiable, Hashable, Sendable {
     var balance: Int64
     var entryCount: Int
     var lastActivity: Date
+    var contactIdentifier: String?
+
+    var isLinked: Bool { contactIdentifier != nil }
 }
