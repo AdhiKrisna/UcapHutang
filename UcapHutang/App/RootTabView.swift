@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 struct IdentifiableUUID: Identifiable, Equatable {
     let id: UUID
@@ -7,40 +6,34 @@ struct IdentifiableUUID: Identifiable, Equatable {
 }
 
 enum AppTab: Hashable {
-    case draft
+    case review
     case capture
     case ledger
 }
 
 struct RootTabView: View {
-    @EnvironmentObject private var container: AppContainer
-    @State private var selectedTab: AppTab = .draft
+    @Environment(AppContainer.self) private var container
+    @State private var selectedTab: AppTab = .review
     @State private var reviewDraftItem: IdentifiableUUID?
     @State private var selectedCaptureFlow: CaptureFlow?
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            ReviewListView(repository: container.repository) { draftID in
-                reviewDraftItem = IdentifiableUUID(draftID)
-            }
-            .tabItem {
-                Label("Draft", systemImage: "exclamationmark.triangle")
-            }
-            .tag(AppTab.draft)
-
-            CatatFlowChooserView { flow in
-                selectedCaptureFlow = flow
-            }
-            .tabItem {
-                Label("Catat", systemImage: "mic.fill")
-            }
-            .tag(AppTab.capture)
-
-            LedgerListView(repository: container.repository)
-                .tabItem {
-                    Label("Riwayat", systemImage: "book.closed")
+            Tab("Review", systemImage: "doc.badge.clock", value: AppTab.review) {
+                ReviewListView(repository: container.repository) { draftID in
+                    reviewDraftItem = IdentifiableUUID(draftID)
                 }
-                .tag(AppTab.ledger)
+            }
+
+            Tab("Catat", systemImage: "mic.fill", value: AppTab.capture) {
+                CatatFlowChooserView { flow in
+                    selectedCaptureFlow = flow
+                }
+            }
+
+            Tab("Riwayat", systemImage: "book.closed", value: AppTab.ledger) {
+                LedgerListView(repository: container.repository)
+            }
         }
         .sheet(item: $reviewDraftItem) { item in
             NavigationStack {

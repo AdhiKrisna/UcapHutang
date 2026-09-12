@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject private var container: AppContainer
+    @Environment(AppContainer.self) private var container
 
     var body: some View {
         if let message = container.storageErrorMessage {
@@ -19,5 +19,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environmentObject(AppContainer.makeDefault())
+        .environment(AppContainer.makeDefault())
 }

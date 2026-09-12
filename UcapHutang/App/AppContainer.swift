@@ -1,9 +1,9 @@
 import Foundation
-import Combine
+import Observation
 import SwiftData
 
-@MainActor
-final class AppContainer: ObservableObject {
+@Observable
+final class AppContainer {
     let repository: any TransactionRepository
     let extractionService: any DraftExtractionService
     let storageErrorMessage: String?
@@ -41,31 +41,4 @@ final class AppContainer: ObservableObject {
             )
         }
     }
-}
-
-enum PreviewData {
-    static let drafts: [TransactionDraft] = [
-        TransactionDraft(
-            flow: .personal,
-            type: .piutang,
-            title: "Makan siang",
-            totalAmount: 150_000,
-            participants: [TransactionParticipant(name: "Dito", shareAmount: 150_000)],
-            notes: "Pinjam buat makan siang",
-            rawTranscript: "Dito pinjam seratus lima puluh ribu buat makan siang"
-        ),
-        TransactionDraft(
-            flow: .splitBill,
-            type: .splitBill,
-            title: "Makan malam",
-            totalAmount: 300_000,
-            splitMethod: .equal,
-            participants: [
-                TransactionParticipant(name: "Orang A", shareAmount: 100_000),
-                TransactionParticipant(name: "Orang B", shareAmount: 100_000)
-            ],
-            notes: "Bagi rata termasuk saya",
-            rawTranscript: "Aku bayarin makan malam bertiga sama Orang A dan Orang B total tiga ratus ribu"
-        )
-    ]
 }
