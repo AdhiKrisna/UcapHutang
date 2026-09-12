@@ -44,7 +44,7 @@ struct RootTabView: View {
         }
         .sheet(item: $reviewDraftItem) { item in
             NavigationStack {
-                ReviewDraftView(draftID: item.id, repository: container.repository)
+                DraftReviewView(draftID: item.id, repository: container.repository)
             }
         }
         .sheet(item: $selectedCaptureFlow) { flow in
