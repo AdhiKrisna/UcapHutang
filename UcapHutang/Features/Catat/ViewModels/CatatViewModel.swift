@@ -1,31 +1,24 @@
 import Foundation
-import SwiftUI
-import Combine
+import Observation
 
-@MainActor
-final class CatatViewModel: ObservableObject {
+@Observable
+final class CatatViewModel {
     let flow: CaptureFlow
-    @Published var createdDraftID: UUID?
+    var createdDraftID: UUID?
     let container: AppContainer
     let speechRecognizer = SpeechRecognizer()
 
-    @Published var liveTranscript = ""
-    @Published var isProcessing = false
-    @Published var errorMessage: String?
-    @Published private(set) var isStartingRecording = false
+    var liveTranscript = ""
+    var isProcessing = false
+    var errorMessage: String?
+    private(set) var isStartingRecording = false
 
-    private var activeProcessingID: UUID?
-    private var processingTask: Task<Void, Never>?
+    @ObservationIgnored private var activeProcessingID: UUID?
+    @ObservationIgnored private var processingTask: Task<Void, Never>?
 
     init(flow: CaptureFlow, container: AppContainer) {
         self.flow = flow
         self.container = container
-    }
-
-    var micButtonGradient: LinearGradient {
-        speechRecognizer.isRecording
-            ? LinearGradient(colors: [.red, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
-            : LinearGradient(colors: [AppColors.accent, .indigo], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 
     var stageHeadline: String {

@@ -1,7 +1,7 @@
 import Foundation
 import Speech
 import AVFoundation
-import Combine
+import Observation
 
 public enum SpeechRecognizerState: Equatable, Sendable {
     case idle
@@ -10,20 +10,20 @@ public enum SpeechRecognizerState: Equatable, Sendable {
     case failed(String)
 }
 
-@MainActor
-public final class SpeechRecognizer: ObservableObject {
-    @Published public var state: SpeechRecognizerState = .idle
-    @Published public var isRecording = false
-    @Published public var errorMessage: String?
-    @Published public var audioLevel: Float = 0.0
+@Observable
+public final class SpeechRecognizer {
+    public var state: SpeechRecognizerState = .idle
+    public var isRecording = false
+    public var errorMessage: String?
+    public var audioLevel: Float = 0.0
 
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "id-ID")) ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
-    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    private var recognitionTask: SFSpeechRecognitionTask?
+    @ObservationIgnored private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    @ObservationIgnored private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
-    private var hasInstalledInputTap = false
-    private var activeTranscript: String = ""
-    private var transcriptContinuation: CheckedContinuation<String, Never>?
+    @ObservationIgnored private var hasInstalledInputTap = false
+    @ObservationIgnored private var activeTranscript: String = ""
+    @ObservationIgnored private var transcriptContinuation: CheckedContinuation<String, Never>?
 
     public init() {}
 

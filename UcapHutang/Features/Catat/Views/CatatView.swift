@@ -2,13 +2,13 @@ import SwiftUI
 
 struct CatatView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: CatatViewModel
+    @State private var viewModel: CatatViewModel
 
     let flow: CaptureFlow
 
     init(flow: CaptureFlow, container: AppContainer) {
         self.flow = flow
-        _viewModel = StateObject(wrappedValue: CatatViewModel(flow: flow, container: container))
+        _viewModel = State(initialValue: CatatViewModel(flow: flow, container: container))
     }
 
     var body: some View {
