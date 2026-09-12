@@ -5,12 +5,6 @@ struct IdentifiableUUID: Identifiable, Equatable {
     init(_ id: UUID) { self.id = id }
 }
 
-enum AppTab: Hashable {
-    case review
-    case capture
-    case ledger
-}
-
 struct RootTabView: View {
     @Environment(AppContainer.self) private var container
     @State private var selectedTab: AppTab = .review
