@@ -12,6 +12,8 @@ enum AppColors {
     static let warning = Color.orange
     static let destructive = Color.red
     static let border = Color.secondary.opacity(0.22)
+    /// Asset color: Light #FFF5E0, Dark #3A3222.
+    static let reminderButtonBackground = Color("ReminderButtonBackground")
 }
 
 enum AppSpacing {
@@ -76,5 +78,6 @@ struct AppFilterChip: View {
             .background(isSelected ? AppColors.surface : Color.clear)
             .clipShape(Capsule())
             .overlay(Capsule().stroke(AppColors.border))
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
