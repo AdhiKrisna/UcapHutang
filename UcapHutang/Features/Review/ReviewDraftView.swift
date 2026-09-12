@@ -163,36 +163,19 @@ struct ReviewDraftView: View {
             Text(draft.flow == .personal ? "Orang" : "Peserta")
                 .font(.body).foregroundStyle(AppColors.textPrimary)
             ForEach(Array(draft.participants.enumerated()), id: \.element.id) { index, participant in
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(participant.name).font(.body.weight(.bold))
-                            Text(participant.contactIdentifier == nil ? "Nama belum terhubung" : "Terhubung otomatis ke kontak")
-                                .font(.subheadline).foregroundStyle(AppColors.textSecondary)
-                        }
-                        Spacer()
-                        Button(participant.contactIdentifier == nil ? "Hubungkan" : "Bukan dia?") {
-                            contactPickerIndex = index
-                        }
-                        .underline()
-                        .font(.subheadline)
-                        .foregroundStyle(AppColors.textPrimary)
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(participant.name).font(.body.weight(.bold))
+                        Text(participant.contactIdentifier == nil ? "Nama belum terhubung" : "Terhubung otomatis ke kontak")
+                            .font(.subheadline).foregroundStyle(AppColors.textSecondary)
                     }
-                    TextField(
-                        "Optional Notes",
-                        text: Binding(
-                            get: { viewModel.draft?.participants[safe: index]?.notes ?? "" },
-                            set: { viewModel.updateParticipantNotes(index: index, notes: $0) }
-                        ),
-                        axis: .vertical
-                    )
-                    .lineLimit(1...3)
-                    .textFieldStyle(.plain)
+                    Spacer()
+                    Button(participant.contactIdentifier == nil ? "Hubungkan" : "Bukan dia?") {
+                        contactPickerIndex = index
+                    }
+                    .underline()
                     .font(.subheadline)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 10)
-                    .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .foregroundStyle(AppColors.textPrimary)
                 }
                 .padding(14)
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppColors.border))
@@ -203,6 +186,22 @@ struct ReviewDraftView: View {
                     .background(AppColors.surface)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(AppColors.textSecondary))
                     .foregroundStyle(AppColors.textPrimary)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Optional Notes")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textSecondary)
+                TextField("Optional Notes", text: Binding(
+                    get: { viewModel.draft?.notes ?? "" },
+                    set: { viewModel.draft?.notes = $0.isEmpty ? nil : $0 }
+                ), axis: .vertical)
+                .lineLimit(1...3)
+                .textFieldStyle(.plain)
+                .font(.subheadline)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 10)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
         }
     }
