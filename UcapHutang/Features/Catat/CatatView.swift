@@ -77,7 +77,7 @@ struct CatatView: View {
                 viewModel.handleSpeechStateChange(state)
             }
             .navigationDestination(item: $viewModel.createdDraftID) { draftID in
-                ReviewDraftView(draftID: draftID, repository: viewModel.container.repository)
+                ReviewView(draftID: draftID, repository: viewModel.container.repository)
             }
         }
     }

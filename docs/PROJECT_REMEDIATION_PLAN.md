@@ -92,7 +92,7 @@
 
 ### P2 — architecture and maintainability
 
-1. Split the large Review file into `ReviewDraftViewModel`, transcript, transaction fields, participants, save guidance, and actions subviews.
+1. Split the large Review file into `ReviewViewModel`, transcript, transaction fields, participants, save guidance, and actions subviews.
 2. Move validation into a domain `DraftValidator` used by both UI and repositories so persistence cannot bypass UI rules.
 3. Separate model generation protocol and extraction orchestration files; add explicit model state/progress.
 4. Remove global retroactive `Int: Identifiable`; use a local wrapper for sheet selection.

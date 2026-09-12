@@ -8,7 +8,7 @@ enum CaptureFlow: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .personal: "Utang / Piutang"
+        case .personal: "Hutang Personal"
         case .splitBill: "Split Bill"
         }
     }
@@ -62,6 +62,7 @@ struct TransactionDraft: Identifiable, Codable, Hashable, Sendable {
     var totalAmount: Int64
     var splitMethod: SplitMethod?
     var participants: [TransactionParticipant]
+    var userShareAmount: Int64? = nil
     var notes: String?
     var rawTranscript: String
     var rawModelResponse: String?

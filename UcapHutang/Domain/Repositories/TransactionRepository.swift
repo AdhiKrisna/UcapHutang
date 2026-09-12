@@ -77,7 +77,7 @@ actor InMemoryTransactionRepository: TransactionRepository {
             let delta = draft.type == .piutang ? magnitude : -magnitude
             entries.append(makeCharge(draft: draft, participant: participant, delta: delta))
         case .splitBill:
-            for participant in draft.participants {
+            for participant in draft.participants where participant.shareAmount > 0 {
                 entries.append(makeCharge(draft: draft, participant: participant, delta: participant.shareAmount))
             }
         }

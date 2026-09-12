@@ -37,6 +37,7 @@ final class SDTransactionDraft {
     var title: String
     var totalAmount: Int64
     var splitMethodRaw: String?
+    var userShareAmount: Int64?
     var notes: String?
     var rawTranscript: String
     var rawModelResponse: String?
@@ -55,6 +56,7 @@ final class SDTransactionDraft {
         title: String = "",
         totalAmount: Int64 = 0,
         splitMethodRaw: String? = nil,
+        userShareAmount: Int64? = nil,
         notes: String? = nil,
         rawTranscript: String = "",
         rawModelResponse: String? = nil,
@@ -70,6 +72,7 @@ final class SDTransactionDraft {
         self.title = title
         self.totalAmount = totalAmount
         self.splitMethodRaw = splitMethodRaw
+        self.userShareAmount = userShareAmount
         self.notes = notes
         self.rawTranscript = rawTranscript
         self.rawModelResponse = rawModelResponse

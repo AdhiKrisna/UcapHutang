@@ -35,18 +35,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
     func saveDraft(_ draft: TransactionDraft) async throws {
         let descriptor = FetchDescriptor<SDTransactionDraft>(predicate: #Predicate { $0.id == draft.id })
         if let existing = try context.fetch(descriptor).first {
-            existing.statusRaw = draft.status.rawValue
-            existing.flowRaw = draft.flow.rawValue
-            existing.typeRaw = draft.type.rawValue
-            existing.transactionDate = draft.transactionDate
-            existing.title = draft.title
-            existing.totalAmount = draft.totalAmount
-            existing.splitMethodRaw = draft.splitMethod?.rawValue
-            existing.notes = draft.notes
-            existing.rawTranscript = draft.rawTranscript
-            existing.rawModelResponse = draft.rawModelResponse
-            existing.reviewWarningsRaw = draft.reviewWarnings
-            existing.participants = draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) }
+            update(existing, from: draft)
         } else {
             let sd = SDTransactionDraft(
                 id: draft.id,
@@ -57,6 +46,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
                 title: draft.title,
                 totalAmount: draft.totalAmount,
                 splitMethodRaw: draft.splitMethod?.rawValue,
+                userShareAmount: draft.userShareAmount,
                 notes: draft.notes,
                 rawTranscript: draft.rawTranscript,
                 rawModelResponse: draft.rawModelResponse,
@@ -107,18 +97,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
 
         // Mutasi atau insert draft tanpa commit save() terpisah
         if let existing = existingDraft {
-            existing.statusRaw = draft.status.rawValue
-            existing.flowRaw = draft.flow.rawValue
-            existing.typeRaw = draft.type.rawValue
-            existing.transactionDate = draft.transactionDate
-            existing.title = draft.title
-            existing.totalAmount = draft.totalAmount
-            existing.splitMethodRaw = draft.splitMethod?.rawValue
-            existing.notes = draft.notes
-            existing.rawTranscript = draft.rawTranscript
-            existing.rawModelResponse = draft.rawModelResponse
-            existing.reviewWarningsRaw = draft.reviewWarnings
-            existing.participants = draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) }
+            update(existing, from: draft)
         } else {
             let sd = SDTransactionDraft(
                 id: draft.id,
@@ -129,6 +108,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
                 title: draft.title,
                 totalAmount: draft.totalAmount,
                 splitMethodRaw: draft.splitMethod?.rawValue,
+                userShareAmount: draft.userShareAmount,
                 notes: draft.notes,
                 rawTranscript: draft.rawTranscript,
                 rawModelResponse: draft.rawModelResponse,
@@ -150,7 +130,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
             let entry = makeCharge(draft: draft, participant: participant, delta: delta)
             context.insert(entry)
         case .splitBill:
-            for participant in draft.participants {
+            for participant in draft.participants where participant.shareAmount > 0 {
                 let entry = makeCharge(draft: draft, participant: participant, delta: participant.shareAmount)
                 context.insert(entry)
             }
@@ -204,6 +184,42 @@ final class SwiftDataTransactionRepository: TransactionRepository {
         )
     }
 
+    private func update(_ existing: SDTransactionDraft, from draft: TransactionDraft) {
+        existing.statusRaw = draft.status.rawValue
+        existing.flowRaw = draft.flow.rawValue
+        existing.typeRaw = draft.type.rawValue
+        existing.transactionDate = draft.transactionDate
+        existing.title = draft.title
+        existing.totalAmount = draft.totalAmount
+        existing.splitMethodRaw = draft.splitMethod?.rawValue
+        existing.userShareAmount = draft.userShareAmount
+        existing.notes = draft.notes
+        existing.rawTranscript = draft.rawTranscript
+        existing.rawModelResponse = draft.rawModelResponse
+        existing.reviewWarningsRaw = draft.reviewWarnings
+
+        let currentByID = Dictionary(uniqueKeysWithValues: existing.participants.map { ($0.id, $0) })
+        let incomingIDs = Set(draft.participants.map(\.id))
+        let removed = existing.participants.filter { !incomingIDs.contains($0.id) }
+
+        existing.participants = draft.participants.map { participant in
+            let stored = currentByID[participant.id] ?? SDTransactionParticipant(
+                id: participant.id,
+                name: participant.name
+            )
+            stored.name = participant.name
+            stored.contactIdentifier = participant.contactIdentifier
+            stored.shareAmount = participant.shareAmount
+            stored.itemTitle = participant.itemTitle
+            stored.notes = participant.notes
+            return stored
+        }
+
+        for participant in removed {
+            context.delete(participant)
+        }
+    }
+
     private static func toDomain(_ sd: SDTransactionDraft) -> TransactionDraft {
         TransactionDraft(
             id: sd.id,
@@ -215,6 +231,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
             totalAmount: sd.totalAmount,
             splitMethod: sd.splitMethodRaw.flatMap(SplitMethod.init(rawValue:)),
             participants: sd.participants.map { TransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) },
+            userShareAmount: sd.userShareAmount,
             notes: sd.notes,
             rawTranscript: sd.rawTranscript,
             rawModelResponse: sd.rawModelResponse,
