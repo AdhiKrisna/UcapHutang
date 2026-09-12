@@ -46,6 +46,9 @@ final class SwiftDataTransactionRepository: TransactionRepository {
             existing.rawTranscript = draft.rawTranscript
             existing.rawModelResponse = draft.rawModelResponse
             existing.reviewWarningsRaw = draft.reviewWarnings
+            for participant in existing.participants {
+                context.delete(participant)
+            }
             existing.participants = draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) }
         } else {
             let sd = SDTransactionDraft(
@@ -118,6 +121,9 @@ final class SwiftDataTransactionRepository: TransactionRepository {
             existing.rawTranscript = draft.rawTranscript
             existing.rawModelResponse = draft.rawModelResponse
             existing.reviewWarningsRaw = draft.reviewWarnings
+            for participant in existing.participants {
+                context.delete(participant)
+            }
             existing.participants = draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) }
         } else {
             let sd = SDTransactionDraft(
