@@ -31,6 +31,19 @@ public final class SpeechRecognizer: ObservableObject {
         errorMessage = nil
         activeTranscript = ""
 
+        AVAudioApplication.requestRecordPermission { [weak self] microphoneGranted in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                guard microphoneGranted else {
+                    self.setError("Izin mikrofon ditolak. Buka Settings untuk mengaktifkan.")
+                    return
+                }
+                self.requestSpeechAuthorization(onTranscript: onTranscript)
+            }
+        }
+    }
+
+    private func requestSpeechAuthorization(onTranscript: @escaping @MainActor (String) -> Void) {
         SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
             Task { @MainActor [weak self] in
                 guard let self else { return }
@@ -42,9 +55,9 @@ public final class SpeechRecognizer: ObservableObject {
                 case .restricted:
                     self.setError("Speech Recognition dibatasi pada perangkat ini.")
                 case .notDetermined:
-                    self.setError("Izin belum ditentukan.")
+                    self.setError("Izin Speech Recognition belum ditentukan.")
                 @unknown default:
-                    self.setError("Status otorisasi tidak dikenal.")
+                    self.setError("Status otorisasi Speech Recognition tidak dikenal.")
                 }
             }
         }

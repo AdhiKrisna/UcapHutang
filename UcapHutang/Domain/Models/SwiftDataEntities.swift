@@ -8,19 +8,22 @@ final class SDTransactionParticipant {
     var contactIdentifier: String?
     var shareAmount: Int64
     var itemTitle: String?
+    var notes: String?
 
     init(
         id: UUID = UUID(),
         name: String,
         contactIdentifier: String? = nil,
         shareAmount: Int64 = 0,
-        itemTitle: String? = nil
+        itemTitle: String? = nil,
+        notes: String? = nil
     ) {
         self.id = id
         self.name = name
         self.contactIdentifier = contactIdentifier
         self.shareAmount = shareAmount
         self.itemTitle = itemTitle
+        self.notes = notes
     }
 }
 

@@ -149,6 +149,13 @@ final class ReviewDraftViewModel: ObservableObject {
         self.draft = draft
     }
 
+    func updateParticipantNotes(index: Int, notes: String) {
+        guard var draft, draft.participants.indices.contains(index) else { return }
+        let cleaned = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        draft.participants[index].notes = cleaned.isEmpty ? nil : cleaned
+        self.draft = draft
+    }
+
     func showValidationMessage() {
         guard !validationMessages.isEmpty else { return }
         errorMessage = "Lengkapi data berikut sebelum menyimpan:\n\n• " + validationMessages.joined(separator: "\n• ")

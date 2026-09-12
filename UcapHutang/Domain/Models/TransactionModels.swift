@@ -49,6 +49,7 @@ struct TransactionParticipant: Identifiable, Codable, Hashable, Sendable {
     var contactIdentifier: String?
     var shareAmount: Int64
     var itemTitle: String?
+    var notes: String?
 }
 
 struct TransactionDraft: Identifiable, Codable, Hashable, Sendable {
@@ -95,6 +96,6 @@ struct PersonLedgerSummary: Identifiable, Hashable, Sendable {
 
 extension Int64 {
     var rupiahFormatted: String {
-        formatted(.currency(code: "IDR").locale(Locale(identifier: "id_ID")).precision(.fractionLength(0)))
+        "Rp. " + formatted(.number.locale(Locale(identifier: "id_ID")).precision(.fractionLength(0)))
     }
 }

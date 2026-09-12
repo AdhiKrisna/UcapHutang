@@ -152,8 +152,10 @@ struct ReviewDraftView: View {
     }
 
     private func reviewDate(_ date: Date) -> String {
-        if Calendar.current.isDateInToday(date) { return "Hari Ini" }
-        return date.formatted(date: .abbreviated, time: .shortened)
+        let dateValue = Calendar.current.isDateInToday(date)
+            ? "Hari Ini"
+            : date.formatted(date: .abbreviated, time: .omitted)
+        return "\(dateValue), \(date.formatted(date: .omitted, time: .shortened))"
     }
 
     private func personSection(_ draft: TransactionDraft) -> some View {
@@ -161,19 +163,36 @@ struct ReviewDraftView: View {
             Text(draft.flow == .personal ? "Orang" : "Peserta")
                 .font(.body).foregroundStyle(AppColors.textPrimary)
             ForEach(Array(draft.participants.enumerated()), id: \.element.id) { index, participant in
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(participant.name).font(.body.weight(.bold))
-                        Text(participant.contactIdentifier == nil ? "Nama belum terhubung" : "Terhubung otomatis ke kontak")
-                            .font(.subheadline).foregroundStyle(AppColors.textSecondary)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(participant.name).font(.body.weight(.bold))
+                            Text(participant.contactIdentifier == nil ? "Nama belum terhubung" : "Terhubung otomatis ke kontak")
+                                .font(.subheadline).foregroundStyle(AppColors.textSecondary)
+                        }
+                        Spacer()
+                        Button(participant.contactIdentifier == nil ? "Hubungkan" : "Bukan dia?") {
+                            contactPickerIndex = index
+                        }
+                        .underline()
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.textPrimary)
                     }
-                    Spacer()
-                    Button(participant.contactIdentifier == nil ? "Hubungkan" : "Bukan dia?") {
-                        contactPickerIndex = index
-                    }
-                    .underline()
+                    TextField(
+                        "Optional Notes",
+                        text: Binding(
+                            get: { viewModel.draft?.participants[safe: index]?.notes ?? "" },
+                            set: { viewModel.updateParticipantNotes(index: index, notes: $0) }
+                        ),
+                        axis: .vertical
+                    )
+                    .lineLimit(1...3)
+                    .textFieldStyle(.plain)
                     .font(.subheadline)
-                    .foregroundStyle(AppColors.textPrimary)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 10)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
                 .padding(14)
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppColors.border))
