@@ -1,0 +1,1352 @@
+[
+  {
+    "input": "Uang utang ke Juan 20.000 beli ayam",
+    "person": "Juan",
+    "type": "hutang",
+    "amount": 20000,
+    "title": "beli ayam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Si ten ngutang 25.000 sama aku untuk beli nasi Padang",
+    "person": "Si Ten",
+    "type": "piutang",
+    "amount": 25000,
+    "title": "nasi Padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Satu yang utang aku 20.000",
+    "person": "Satu",
+    "type": "piutang",
+    "amount": 20000,
+    "title": "utang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku mau ngutang temanku sebesar Rp60.765.000",
+    "person": "temanku",
+    "type": "hutang",
+    "amount": 60765000,
+    "title": "ngutang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Arif ngutang 1.000.000.000 beli mobil 13 Agustus 2025",
+    "person": "Arif",
+    "type": "piutang",
+    "amount": 1000000000,
+    "title": "beli mobil",
+    "date": "2025-08-13",
+    "notes": null
+  },
+  {
+    "input": "Krisna ngutang 50.000 untuk beli belanjaan",
+    "person": "Krisna",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "beli belanjaan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Oke cia titip sate Padang harganya 20.000",
+    "person": "Cia",
+    "type": "piutang",
+    "amount": 20000,
+    "title": "sate Padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku meminjamkan 100.000 ke Budi 9 September 2026",
+    "person": "Budi",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "pinjaman",
+    "date": "2026-09-09",
+    "notes": null
+  },
+  {
+    "input": "Linux ngutang ke aku 50.000 semalam",
+    "person": "Linux",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "ngutang",
+    "date": "kemarin",
+    "notes": null
+  },
+  {
+    "input": "Tadi pagi saya beli nasi Padang 15.000 untuk Krisna",
+    "person": "Krisna",
+    "type": "piutang",
+    "amount": 15000,
+    "title": "nasi Padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Linux titip telur satu box harganya 20.000",
+    "person": "Linux",
+    "type": "piutang",
+    "amount": 20000,
+    "title": "telur satu box",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Mulai mulai Rafael menitip kacang garuda tiga bungkus totalnya 35.000",
+    "person": "Rafael",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "kacang garuda",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bang barusan titip nasi goreng seafood totalnya 30.000",
+    "person": "Bang",
+    "type": "piutang",
+    "amount": 30000,
+    "title": "nasi goreng seafood",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Linux pinjam 100.000.000.000",
+    "person": "Linux",
+    "type": "piutang",
+    "amount": 100000000000,
+    "title": "pinjam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Friska pinjam duit sama gua 50.000",
+    "person": "Friska",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "pinjam duit",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dini beliin gua dendeng jadi gua hutang sama Dini 20.000",
+    "person": "Dini",
+    "type": "hutang",
+    "amount": 20000,
+    "title": "dendeng",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Hari ini 10 September 2026 aku nombokin Fauzi tiket nonton bioskop seharga 35.000",
+    "person": "Fauzi",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "tiket nonton bioskop",
+    "date": "2026-09-10",
+    "notes": null
+  },
+  {
+    "input": "Si hutang sama gua 200.000 untuk beli tiket konser",
+    "person": "Si",
+    "type": "piutang",
+    "amount": 200000,
+    "title": "beli tiket konser",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Friska ngutang aku 50.000 untuk beli nasi goreng Padang",
+    "person": "Friska",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "nasi goreng Padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tadi temanku ngutang aku sebanyak Rp10.000.000",
+    "person": "temanku",
+    "type": "piutang",
+    "amount": 10000000,
+    "title": "ngutang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tadi Krisna utang aku 100.000",
+    "person": "Krisna",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "utang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku titip beli piring sama Rose harganya 20.000",
+    "person": "Rose",
+    "type": "hutang",
+    "amount": 20000,
+    "title": "beli piring",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Rafi ngutang 50.000 ke gua untuk beli tiket konser",
+    "person": "Rafi",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "tiket konser",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gw bayarin makan si Budi 35rb di warteg",
+    "person": "Budi",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "makan di warteg",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Siti pinjem 200k buat bayar listrik",
+    "person": "Siti",
+    "type": "piutang",
+    "amount": 200000,
+    "title": "bayar listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Kemarin 12 Mei 2026 ditalangin Reza 50rb beli bensin",
+    "person": "Reza",
+    "type": "hutang",
+    "amount": 50000,
+    "title": "beli bensin",
+    "date": "2026-05-12",
+    "notes": null
+  },
+  {
+    "input": "Aku ditalangin Doni beli pulsa 25.000",
+    "person": "Doni",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "beli pulsa",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Andi nombokin gua kopi kenangan 28k",
+    "person": "Andi",
+    "type": "hutang",
+    "amount": 28000,
+    "title": "kopi kenangan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua nombokin Rian martabak manis 45 ribu",
+    "person": "Rian",
+    "type": "piutang",
+    "amount": 45000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Utang ke Maya 150rb sewa lapangan futsal",
+    "person": "Maya",
+    "type": "hutang",
+    "amount": 150000,
+    "title": "sewa lapangan futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Putri belum bayar utang kas 20rb ke gw",
+    "person": "Putri",
+    "type": "piutang",
+    "amount": 20000,
+    "title": "uang kas",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Pinjem duit Hendra 500.000 buat servis motor",
+    "person": "Hendra",
+    "type": "hutang",
+    "amount": 500000,
+    "title": "servis motor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Kasih pinjaman ke Gilang 1.500.000 tanggal 1 Januari 2026",
+    "person": "Gilang",
+    "type": "piutang",
+    "amount": 1500000,
+    "title": "pinjaman",
+    "date": "2026-01-01",
+    "notes": null
+  },
+  {
+    "input": "Beliin obat panadol buat Eko 12k",
+    "person": "Eko",
+    "type": "piutang",
+    "amount": 12000,
+    "title": "obat panadol",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Eko beliin gw rokok surya 32 ribu",
+    "person": "Eko",
+    "type": "hutang",
+    "amount": 32000,
+    "title": "rokok surya",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku dipinjamin Daffa 100k, janji balikin minggu depan",
+    "person": "Daffa",
+    "type": "hutang",
+    "amount": 100000,
+    "title": "pinjaman",
+    "date": null,
+    "notes": "janji balikin minggu depan"
+  },
+  {
+    "input": "Fajar minjem uang 75rb buat beli makan siang",
+    "person": "Fajar",
+    "type": "piutang",
+    "amount": 75000,
+    "title": "makan siang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tolong catat utang ke Bu Siti 80rb belanja sayur",
+    "person": "Bu Siti",
+    "type": "hutang",
+    "amount": 80000,
+    "title": "belanja sayur",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Pak Joko pinjam 2 juta buat modal usaha 15 Juli 2025",
+    "person": "Pak Joko",
+    "type": "piutang",
+    "amount": 2000000,
+    "title": "modal usaha",
+    "date": "2025-07-15",
+    "notes": null
+  },
+  {
+    "input": "Gua tf duluan tiket bioskop si Kevin 40.000",
+    "person": "Kevin",
+    "type": "piutang",
+    "amount": 40000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Clarissa bayar dulu makan siang aku 30rb",
+    "person": "Clarissa",
+    "type": "hutang",
+    "amount": 30000,
+    "title": "makan siang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bayarin parkir mobil buat Danu 10k",
+    "person": "Danu",
+    "type": "piutang",
+    "amount": 10000,
+    "title": "parkir mobil",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tadi siang Bayu nitip boba xing futang 38 ribu ke aku",
+    "person": "Bayu",
+    "type": "piutang",
+    "amount": 38000,
+    "title": "boba xing futang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua kepake duit kantor lewat Bimo 250rb",
+    "person": "Bimo",
+    "type": "hutang",
+    "amount": 250000,
+    "title": "duit kantor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Duit gua kepake sama Dimas 100 ribu kemarin",
+    "person": "Dimas",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "uang kepake",
+    "date": "kemarin",
+    "notes": null
+  },
+  {
+    "input": "Wahyu minjemin gw 500k buat beli kado",
+    "person": "Wahyu",
+    "type": "hutang",
+    "amount": 500000,
+    "title": "beli kado",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Pinjam saldo Gopay ke Cindy 50 ribu",
+    "person": "Cindy",
+    "type": "hutang",
+    "amount": 50000,
+    "title": "saldo Gopay",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Top up ShopeePay buat Tari 100k belum dibayar",
+    "person": "Tari",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "top up ShopeePay",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku minjem uang kas ke Rina 50.000",
+    "person": "Rina",
+    "type": "hutang",
+    "amount": 50000,
+    "title": "uang kas",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Rina pinjam uang kas ke aku 50.000",
+    "person": "Rina",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "uang kas",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Adit pinjam uang 18k buat beli kopi susu",
+    "person": "Adit",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku pinjam uang ke Bagas sebesar 15.000 buat nasi uduk",
+    "person": "Bagas",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua talangin Citra 100 ribu untuk bayar token listrik",
+    "person": "Citra",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Ditalangin sama Dion 25rb waktu beli buku tulis",
+    "person": "Dion",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Eka nitip beli sepatu futsal harganya 350k",
+    "person": "Eka",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nitip beli tiket bioskop ke Fauzan 45.000",
+    "person": "Fauzan",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Nombokin Gita beli martabak telor seharga 35rb",
+    "person": "Gita",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dinombokin Hafiz 70 ribu pas pesen jas hujan",
+    "person": "Hafiz",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bayarin bensin pertalite si Indah habis 50k",
+    "person": "Indah",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Joko bayarin makan malam gua total 60.000",
+    "person": "Joko",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Kiki ngutang 18k beli kopi susu tanggal 5 Maret 2026",
+    "person": "Kiki",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": "2026-03-05",
+    "notes": null
+  },
+  {
+    "input": "Aku utang ke Laras sejumlah 15.000 untuk nasi uduk kemarin 10 April 2026",
+    "person": "Laras",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": "2026-04-10",
+    "notes": null
+  },
+  {
+    "input": "Tolong catat piutang dari Mega 100 ribu keperluan token listrik",
+    "person": "Mega",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tolong catat hutang ke Naufal 25rb untuk buku tulis",
+    "person": "Naufal",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Oki pinjam uang 350k buat beli sepatu futsal",
+    "person": "Oki",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku pinjam uang ke Pras sebesar 45.000 buat tiket bioskop",
+    "person": "Pras",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua talangin Qori 35rb untuk bayar martabak telor",
+    "person": "Qori",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Ditalangin sama Rizal 70 ribu waktu beli jas hujan",
+    "person": "Rizal",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Salsa nitip beli bensin pertalite harganya 50k",
+    "person": "Salsa",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nitip beli makan malam ke Taufik 60.000",
+    "person": "Taufik",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Nombokin Ulfa beli kopi susu seharga 18k",
+    "person": "Ulfa",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dinombokin Vino 15.000 pas pesen nasi uduk",
+    "person": "Vino",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bayarin token listrik si Wulan habis 100 ribu",
+    "person": "Wulan",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Yoga bayarin buku tulis gua total 25rb",
+    "person": "Yoga",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Zahra ngutang 350k beli sepatu futsal tanggal 5 Maret 2026",
+    "person": "Zahra",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": "2026-03-05",
+    "notes": null
+  },
+  {
+    "input": "Aku utang ke Aldo sejumlah 45.000 untuk tiket bioskop kemarin 10 April 2026",
+    "person": "Aldo",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": "2026-04-10",
+    "notes": null
+  },
+  {
+    "input": "Tolong catat piutang dari Bella 35rb keperluan martabak telor",
+    "person": "Bella",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tolong catat hutang ke Candra 70 ribu untuk jas hujan",
+    "person": "Candra",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dina pinjam uang 50k buat beli bensin pertalite",
+    "person": "Dina",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku pinjam uang ke Erwin sebesar 60.000 buat makan malam",
+    "person": "Erwin",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua talangin Adit 18k untuk bayar kopi susu",
+    "person": "Adit",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Ditalangin sama Bagas 15.000 waktu beli nasi uduk",
+    "person": "Bagas",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Citra nitip beli token listrik harganya 100 ribu",
+    "person": "Citra",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nitip beli buku tulis ke Dion 25rb",
+    "person": "Dion",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Nombokin Eka beli sepatu futsal seharga 350k",
+    "person": "Eka",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dinombokin Fauzan 45.000 pas pesen tiket bioskop",
+    "person": "Fauzan",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bayarin martabak telor si Gita habis 35rb",
+    "person": "Gita",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Hafiz bayarin jas hujan gua total 70 ribu",
+    "person": "Hafiz",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Indah ngutang 50k beli bensin pertalite tanggal 5 Maret 2026",
+    "person": "Indah",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": "2026-03-05",
+    "notes": null
+  },
+  {
+    "input": "Aku utang ke Joko sejumlah 60.000 untuk makan malam kemarin 10 April 2026",
+    "person": "Joko",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": "2026-04-10",
+    "notes": null
+  },
+  {
+    "input": "Tolong catat piutang dari Kiki 18k keperluan kopi susu",
+    "person": "Kiki",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tolong catat hutang ke Laras 15.000 untuk nasi uduk",
+    "person": "Laras",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Mega pinjam uang 100 ribu buat beli token listrik",
+    "person": "Mega",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku pinjam uang ke Naufal sebesar 25rb buat buku tulis",
+    "person": "Naufal",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua talangin Oki 350k untuk bayar sepatu futsal",
+    "person": "Oki",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Ditalangin sama Pras 45.000 waktu beli tiket bioskop",
+    "person": "Pras",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Qori nitip beli martabak telor harganya 35rb",
+    "person": "Qori",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nitip beli jas hujan ke Rizal 70 ribu",
+    "person": "Rizal",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Nombokin Salsa beli bensin pertalite seharga 50k",
+    "person": "Salsa",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dinombokin Taufik 60.000 pas pesen makan malam",
+    "person": "Taufik",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bayarin kopi susu si Ulfa habis 18k",
+    "person": "Ulfa",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Vino bayarin nasi uduk gua total 15.000",
+    "person": "Vino",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Wulan ngutang 100 ribu beli token listrik tanggal 5 Maret 2026",
+    "person": "Wulan",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": "2026-03-05",
+    "notes": null
+  },
+  {
+    "input": "Aku utang ke Yoga sejumlah 25rb untuk buku tulis kemarin 10 April 2026",
+    "person": "Yoga",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": "2026-04-10",
+    "notes": null
+  },
+  {
+    "input": "Tolong catat piutang dari Zahra 350k keperluan sepatu futsal",
+    "person": "Zahra",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tolong catat hutang ke Aldo 45.000 untuk tiket bioskop",
+    "person": "Aldo",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bella pinjam uang 35rb buat beli martabak telor",
+    "person": "Bella",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku pinjam uang ke Candra sebesar 70 ribu buat jas hujan",
+    "person": "Candra",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua talangin Dina 50k untuk bayar bensin pertalite",
+    "person": "Dina",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Ditalangin sama Erwin 60.000 waktu beli makan malam",
+    "person": "Erwin",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Adit nitip beli kopi susu harganya 18k",
+    "person": "Adit",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nitip beli nasi uduk ke Bagas 15.000",
+    "person": "Bagas",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Nombokin Citra beli token listrik seharga 100 ribu",
+    "person": "Citra",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dinombokin Dion 25rb pas pesen buku tulis",
+    "person": "Dion",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bayarin sepatu futsal si Eka habis 350k",
+    "person": "Eka",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Fauzan bayarin tiket bioskop gua total 45.000",
+    "person": "Fauzan",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gita ngutang 35rb beli martabak telor tanggal 5 Maret 2026",
+    "person": "Gita",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": "2026-03-05",
+    "notes": null
+  },
+  {
+    "input": "Aku utang ke Hafiz sejumlah 70 ribu untuk jas hujan kemarin 10 April 2026",
+    "person": "Hafiz",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": "2026-04-10",
+    "notes": null
+  },
+  {
+    "input": "Tolong catat piutang dari Indah 50k keperluan bensin pertalite",
+    "person": "Indah",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tolong catat hutang ke Joko 60.000 untuk makan malam",
+    "person": "Joko",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Kiki pinjam uang 18k buat beli kopi susu",
+    "person": "Kiki",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku pinjam uang ke Laras sebesar 15.000 buat nasi uduk",
+    "person": "Laras",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua talangin Mega 100 ribu untuk bayar token listrik",
+    "person": "Mega",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Ditalangin sama Naufal 25rb waktu beli buku tulis",
+    "person": "Naufal",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Oki nitip beli sepatu futsal harganya 350k",
+    "person": "Oki",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nitip beli tiket bioskop ke Pras 45.000",
+    "person": "Pras",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Nombokin Qori beli martabak telor seharga 35rb",
+    "person": "Qori",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dinombokin Rizal 70 ribu pas pesen jas hujan",
+    "person": "Rizal",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bayarin bensin pertalite si Salsa habis 50k",
+    "person": "Salsa",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Taufik bayarin makan malam gua total 60.000",
+    "person": "Taufik",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Ulfa ngutang 18k beli kopi susu tanggal 5 Maret 2026",
+    "person": "Ulfa",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": "2026-03-05",
+    "notes": null
+  },
+  {
+    "input": "Aku utang ke Vino sejumlah 15.000 untuk nasi uduk kemarin 10 April 2026",
+    "person": "Vino",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": "2026-04-10",
+    "notes": null
+  },
+  {
+    "input": "Tolong catat piutang dari Wulan 100 ribu keperluan token listrik",
+    "person": "Wulan",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tolong catat hutang ke Yoga 25rb untuk buku tulis",
+    "person": "Yoga",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Zahra pinjam uang 350k buat beli sepatu futsal",
+    "person": "Zahra",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku pinjam uang ke Aldo sebesar 45.000 buat tiket bioskop",
+    "person": "Aldo",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua talangin Bella 35rb untuk bayar martabak telor",
+    "person": "Bella",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Ditalangin sama Candra 70 ribu waktu beli jas hujan",
+    "person": "Candra",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dina nitip beli bensin pertalite harganya 50k",
+    "person": "Dina",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nitip beli makan malam ke Erwin 60.000",
+    "person": "Erwin",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Nombokin Adit beli kopi susu seharga 18k",
+    "person": "Adit",
+    "type": "piutang",
+    "amount": 18000,
+    "title": "kopi susu",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dinombokin Bagas 15.000 pas pesen nasi uduk",
+    "person": "Bagas",
+    "type": "hutang",
+    "amount": 15000,
+    "title": "nasi uduk",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Bayarin token listrik si Citra habis 100 ribu",
+    "person": "Citra",
+    "type": "piutang",
+    "amount": 100000,
+    "title": "token listrik",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Dion bayarin buku tulis gua total 25rb",
+    "person": "Dion",
+    "type": "hutang",
+    "amount": 25000,
+    "title": "buku tulis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Eka ngutang 350k beli sepatu futsal tanggal 5 Maret 2026",
+    "person": "Eka",
+    "type": "piutang",
+    "amount": 350000,
+    "title": "sepatu futsal",
+    "date": "2026-03-05",
+    "notes": null
+  },
+  {
+    "input": "Aku utang ke Fauzan sejumlah 45.000 untuk tiket bioskop kemarin 10 April 2026",
+    "person": "Fauzan",
+    "type": "hutang",
+    "amount": 45000,
+    "title": "tiket bioskop",
+    "date": "2026-04-10",
+    "notes": null
+  },
+  {
+    "input": "Tolong catat piutang dari Gita 35rb keperluan martabak telor",
+    "person": "Gita",
+    "type": "piutang",
+    "amount": 35000,
+    "title": "martabak telor",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Tolong catat hutang ke Hafiz 70 ribu untuk jas hujan",
+    "person": "Hafiz",
+    "type": "hutang",
+    "amount": 70000,
+    "title": "jas hujan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Indah pinjam uang 50k buat beli bensin pertalite",
+    "person": "Indah",
+    "type": "piutang",
+    "amount": 50000,
+    "title": "bensin pertalite",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku pinjam uang ke Joko sebesar 60.000 buat makan malam",
+    "person": "Joko",
+    "type": "hutang",
+    "amount": 60000,
+    "title": "makan malam",
+    "date": null,
+    "notes": null
+  }
+]
