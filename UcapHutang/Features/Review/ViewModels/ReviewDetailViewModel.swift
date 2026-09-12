@@ -132,7 +132,7 @@ final class ReviewDetailViewModel {
 
     func deleteDraft() async {
         if let repository {
-            try? await repository.discardDraft(id: draftID)
+            try? await repository.deleteDraft(id: draftID)
         }
         didFinish = true
     }

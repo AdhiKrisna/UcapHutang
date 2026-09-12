@@ -48,7 +48,8 @@ final class PersonLedgerDetailViewModel {
             displayName: latestName,
             balance: currentEntries.reduce(Int64(0)) { $0 + $1.balanceDelta },
             entryCount: currentEntries.count,
-            lastActivity: currentEntries.first?.date ?? person.lastActivity
+            lastActivity: currentEntries.first?.date ?? person.lastActivity,
+            contactIdentifier: currentEntries.lazy.compactMap(\.contactIdentifier).first
         )
     }
 }

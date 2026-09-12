@@ -75,7 +75,8 @@ final class LedgerListViewModel {
                 displayName: latest.personName,
                 balance: values.reduce(0) { $0 + $1.balanceDelta },
                 entryCount: values.count,
-                lastActivity: latest.date
+                lastActivity: latest.date,
+                contactIdentifier: values.lazy.compactMap(\.contactIdentifier).first
             )
         }
         .sorted { $0.lastActivity > $1.lastActivity }

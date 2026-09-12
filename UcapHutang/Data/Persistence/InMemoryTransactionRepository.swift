@@ -15,6 +15,10 @@ actor InMemoryTransactionRepository: TransactionRepository {
             .sorted { $0.createdAt > $1.createdAt }
     }
 
+    func pendingDraftCount() -> Int {
+        drafts.values.filter { $0.status == .needsReview }.count
+    }
+
     func draft(id: UUID) -> TransactionDraft? { drafts[id] }
 
     func saveDraft(_ draft: TransactionDraft) {
@@ -22,10 +26,8 @@ actor InMemoryTransactionRepository: TransactionRepository {
         notifyChange()
     }
 
-    func discardDraft(id: UUID) {
-        guard var draft = drafts[id] else { return }
-        draft.status = .discarded
-        drafts[id] = draft
+    func deleteDraft(id: UUID) {
+        guard drafts.removeValue(forKey: id) != nil else { return }
         notifyChange()
     }
 
@@ -58,9 +60,31 @@ actor InMemoryTransactionRepository: TransactionRepository {
 
     func ledgerEntries() -> [LedgerEntry] { entries.sorted { $0.date > $1.date } }
 
+    func linkedContactIdentifiers() -> [String] {
+        Array(Set(entries.compactMap(\.contactIdentifier))).sorted()
+    }
+
+    func linkPerson(personID: String, to contact: ContactRef) throws {
+        guard entries.contains(where: { $0.personID == personID }) else {
+            throw RepositoryError.personNotFound
+        }
+        for index in entries.indices
+        where entries[index].personID == personID || entries[index].personID == contact.identifier {
+            entries[index].personID = contact.identifier
+            entries[index].personName = contact.displayName
+            entries[index].contactIdentifier = contact.identifier
+        }
+        notifyChange()
+    }
+
     func recordPayment(for person: PersonLedgerSummary, amount: Int64, date: Date, notes: String?) throws {
         guard amount > 0 else { throw RepositoryError.invalidAmount }
-        let latestBalance = entries.filter { $0.personID == person.id }.reduce(Int64(0)) { $0 + $1.balanceDelta }
+        let personEntries = entries.filter { $0.personID == person.id }
+        let contactIdentifier = personEntries.lazy.compactMap(\.contactIdentifier).first
+        guard personEntries.isEmpty || contactIdentifier != nil else {
+            throw RepositoryError.personNotLinked
+        }
+        let latestBalance = personEntries.reduce(Int64(0)) { $0 + $1.balanceDelta }
         guard latestBalance != 0 else { throw RepositoryError.noOutstandingBalance }
         guard amount <= abs(latestBalance) else { throw RepositoryError.paymentExceedsBalance }
         let delta = latestBalance > 0 ? -amount : amount
@@ -71,7 +95,8 @@ actor InMemoryTransactionRepository: TransactionRepository {
             balanceDelta: delta,
             date: date,
             title: "Bayar",
-            notes: notes
+            notes: notes,
+            contactIdentifier: contactIdentifier
         ))
         notifyChange()
     }
@@ -91,7 +116,8 @@ actor InMemoryTransactionRepository: TransactionRepository {
             date: draft.transactionDate,
             title: draft.title,
             notes: draft.notes,
-            sourceDraftID: draft.id
+            sourceDraftID: draft.id,
+            contactIdentifier: participant.contactIdentifier
         )
     }
 }

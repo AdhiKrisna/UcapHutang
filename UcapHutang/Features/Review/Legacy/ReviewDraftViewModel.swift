@@ -188,7 +188,7 @@ final class ReviewDraftViewModel: ObservableObject {
 
     func discard() async {
         do {
-            try await repository.discardDraft(id: draftID)
+            try await repository.deleteDraft(id: draftID)
             didFinish = true
         } catch {
             errorMessage = friendlyMessage(for: error)

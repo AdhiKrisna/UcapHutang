@@ -33,7 +33,6 @@ enum TransactionType: String, Codable, CaseIterable, Sendable {
 enum DraftStatus: String, Codable, Sendable {
     case needsReview
     case confirmed
-    case discarded
 }
 
 enum SplitMethod: String, Codable, CaseIterable, Sendable {
