@@ -83,6 +83,9 @@ All decisions below were made explicitly by the product owner on 2026-09-12.
 | Primary button color | System prominent style tinted `.primary` (black in Light, white in Dark). |
 | Review / Riwayat alert copy | Approved as written in §8.1, §8.3–8.5 and §9 (Periksa Lagi, Data Belum Bisa Disimpan, Catatan Belum Bisa Dihapus, Orang ini sudah ada di catatan., Belum Bisa Menghubungkan, Cari kontak, card VoiceOver labels). |
 | Reminder button color | Asset `ReminderButtonBackground`: Light `#FFF5E0`, Dark `#3A3222`. |
+| Reminder notification sound | **Silent**: permission is requested with `.alert` only and the notification content has no sound. |
+| Colored monetary amounts (contrast) | Amounts use the primary text color; green/red stay on arrow icons, status dots, and labels. |
+| Colored labels and markers (contrast) | **Kept colored** by product decision: the "Piutang"/"Utang" summary labels, the balance status tag ("Dia berutang padamu"/"Kamu berutang padanya"), and "Wajib dihubungkan" keep system green/red/orange even though small text is below 4.5:1 in Light. Meaning is never carried by color alone (text and icons accompany it). |
 | "Ingatkan lewat iMessage" label | Renamed to **"Ingatkan lewat Pesan"**. |
 | Linked contact later deleted from the iPhone | **Still treated as linked**; the stored name snapshot is shown. |
 | Legacy `discarded` drafts | **Purged during the Schema V2 migration**; the `discarded` status is removed from code. |
@@ -439,7 +442,7 @@ protocol VoiceCapturing: Sendable {               // Domain/Protocols — what C
 
 final class VoiceCapturePipeline: VoiceCapturing { // Services/Capture
     // 1) extraction.extract  2) DraftMapper.makeDraft  3) repository.saveDraft
-    // 4) reminderScheduler.sync() — added in P6
+    // The reminder re-sync is triggered by the repository-change notification in RootTabView (§10.2), not here.
 }
 ```
 
@@ -570,12 +573,12 @@ protocol ReminderScheduling: Sendable {
 }
 ```
 
-`ReviewReminderScheduler` wraps `UNUserNotificationCenter` behind a small protocol (`NotificationCenterClient`) so it can be unit-tested with a fake.
+`ReviewReminderScheduler` wraps `UNUserNotificationCenter` behind a small protocol (`NotificationCenterClient`) so it can be unit-tested with a fake. Permission is requested with `[.alert]` only (silent reminders).
 
 `sync()`:
 
 1. Remove the pending request with identifier `review-reminder`.
-2. If `settings.isEnabled && access == .authorized && pendingDraftCount > 0`: add a request with `UNCalendarNotificationTrigger(dateMatching: DateComponents(hour:, minute:), repeats: true)`.
+2. If `settings.isEnabled && access == .authorized && pendingDraftCount > 0`: add a request with `UNCalendarNotificationTrigger(dateMatching: DateComponents(hour:, minute:), repeats: true)`. The content has no sound.
    - Title: "Ada catatan yang perlu ditinjau"
    - Body: "Kamu punya \(count) catatan yang belum disimpan ke Riwayat."
    - `userInfo["destination"] = "review"`.
@@ -609,12 +612,12 @@ Known limitation (documented): the count in the body is the count at the last sy
 
 ## 11. HIG audit (all screens)
 
-Current estimate: **5/10** on the HIG quick diagnostic (safe areas OK; Dark Mode, Dynamic Type, touch targets, VoiceOver and native-idiom points lost). Target: **10/10**.
+Current estimate: **5/10** on the HIG quick diagnostic (safe areas OK; Dark Mode, Dynamic Type, touch targets, VoiceOver and native-idiom points lost). Target: **10/10** on the HIG quick diagnostic, with one accepted exception decided by the product owner: the colored small labels listed in §3 stay below 4.5:1 contrast in Light.
 
 | Area | Current problem (evidence) | Required fix |
 |------|----------------------------|--------------|
 | Typography | Hard-coded sizes: `.system(size: 26, …)` in `Components.swift:69`, `LedgerListView.swift:19`; `.system(size: 32, …)` in `PersonLedgerDetailView.swift:38`; `.system(size: 9, …)` in `DraftCardView.swift:92`; `.system(size: 34, …)` in `CatatView.swift:96` | Semantic text styles; `@ScaledMetric` for custom sizes (avatars, record control). |
-| Color / Dark Mode | `Color(red: 1.0, green: 0.96, blue: 0.88)` in `PersonLedgerDetailView.swift:53`; `.white` on accent in `ContactPickerSheet.swift:52`; raw `Color.green/.red` | Semantic colors only, routed through `AppColors`. The reminder button background becomes asset color **`ReminderButtonBackground`** (Light `#FFF5E0`, Dark `#3A3222`) exposed as `AppColors.reminderButtonBackground`. |
+| Color / Dark Mode | `Color(red: 1.0, green: 0.96, blue: 0.88)` in `PersonLedgerDetailView.swift:53`; `.white` on accent in `ContactPickerSheet.swift:52`; raw `Color.green/.red` | Semantic colors only, routed through `AppColors`. The reminder button background becomes asset color **`ReminderButtonBackground`** (Light `#FFF5E0`, Dark `#3A3222`) exposed as `AppColors.reminderButtonBackground`. Monetary amounts use `.primary`; green/red stay on arrow icons, status dots, and labels. |
 | Navigation | Custom chevron back buttons: `DraftReviewView.swift:183-189`, `ReviewDraftView.swift:76-101`, `DraftContactPickerSheet.swift:104-110` | System back; sheets use text "Batal"/"Selesai"/"Tutup". |
 | Tab bar | `.tabItem` in `RootTabView.swift`; Draft tab icon `exclamationmark.triangle` implies an error | `Tab` API with `.badge`; tabs **Review** (`doc.badge.clock`, formerly "Draft"), **Catat** (`mic.fill`, unchanged), **Riwayat** (`book.closed`, unchanged). |
 | Touch targets | Card buttons with 6 pt vertical padding (`SmartContactCardView.swift:45-48,71-74`); filter buttons 38 pt (`Components.swift:23`) | ≥ 44×44 pt. |
@@ -691,6 +694,6 @@ One implementation plan per phase, executed in order. Each phase ends with a gre
 8. With notifications allowed and at least one draft, exactly one repeating notification is scheduled at the configured time (default 20:00); none when Draft is empty or reminders are off.
 9. The notification primer appears once on first launch, explains the 20:00 default and that it can be changed.
 10. Folder structure matches §5.2; ViewModels use `@Observable` and import no system frameworks other than `Foundation`/`Observation`.
-11. All screens pass the HIG checks in §11.
+11. All screens pass the HIG checks in §11 (with the accepted colored-label contrast exception in §3).
 12. `xcodebuild test` passes after every phase.
 13. Closing Review without saving keeps the user's edits in the draft and never writes to Riwayat.
