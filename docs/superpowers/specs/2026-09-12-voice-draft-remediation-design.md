@@ -15,16 +15,16 @@
    1. Speech → text with `SFSpeechRecognizer` (`id-ID`).
    2. Text → structured output with the local LLM (Qwen3-0.6B-4bit via MLX).
    3. Structured output → `TransactionDraft` → persisted with SwiftData.
-3. The Catat sheet closes and the user is told the result is in **Draft**. The user is **not** taken to Review.
+3. The Catat sheet closes and the user is told the result is in the **Review** tab (formerly "Draft"). The user is **not** taken to the review form.
 4. Every day at a **user-chosen time** (default 20:00), while at least one draft is pending, a local notification reminds the user to check drafts.
-5. The user opens a draft from the **Draft** tab, completes it (every person **must be linked to an iPhone contact**), and taps **Simpan Catatan**.
+5. The user opens a draft from the **Review** tab, completes it (every person **must be linked to an iPhone contact**), and taps **Simpan Catatan**.
 6. A valid draft becomes confirmed ledger entries shown in **Riwayat** (the "catatan" menu).
 
 ## 2. Bug being fixed
 
 > In Catat, tapping "Simpan Catatan" shows the "lengkapi data" alert, but the data is still saved to history with a person who is not linked to a contact.
 
-**Required behavior:** a draft can only be confirmed when **every** participant is linked to an iPhone contact (`contactIdentifier != nil`). When it is not, nothing is written to the ledger; the draft stays in the Draft tab.
+**Required behavior:** a draft can only be confirmed when **every** participant is linked to an iPhone contact (`contactIdentifier != nil`). When it is not, nothing is written to the ledger; the draft stays in the Review tab.
 
 **Root causes found in code:**
 
@@ -44,7 +44,7 @@ All decisions below were made explicitly by the product owner on 2026-09-12.
 
 | Topic | Decision |
 |-------|----------|
-| Draft after failed save | Stays in the Draft tab. Only confirmation into Riwayat is blocked. |
+| Draft after failed save | Stays in the Review tab (formerly "Draft"). Only confirmation into Riwayat is blocked. |
 | Split Bill contacts | **All** participants must be linked. |
 | Contact source | **iPhone Contacts only.** No "create new contact", no app-local people. |
 | "Catatan" menu | The **Riwayat** tab (`Features/Ledger` today). |
@@ -52,12 +52,12 @@ All decisions below were made explicitly by the product owner on 2026-09-12.
 | When to ask Contacts permission | When the user taps **Hubungkan** (just-in-time). |
 | Existing unlinked people in Riwayat | **Must be linked.** Badge on the person, "Catat Bayar" and "Ingatkan" blocked until linked. |
 | Linking to a contact that already has history | **Merge with confirmation**; balances add up. |
-| After Catat processing | Close the sheet + tell the user it is in Draft. |
+| After Catat processing | Close the sheet + tell the user it is in Review. |
 | Reminder timing | **User-chosen time**, default **20:00**, active immediately once notification permission is granted; the user is told the time can be changed. |
-| Reminder settings location | New **Pengaturan** screen opened from a **gear button in the Draft tab** toolbar. |
+| Reminder settings location | New **Pengaturan** screen opened from a **gear button in the Review tab** toolbar. |
 | Notification permission timing | **First app launch**, preceded by an explanation (pre-permission) screen. |
 | Reminder repetition | **Daily** at the chosen time **while drafts exist**; stops when Draft is empty. |
-| Review design source of truth | The **Draft-tab design** (`DraftReviewView`, `SmartContactCardView`, `DraftContactPickerSheet`). |
+| Review design source of truth | The **Draft-tab design** (`DraftReviewView`, `SmartContactCardView`, `DraftContactPickerSheet`). These types are renamed to `Review*` (§5.3). |
 | Auto-link | **Never automatic.** A single matching contact is shown as a suggestion that the user must confirm. |
 | Editable in Review | Waktu, Nominal, Deskripsi, Jenis, people (add/remove/change), per-person amount for Split Bill (equal or custom). |
 | Transcript / extraction warnings in Review | **Not shown** (still stored as evidence). |
@@ -65,9 +65,13 @@ All decisions below were made explicitly by the product owner on 2026-09-12.
 | Split "Custom" | `total = Σ friends' shares`; Nominal is read-only; the user's share is Rp0; the toggle is hidden. |
 | Rounding remainder | Given to friends in list order (current `SplitCalculationEngine` behavior). |
 | "Hapus catatan ini" | **Permanent delete** (draft + participants). |
-| Closing Review without saving | Edits are **auto-saved back to the draft** (it stays in Draft); no confirmation dialog. |
+| Closing Review without saving | Edits are **auto-saved back to the draft** (it stays in Review); no confirmation dialog. |
 | Reminder while the app is open | **No banner**; delivered to Notification Center only. |
-| Draft tab icon | `doc.badge.clock`. |
+| Former "Draft" tab | Renamed **"Review"**, icon `doc.badge.clock`; every user-facing "Draft" text is replaced (§7.4, §8.1, §10). |
+| Draft/Review feature folders | The content of `Features/Draft` moves into `Features/Review` and replaces it; `Features/Draft` is deleted. |
+| Feature type names | Feature-layer `Draft*` types are renamed to `Review*` (§5.3). Domain/data names (`TransactionDraft`, `DraftStatus`, `DraftValidator`, `DraftMapper`, repository methods) do not change. |
+| Old Catat-path Review files | Moved to `Features/Review/Legacy/` in P1 (so P1 changes no behavior), deleted in P3. |
+| Uncommitted change in `QwenOutputDecoder.swift` | Owned by the developer. Agents never touch it; P1 starts only after the developer has committed or discarded it. |
 | "Ingatkan lewat iMessage" label | Renamed to **"Ingatkan lewat Pesan"**. |
 | Linked contact later deleted from the iPhone | **Still treated as linked**; the stored name snapshot is shown. |
 | Legacy `discarded` drafts | **Purged during the Schema V2 migration**; the `discarded` status is removed from code. |
@@ -97,7 +101,7 @@ All decisions below were made explicitly by the product owner on 2026-09-12.
 - Showing transcripts or model warnings in Review.
 - Switching a draft between Personal and Split Bill in Review (the capture flow stays authoritative).
 - Writing to the iPhone Contacts database.
-- App icon badge, swipe-to-delete on the Draft list, export/import, iCloud sync.
+- App icon badge, swipe-to-delete on the Review list, export/import, iCloud sync.
 - Pre-filling the SMS recipient from the linked contact in "Ingatkan".
 - UI test target (not present today; manual device QA covers integration).
 
@@ -149,17 +153,17 @@ UcapHutang/
 │                                       TransactionDateResolver, QwenDraftExtractionService)
 │   ├── Capture/                       (stage 3: DraftMapper.swift, VoiceCapturePipeline.swift)
 │   ├── Contacts/                      (SystemContactsProvider.swift)
-│   └── Notifications/                 (DraftReminderScheduler.swift)
+│   └── Notifications/                 (ReviewReminderScheduler.swift)
 ├── Resources/Models/Qwen3-0.6B-4bit/  (unchanged, git-ignored)
 └── Features/
     ├── Catat/       Views/ ViewModels/ Components/
-    ├── Draft/       Views/ ViewModels/ Components/ Models/
+    ├── Review/      Views/ ViewModels/ Components/ Models/   (+ Legacy/ only between P1 and P3)
     ├── Riwayat/     Views/ ViewModels/ Components/ Models/
     ├── Pengaturan/  Views/ ViewModels/
     └── Onboarding/  Views/ ViewModels/
 ```
 
-A feature only gets a subfolder when it has at least one file for it. `Models/` inside a feature holds **UI-only** models (e.g. `DraftItemUIModel`); domain models live in `Domain/Models`.
+A feature only gets a subfolder when it has at least one file for it. `Models/` inside a feature holds **UI-only** models (e.g. `ReviewItemUIModel`); domain models live in `Domain/Models`.
 
 ### 5.3 File mapping from today
 
@@ -175,11 +179,14 @@ A feature only gets a subfolder when it has at least one file for it. `Models/` 
 | `Services/AI/DraftExtractionService.swift` | split into `QwenPromptBuilder.swift`, `QwenDraftExtractionService.swift` (stage 2) and `Services/Capture/DraftMapper.swift` (stage 3) |
 | `Services/Contacts/ContactResolutionService.swift` | `Services/Contacts/SystemContactsProvider.swift` implementing `ContactsProviding` (no singleton) |
 | `Features/Catat/*.swift` | `Features/Catat/Views/`, `Features/Catat/ViewModels/` |
-| `Features/Draft/DraftListView.swift` | `Features/Draft/Views/` |
-| `Features/Review/*` | **deleted** once the unified Review exists |
+| `Features/Draft/**` | `Features/Review/**` (replaces the old folder; `DraftListView.swift` goes to `Views/`) with these renames: `DraftListView`→`ReviewListView`, `DraftListViewModel`→`ReviewListViewModel`, `DraftReviewView`→`ReviewDetailView`, `DraftReviewViewModel`→`ReviewDetailViewModel`, `DraftCardView`→`ReviewCardView`, `DraftContactPickerSheet`→`ReviewContactPickerSheet`, `DraftContactPickerViewModel`→`ReviewContactPickerViewModel`, `DraftUIModels.swift`→`ReviewUIModels.swift` (`DraftItemUIModel`→`ReviewItemUIModel`, `DraftParticipantUIModel`→`ReviewParticipantUIModel`, `DraftFilterType`→`ReviewFilterType`, `DraftMockData`→`ReviewMockData` until P3). `SmartContactCardView` and `SplitParticipantRow` keep their names. |
+| `Features/Review/ReviewDraftView.swift`, `ReviewDraftViewModel.swift`, `ContactPickerSheet.swift` (old Catat-path Review) | `Features/Review/Legacy/` in P1; **deleted** in P3 |
+| `AppTab.draft` | `AppTab.review` |
 | `Features/Ledger/**` | `Features/Riwayat/**` (type names may keep `Ledger` prefix; folder is renamed) |
 
-**Delete:** unused `*ViewModelProtocol` protocols, `import Combine` in ViewModels, `extension Int: @retroactive Identifiable` (`Features/Review/ReviewDraftView.swift:468`), dead view builders in `ReviewDraftView`, `DraftMockData` from production code (move to `#Preview` blocks or test fixtures), `PreviewData` in `AppContainer.swift` if unused, and every local `formatRupiah(_:)` duplicate in favor of `Int64.rupiahFormatted`.
+**Delete in P1:** unused `*ViewModelProtocol` protocols, `import Combine` in ViewModels, `PreviewData` in `AppContainer.swift` if unused, and every local `formatRupiah(_:)` duplicate in favor of `Int64.rupiahFormatted`.
+
+**Delete in P3 (together with `Features/Review/Legacy/`):** `extension Int: @retroactive Identifiable` (today `Features/Review/ReviewDraftView.swift:468`), the dead view builders in `ReviewDraftView`, and `ReviewMockData` from production code (sample values move into `#Preview` blocks or test fixtures). These stay until P3 because the legacy screen and the mock-backed review form still use them, and P1 must not change behavior.
 
 ### 5.4 Composition root and injection
 
@@ -334,7 +341,7 @@ static func shares(total: Int64, friendCount: Int, includesUser: Bool) -> [Int64
 static func customTotal(_ shares: [Int64]) -> Int64?   // nil on overflow
 ```
 
-Used by `DraftMapper`, `DraftReviewViewModel`, and `DraftValidator`. No other code divides totals.
+Used by `DraftMapper`, `ReviewDetailViewModel`, and `DraftValidator`. No other code divides totals.
 
 ## 7. Voice pipeline (three stages)
 
@@ -410,21 +417,21 @@ Re-entrancy and cancellation guards currently in `CatatViewModel` (active reques
 - On success:
   1. Dismiss the Catat sheet.
   2. `UINotificationFeedbackGenerator().notificationOccurred(.success)` (via `.sensoryFeedback(.success, trigger:)`).
-  3. Post an accessibility announcement: "Tersimpan ke Draft".
-  4. Show a non-blocking banner at the top of the Catat tab: **"Tersimpan ke Draft"** with a **"Lihat"** button (switches `AppRouter` to the Draft tab). Auto-hides after 4 seconds; stays while VoiceOver focus is on it. Respects Reduce Motion (fade instead of slide).
-  5. The Draft tab shows `.badge(pendingDraftCount)`.
+  3. Post an accessibility announcement: "Tersimpan ke Review".
+  4. Show a non-blocking banner at the top of the Catat tab: **"Tersimpan ke Review"** with a **"Lihat"** button (switches `AppRouter` to the Review tab). Auto-hides after 4 seconds; stays while VoiceOver focus is on it. Respects Reduce Motion (fade instead of slide).
+  5. The Review tab shows `.badge(pendingDraftCount)`.
 - The user stays on the Catat tab.
 
 ## 8. Review (single screen, Draft-tab design)
 
-Location: `Features/Draft/Views/DraftReviewView.swift`, `Features/Draft/ViewModels/DraftReviewViewModel.swift`, `Features/Draft/Components/SmartContactCardView.swift`, `Features/Draft/Views/DraftContactPickerSheet.swift`, `Features/Draft/ViewModels/DraftContactPickerViewModel.swift`.
+Location: `Features/Review/Views/ReviewDetailView.swift`, `Features/Review/ViewModels/ReviewDetailViewModel.swift`, `Features/Review/Components/SmartContactCardView.swift`, `Features/Review/Views/ReviewContactPickerSheet.swift`, `Features/Review/ViewModels/ReviewContactPickerViewModel.swift`.
 
-Entry points: tapping a card in the Draft tab (and, indirectly, a reminder notification that opens the Draft tab). Presented as a sheet with its own `NavigationStack` (as today in `RootTabView`).
+Entry points: tapping a card in the Review tab (and, indirectly, a reminder notification that opens the Review tab). Presented as a sheet with its own `NavigationStack` (as today in `RootTabView`).
 
 ### 8.1 Loading
 
 - `init(draftID:)` → `.task { await viewModel.load() }` → loads the draft from the repository. **No default/mock values.**
-- States: loading (`ProgressView`), loaded, not found (`ContentUnavailableView` + "Tutup").
+- States: loading (`ProgressView`), loaded, not found (`ContentUnavailableView` with the text "Catatan ini tidak ditemukan." + "Tutup").
 - After load, compute contact suggestions (8.3).
 
 ### 8.2 Fields
@@ -460,7 +467,7 @@ A summary row for Split shows friends' total, the user's share (equal + ON only)
 2. `contacts.access()`:
    - `.notDetermined` → `await contacts.requestAccess()`; re-evaluate.
    - `.denied` (includes `restricted` and `limited`) → alert **"Akses Kontak Diperlukan"**, message "UcapHutang perlu akses penuh ke Kontak agar setiap catatan terhubung ke orang yang tepat.", buttons **"Buka Pengaturan"** / **"Nanti"**. Stop.
-   - `.authorized` → present `DraftContactPickerSheet`.
+   - `.authorized` → present `ReviewContactPickerSheet`.
 3. Picker (native `List` + `.searchable`, prefilled with the participant's name when relinking):
    - Section **"Kontak yang pernah dicatat"**: contacts whose identifiers are in `repository.linkedContactIdentifiers()`, resolved through `ContactsProviding`; missing contacts are skipped.
    - Section **"Kontak di iPhone"**: search results from `ContactsProviding`.
@@ -478,7 +485,7 @@ A summary row for Split shows friends' total, the user's share (equal + ON only)
   4. Repository error → alert with the error's Indonesian message; draft unchanged.
   - The button is disabled while saving (with a `ProgressView`).
 - **Hapus catatan ini** (destructive text button) → `confirmationDialog` "Hapus catatan ini?" / "Catatan dan transkripnya akan dihapus permanen." / **Hapus** (destructive) / **Batal** → `repository.deleteDraft(id:)` → dismiss.
-- **Closing without saving** (toolbar **"Tutup"** in the cancellation placement, or swipe-down): if the ViewModel is dirty, its edits are written back with `repository.saveDraft(draft)` — status stays `needsReview`, no validation, no ledger write — and the Draft list refreshes. No confirmation dialog. `DraftReviewView` calls `viewModel.persistEditsIfNeeded()` from `.onDisappear` inside a `Task` (the task retains the ViewModel until the write finishes). The method is idempotent and a no-op after a successful save or delete, or when nothing changed.
+- **Closing without saving** (toolbar **"Tutup"** in the cancellation placement, or swipe-down): if the ViewModel is dirty, its edits are written back with `repository.saveDraft(draft)` — status stays `needsReview`, no validation, no ledger write — and the Review list refreshes. No confirmation dialog. `ReviewDetailView` calls `viewModel.persistEditsIfNeeded()` from `.onDisappear` inside a `Task` (the task retains the ViewModel until the write finishes). The method is idempotent and a no-op after a successful save or delete, or when nothing changed.
 
 ## 9. Riwayat (legacy unlinked people)
 
@@ -517,15 +524,15 @@ protocol ReminderScheduling: Sendable {
 }
 ```
 
-`DraftReminderScheduler` wraps `UNUserNotificationCenter` behind a small protocol (`NotificationCenterClient`) so it can be unit-tested with a fake.
+`ReviewReminderScheduler` wraps `UNUserNotificationCenter` behind a small protocol (`NotificationCenterClient`) so it can be unit-tested with a fake.
 
 `sync()`:
 
-1. Remove the pending request with identifier `draft-review-reminder`.
+1. Remove the pending request with identifier `review-reminder`.
 2. If `settings.isEnabled && access == .authorized && pendingDraftCount > 0`: add a request with `UNCalendarNotificationTrigger(dateMatching: DateComponents(hour:, minute:), repeats: true)`.
-   - Title: "Ada draft yang perlu dicek"
-   - Body: "Kamu punya \(count) draft yang belum disimpan ke Riwayat."
-   - `userInfo["destination"] = "draft"`.
+   - Title: "Ada catatan yang perlu ditinjau"
+   - Body: "Kamu punya \(count) catatan yang belum disimpan ke Riwayat."
+   - `userInfo["destination"] = "review"`.
 3. Otherwise leave nothing scheduled.
 
 Call `sync()` on: `.transactionRepositoryDidChange`, settings change, scene phase `.active`, and after the onboarding permission result.
@@ -536,19 +543,19 @@ Known limitation (documented): the count in the body is the count at the last sy
 
 - `AppDelegate` (`@UIApplicationDelegateAdaptor`) sets itself as `UNUserNotificationCenter.current().delegate`.
 - `willPresent` → `[.list]` (no banner while the app is in the foreground; the reminder still lands in Notification Center).
-- `didReceive` with `destination == "draft"` → `AppRouter.selectedTab = .draft`.
+- `didReceive` with `destination == "review"` → `AppRouter.selectedTab = .review`.
 
 ### 10.4 Onboarding (notification primer)
 
 - Shown once on launch when `hasSeenNotificationPrimer == false` and `access == .notDetermined`, as a `.fullScreenCover` over `RootTabView`.
-- Content: `bell.badge` symbol, title **"Pengingat Cek Draft"**, body **"Kami akan mengingatkanmu setiap hari pukul 20.00 untuk mengecek draft hasil rekaman. Jam pengingat bisa kamu ubah kapan saja di Pengaturan."**, primary **"Izinkan Notifikasi"** → system prompt, secondary **"Nanti Saja"** → no system prompt.
+- Content: `bell.badge` symbol, title **"Pengingat Review"**, body **"Kami akan mengingatkanmu setiap hari pukul 20.00 untuk meninjau catatan hasil rekaman. Jam pengingat bisa kamu ubah kapan saja di Pengaturan."**, primary **"Izinkan Notifikasi"** → system prompt, secondary **"Nanti Saja"** → no system prompt.
 - Either button sets `hasSeenNotificationPrimer = true`, dismisses, then calls `sync()`. It is never shown again at launch.
 
 ### 10.5 Pengaturan screen
 
-- Opened from a `gearshape` toolbar button (label "Pengaturan") in the Draft tab; presented as a sheet with `NavigationStack`, title "Pengaturan", "Selesai" confirmation button.
+- Opened from a `gearshape` toolbar button (label "Pengaturan") in the Review tab; presented as a sheet with `NavigationStack`, title "Pengaturan", "Selesai" confirmation button.
 - `Form`:
-  - Section **"Pengingat"**: `Toggle("Pengingat Cek Draft")`; `DatePicker("Jam", displayedComponents: .hourAndMinute)` (disabled when the toggle is off); footer "Kamu akan diingatkan setiap hari pada jam ini selama masih ada draft."
+  - Section **"Pengingat"**: `Toggle("Pengingat Review")`; `DatePicker("Jam", displayedComponents: .hourAndMinute)` (disabled when the toggle is off); footer "Kamu akan diingatkan setiap hari pada jam ini selama masih ada catatan yang perlu ditinjau."
   - Notification status row when not authorized:
     - `.notDetermined` → "Izinkan Notifikasi" button → `requestAccess()`.
     - `.denied` → "Notifikasi dimatikan untuk UcapHutang." + "Buka Pengaturan" button.
@@ -563,7 +570,7 @@ Current estimate: **5/10** on the HIG quick diagnostic (safe areas OK; Dark Mode
 | Typography | Hard-coded sizes: `.system(size: 26, …)` in `Components.swift:69`, `LedgerListView.swift:19`; `.system(size: 32, …)` in `PersonLedgerDetailView.swift:38`; `.system(size: 9, …)` in `DraftCardView.swift:92`; `.system(size: 34, …)` in `CatatView.swift:96` | Semantic text styles; `@ScaledMetric` for custom sizes (avatars, record control). |
 | Color / Dark Mode | `Color(red: 1.0, green: 0.96, blue: 0.88)` in `PersonLedgerDetailView.swift:53`; `.white` on accent in `ContactPickerSheet.swift:52`; raw `Color.green/.red` | Semantic colors only; add named colors with light/dark variants to the asset catalog if a brand tint is needed; route through `AppColors`. |
 | Navigation | Custom chevron back buttons: `DraftReviewView.swift:183-189`, `ReviewDraftView.swift:76-101`, `DraftContactPickerSheet.swift:104-110` | System back; sheets use text "Batal"/"Selesai"/"Tutup". |
-| Tab bar | `.tabItem` in `RootTabView.swift`; Draft tab icon `exclamationmark.triangle` implies an error | `Tab` API with `.badge`; icons `doc.badge.clock` (Draft), `mic.fill` (Catat, unchanged), `book.closed` (Riwayat, unchanged). |
+| Tab bar | `.tabItem` in `RootTabView.swift`; Draft tab icon `exclamationmark.triangle` implies an error | `Tab` API with `.badge`; tabs **Review** (`doc.badge.clock`, formerly "Draft"), **Catat** (`mic.fill`, unchanged), **Riwayat** (`book.closed`, unchanged). |
 | Touch targets | Card buttons with 6 pt vertical padding (`SmartContactCardView.swift:45-48,71-74`); filter buttons 38 pt (`Components.swift:23`) | ≥ 44×44 pt. |
 | Search | Custom floating field with a non-functional mic icon (`LedgerListView.swift:120-139`) | `.searchable(text:prompt:)`; remove the mic icon. |
 | Controls | Custom `Text` buttons with manual backgrounds for primary actions | `.buttonStyle(.borderedProminent)` / `.bordered` / plain text, `.controlSize(.large)` for primary. |
@@ -607,9 +614,9 @@ Each screen must be checked in Light, Dark, and the largest accessibility text s
   - Repositories (`InMemoryTransactionRepository` and `SwiftDataTransactionRepository` with `isStoredInMemoryOnly: true`): confirm with unlinked participant throws and writes no ledger entry (**regression test for the bug**); idempotent confirm; `deleteDraft` removes draft + participants; `pendingDraftCount`; `linkedContactIdentifiers`; `linkPerson` move + merge + name unification; `recordPayment` on unlinked throws.
   - Migration V1 → V2 on an on-disk temp store (§6.5).
   - ViewModels with fakes (`FakeContactsProvider`, `FakeReminderScheduler`, `FakeSpeechTranscriber`, `StubDraftExtractor`): Review load/no-mock, suggestion only on exactly one match and authorized access, denied access shows settings alert, save blocked with issues and no repository call, delete; closing a dirty Review calls `saveDraft` (never `confirmDraft`) and a clean one calls nothing; Catat success sets banner + triggers router badge; Riwayat merge dialog decision; Pengaturan persists and syncs; Onboarding sets flag.
-  - `DraftReminderScheduler` with `FakeNotificationCenterClient`: schedules only when enabled + authorized + count > 0; removes otherwise; trigger components match settings; repeats is `true`.
+  - `ReviewReminderScheduler` with `FakeNotificationCenterClient`: schedules only when enabled + authorized + count > 0; removes otherwise; trigger components match settings; repeats is `true`.
   - `QwenMigrationTests` keep passing.
-- Manual device QA checklist (in the final plan): on-device vs server speech notice, MLX inference, Contacts permission states (not determined / denied / limited / full), notification primer, reminder delivery at a time set 2 minutes ahead, notification tap → Draft tab, VoiceOver run-through of Catat → Draft → Review → Riwayat, Dark Mode, largest text size.
+- Manual device QA checklist (in the final plan): on-device vs server speech notice, MLX inference, Contacts permission states (not determined / denied / limited / full), notification primer, reminder delivery at a time set 2 minutes ahead, notification tap → Review tab, VoiceOver run-through of Catat → Review list → review form → Riwayat, Dark Mode, largest text size.
 
 ## 14. Delivery phases
 
@@ -618,9 +625,9 @@ One implementation plan per phase, executed in order. Each phase ends with a gre
 | Phase | Scope | Key exit criteria |
 |-------|-------|-------------------|
 | **P0** | Bug guard: `DraftValidator` requires `contactIdentifier`; regression tests on both repositories. | Confirming an unlinked draft throws and writes nothing. (Temporary: the mock Draft-tab Review silently fails to save until P3.) |
-| **P1** | Folder restructure (§5.2–5.3), `@Observable` migration, `Tab` API, dead-code/mock removal. **No behavior change.** | App builds, all tests green, no `ObservableObject`/`import Combine` in ViewModels, no files left in old folders. |
+| **P1** | **Precondition:** `UcapHutang/Core/Utilities/QwenOutputDecoder.swift` has no uncommitted changes (the developer resolves it first; the agent stops otherwise). Folder restructure (§5.2–5.3) incl. `Features/Draft` → `Features/Review` with `Review*` renames and the old Catat-path Review files → `Features/Review/Legacy/`; `@Observable` migration; `Tab` API with the "Review" tab label and `doc.badge.clock` icon; P1 deletions (§5.3). **No behavior change** apart from the tab label/icon. | App builds; all tests green; no `ObservableObject`, `@Published`, `@StateObject`, `@EnvironmentObject` or `import Combine` outside `Features/Review/Legacy/`; no files left in old folders; `project.pbxproj` unchanged. |
 | **P2** | Domain model changes (§6.1), `DraftValidationIssue`, split helper, `SchemaV1/V2` + migration plan, repository API (§6.4). | Migration test + repository tests green. |
-| **P3** | Unified Review (§8) incl. `ContactsProviding`, picker, permission flow; delete `Features/Review`. | ViewModel tests green; manual check of all card states. |
+| **P3** | Unified Review (§8) incl. `ContactsProviding`, picker, permission flow; delete `Features/Review/Legacy/`, `Int: @retroactive Identifiable`, and `ReviewMockData`. | ViewModel tests green; manual check of all card states. |
 | **P4** | Pipeline split (§7), `VoiceCapturePipeline`, Catat close + banner + badge, on-device speech. | Mapper/pipeline tests green; Qwen tests green. |
 | **P5** | Riwayat link/merge/blocking (§9). | Link/merge/payment-guard tests green. |
 | **P6** | Reminder scheduler, onboarding primer, Pengaturan, notification routing (§10). | Scheduler + settings tests green; device reminder check. |
@@ -629,12 +636,12 @@ One implementation plan per phase, executed in order. Each phase ends with a gre
 ## 15. Acceptance criteria
 
 1. No code path can create a ledger entry for a participant without `contactIdentifier`.
-2. After a failed save the draft is still in Draft and Riwayat is unchanged.
+2. After a failed save the draft is still in the Review tab and Riwayat is unchanged.
 3. Opening a draft shows its real stored values; there are no mock values in production code.
 4. Split Bill equal shares honor the "Saya ikut dihitung" toggle; custom total always equals the sum of friends' shares.
 5. "Hapus catatan ini" physically deletes the draft and its participants; legacy discarded drafts are gone after migration.
 6. Legacy unlinked people are labeled in Riwayat, cannot record payments or send reminders, and can be linked/merged with confirmation.
-7. After recording, the Catat sheet closes, the user is told the result is in Draft, and the Draft tab badge shows the pending count.
+7. After recording, the Catat sheet closes, the user is told the result is in Review, and the Review tab badge shows the pending count.
 8. With notifications allowed and at least one draft, exactly one repeating notification is scheduled at the configured time (default 20:00); none when Draft is empty or reminders are off.
 9. The notification primer appears once on first launch, explains the 20:00 default and that it can be changed.
 10. Folder structure matches §5.2; ViewModels use `@Observable` and import no system frameworks other than `Foundation`/`Observation`.
