@@ -1,13 +1,13 @@
 import SwiftUI
 
 struct SmartContactCardView: View {
-    let participant: DraftParticipantUIModel
+    let participant: ReviewParticipantUIModel
     var onConfirmTypo: (() -> Void)?
     var onRejectTypo: (() -> Void)?
     var onOpenPicker: (() -> Void)?
 
     init(
-        participant: DraftParticipantUIModel,
+        participant: ReviewParticipantUIModel,
         onConfirmTypo: (() -> Void)? = nil,
         onRejectTypo: (() -> Void)? = nil,
         onOpenPicker: (() -> Void)? = nil
@@ -18,7 +18,7 @@ struct SmartContactCardView: View {
         self.onOpenPicker = onOpenPicker
     }
 
-    public var body: some View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             switch participant.linkState {
             case .autoLinked:
@@ -135,7 +135,7 @@ struct SmartContactCardView: View {
     VStack(spacing: 16) {
         // State A
         SmartContactCardView(
-            participant: DraftParticipantUIModel(
+            participant: ReviewParticipantUIModel(
                 name: "Dito",
                 linkState: .autoLinked(matchedContactName: "Andito Rizkika")
             )
@@ -143,7 +143,7 @@ struct SmartContactCardView: View {
 
         // State B
         SmartContactCardView(
-            participant: DraftParticipantUIModel(
+            participant: ReviewParticipantUIModel(
                 name: "Dito Rizkaka",
                 linkState: .typoSuggestion(suggestedName: "Dito Rizkika", originalName: "Dito Rizkaka")
             )
@@ -151,7 +151,7 @@ struct SmartContactCardView: View {
 
         // State C
         SmartContactCardView(
-            participant: DraftParticipantUIModel(
+            participant: ReviewParticipantUIModel(
                 name: "Dito Rizkaka",
                 linkState: .unlinked
             )

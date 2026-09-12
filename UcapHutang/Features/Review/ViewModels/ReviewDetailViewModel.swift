@@ -1,47 +1,20 @@
-import SwiftUI
-import Combine
+import Foundation
+import Observation
 
-@MainActor
-protocol DraftReviewViewModelProtocol: ObservableObject {
-    var draftID: UUID { get }
-    var timeText: String { get set }
-    var transactionDate: Date { get set }
-    var nominal: Int64 { get set }
-    var formattedNominal: String { get }
-    var description: String { get set }
-    var transactionType: TransactionType { get set }
-    var participants: [DraftParticipantUIModel] { get set }
-    var isSaving: Bool { get }
-    var didFinish: Bool { get }
-    var errorMessage: String? { get set }
-    var showDeleteConfirmation: Bool { get set }
-    var activeContactPickerParticipantID: UUID? { get set }
-
-    func setTransactionType(_ type: TransactionType)
-    func confirmTypo(for participantID: UUID)
-    func rejectTypo(for participantID: UUID)
-    func openContactPicker(for participantID: UUID)
-    func addParticipant()
-    func removeParticipant(id: UUID)
-    func updateParticipantContact(id: UUID, contact: ContactUIModel)
-    func saveDraft() async
-    func deleteDraft() async
-}
-
-@MainActor
-final class DraftReviewViewModel: DraftReviewViewModelProtocol {
+@Observable
+final class ReviewDetailViewModel {
     let draftID: UUID
-    @Published var timeText: String = "Hari ini, 12:41"
-    @Published var transactionDate: Date = Date()
-    @Published var nominal: Int64 = 150_000
-    @Published var description: String = "Pinjam buat makan siang"
-    @Published var transactionType: TransactionType = .hutang
-    @Published var participants: [DraftParticipantUIModel] = []
-    @Published var isSaving: Bool = false
-    @Published var didFinish: Bool = false
-    @Published var errorMessage: String?
-    @Published var showDeleteConfirmation: Bool = false
-    @Published var activeContactPickerParticipantID: UUID?
+    var timeText: String = "Hari ini, 12:41"
+    var transactionDate: Date = Date()
+    var nominal: Int64 = 150_000
+    var description: String = "Pinjam buat makan siang"
+    var transactionType: TransactionType = .hutang
+    var participants: [ReviewParticipantUIModel] = []
+    var isSaving: Bool = false
+    var didFinish: Bool = false
+    var errorMessage: String?
+    var showDeleteConfirmation: Bool = false
+    var activeContactPickerParticipantID: UUID?
 
     private let repository: (any TransactionRepository)?
 
@@ -51,7 +24,7 @@ final class DraftReviewViewModel: DraftReviewViewModelProtocol {
         initialType: TransactionType = .hutang,
         initialNominal: Int64 = 150_000,
         initialDescription: String = "Pinjam buat makan siang",
-        initialParticipants: [DraftParticipantUIModel]? = nil
+        initialParticipants: [ReviewParticipantUIModel]? = nil
     ) {
         self.draftID = draftID
         self.repository = repository
@@ -64,7 +37,7 @@ final class DraftReviewViewModel: DraftReviewViewModelProtocol {
         } else {
             // Default mock data untuk slicing & preview: 1 orang "Dito" terhubung otomatis
             self.participants = [
-                DraftParticipantUIModel(
+                ReviewParticipantUIModel(
                     name: "Dito",
                     shareAmount: initialNominal,
                     linkState: .autoLinked(matchedContactName: "Andito Rizkika"),
@@ -103,7 +76,7 @@ final class DraftReviewViewModel: DraftReviewViewModelProtocol {
     }
 
     func addParticipant() {
-        let newParticipant = DraftParticipantUIModel(
+        let newParticipant = ReviewParticipantUIModel(
             name: "Orang Baru",
             shareAmount: 0,
             linkState: .unlinked

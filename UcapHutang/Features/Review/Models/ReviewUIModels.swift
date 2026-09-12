@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - Filter Enum
-enum DraftFilterType: String, CaseIterable, Identifiable, Sendable {
+enum ReviewFilterType: String, CaseIterable, Identifiable, Sendable {
     case all = "Semua"
     case hutang = "Utang"
     case piutang = "Piutang"
@@ -31,8 +31,8 @@ enum ContactLinkState: Equatable, Sendable {
     }
 }
 
-// MARK: - Draft Item UI Model
-struct DraftItemUIModel: Identifiable, Equatable, Sendable {
+// MARK: - Review Item UI Model
+struct ReviewItemUIModel: Identifiable, Equatable, Sendable {
     let id: UUID
     var type: TransactionType
     var prefix: String // "ke" atau "dari"
@@ -66,8 +66,8 @@ struct DraftItemUIModel: Identifiable, Equatable, Sendable {
     }
 }
 
-// MARK: - Draft Participant UI Model
-struct DraftParticipantUIModel: Identifiable, Equatable, Sendable {
+// MARK: - Review Participant UI Model
+struct ReviewParticipantUIModel: Identifiable, Equatable, Sendable {
     let id: UUID
     var name: String
     var shareAmount: Int64
@@ -131,10 +131,10 @@ struct SelectedContactUIModel: Identifiable, Equatable, Sendable {
     }
 }
 
-// MARK: - Mock / Preview Data
-enum DraftMockData {
-    static let sampleDrafts: [DraftItemUIModel] = [
-        DraftItemUIModel(
+// MARK: - Mock / Preview Data (removed from production code in P3)
+enum ReviewMockData {
+    static let sampleDrafts: [ReviewItemUIModel] = [
+        ReviewItemUIModel(
             type: .piutang,
             prefix: "ke",
             personName: "Dito",
@@ -142,7 +142,7 @@ enum DraftMockData {
             relativeTime: "5 menit lalu",
             amount: 15_000
         ),
-        DraftItemUIModel(
+        ReviewItemUIModel(
             type: .hutang,
             prefix: "dari",
             personName: "Krisna",
@@ -150,7 +150,7 @@ enum DraftMockData {
             relativeTime: "5 menit lalu",
             amount: 500_000
         ),
-        DraftItemUIModel(
+        ReviewItemUIModel(
             type: .splitBill,
             prefix: "ke",
             personName: "3 Orang",

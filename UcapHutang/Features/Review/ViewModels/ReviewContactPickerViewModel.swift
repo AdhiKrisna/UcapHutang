@@ -1,40 +1,21 @@
-import SwiftUI
-import Combine
+import Foundation
+import Observation
 
-@MainActor
-protocol DraftContactPickerViewModelProtocol: ObservableObject {
-    var searchQuery: String { get set }
-    var isMultiSelect: Bool { get }
-    var totalAmount: Int64 { get set }
-    var selectedContacts: [SelectedContactUIModel] { get set }
-    var recentContacts: [ContactUIModel] { get }
-    var deviceContacts: [ContactUIModel] { get }
-    var filteredRecentContacts: [ContactUIModel] { get }
-    var filteredDeviceContacts: [ContactUIModel] { get }
-    var totalAllocatedAmount: Int64 { get }
-    var hasNoResults: Bool { get }
-
-    func toggleSelection(for contact: ContactUIModel)
-    func updateCustomAmount(for contactID: String, amount: Int64)
-    func createNewContact(name: String) -> ContactUIModel
-    func isSelected(contactID: String) -> Bool
-}
-
-@MainActor
-final class DraftContactPickerViewModel: DraftContactPickerViewModelProtocol {
-    @Published var searchQuery: String = ""
+@Observable
+final class ReviewContactPickerViewModel {
+    var searchQuery: String = ""
     let isMultiSelect: Bool
-    @Published var totalAmount: Int64
-    @Published var selectedContacts: [SelectedContactUIModel] = []
-    @Published private(set) var recentContacts: [ContactUIModel] = []
-    @Published private(set) var deviceContacts: [ContactUIModel] = []
+    var totalAmount: Int64
+    var selectedContacts: [SelectedContactUIModel] = []
+    private(set) var recentContacts: [ContactUIModel] = []
+    private(set) var deviceContacts: [ContactUIModel] = []
 
     init(
         isMultiSelect: Bool = false,
         totalAmount: Int64 = 300_000,
         initialSelected: [SelectedContactUIModel] = [],
-        recentContacts: [ContactUIModel] = DraftMockData.sampleHistoryContacts,
-        deviceContacts: [ContactUIModel] = DraftMockData.sampleDeviceContacts
+        recentContacts: [ContactUIModel] = ReviewMockData.sampleHistoryContacts,
+        deviceContacts: [ContactUIModel] = ReviewMockData.sampleDeviceContacts
     ) {
         self.isMultiSelect = isMultiSelect
         self.totalAmount = totalAmount

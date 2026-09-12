@@ -1,12 +1,11 @@
 import SwiftUI
-import Combine
 
-struct DraftListView: View {
-    @StateObject private var viewModel: DraftListViewModel
+struct ReviewListView: View {
+    @State private var viewModel: ReviewListViewModel
     let onSelect: (UUID) -> Void
 
     init(repository: (any TransactionRepository)? = nil, onSelect: @escaping (UUID) -> Void) {
-        _viewModel = StateObject(wrappedValue: DraftListViewModel(repository: repository))
+        _viewModel = State(initialValue: ReviewListViewModel(repository: repository))
         self.onSelect = onSelect
     }
 
@@ -26,7 +25,7 @@ struct DraftListView: View {
                     )
                 },
                 cardContent: { item in
-                    DraftCardView(item: item)
+                    ReviewCardView(item: item)
                 }
             )
             .navigationBarTitleDisplayMode(.inline)
@@ -48,5 +47,5 @@ struct DraftListView: View {
 }
 
 #Preview {
-    DraftListView(repository: nil) { _ in }
+    ReviewListView(repository: nil) { _ in }
 }

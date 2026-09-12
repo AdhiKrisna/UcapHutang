@@ -1,8 +1,8 @@
 import SwiftUI
 
-struct DraftReviewView: View {
+struct ReviewDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: DraftReviewViewModel
+    @State private var viewModel: ReviewDetailViewModel
     @State private var isShowingDatePicker = false
 
     init(
@@ -11,9 +11,9 @@ struct DraftReviewView: View {
         initialType: TransactionType = .hutang,
         initialNominal: Int64 = 150_000,
         initialDescription: String = "Pinjam buat makan siang",
-        initialParticipants: [DraftParticipantUIModel]? = nil
+        initialParticipants: [ReviewParticipantUIModel]? = nil
     ) {
-        _viewModel = StateObject(wrappedValue: DraftReviewViewModel(
+        _viewModel = State(initialValue: ReviewDetailViewModel(
             draftID: draftID,
             repository: repository,
             initialType: initialType,
@@ -23,7 +23,7 @@ struct DraftReviewView: View {
         ))
     }
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
@@ -198,7 +198,7 @@ struct DraftReviewView: View {
                 get: { viewModel.activeContactPickerParticipantID.map { IdentifiableUUID($0) } },
                 set: { viewModel.activeContactPickerParticipantID = $0?.id }
             )) { identifiable in
-                DraftContactPickerSheet(
+                ReviewContactPickerSheet(
                     isMultiSelect: false,
                     onSelectSingle: { selected in
                         viewModel.updateParticipantContact(id: identifiable.id, contact: selected)
@@ -218,12 +218,12 @@ struct DraftReviewView: View {
 }
 
 #Preview("Review - Connected") {
-    DraftReviewView(
+    ReviewDetailView(
         initialType: .hutang,
         initialNominal: 150_000,
         initialDescription: "Pinjam buat makan siang",
         initialParticipants: [
-            DraftParticipantUIModel(
+            ReviewParticipantUIModel(
                 name: "Dito",
                 linkState: .autoLinked(matchedContactName: "Andito Rizkika")
             )
@@ -232,12 +232,12 @@ struct DraftReviewView: View {
 }
 
 #Preview("Review - Typo Suggestion") {
-    DraftReviewView(
+    ReviewDetailView(
         initialType: .hutang,
         initialNominal: 150_000,
         initialDescription: "Pinjam buat makan siang",
         initialParticipants: [
-            DraftParticipantUIModel(
+            ReviewParticipantUIModel(
                 name: "Dito Rizkaka",
                 linkState: .typoSuggestion(suggestedName: "Dito Rizkika", originalName: "Dito Rizkaka")
             )
@@ -246,12 +246,12 @@ struct DraftReviewView: View {
 }
 
 #Preview("Review - Unlinked") {
-    DraftReviewView(
+    ReviewDetailView(
         initialType: .hutang,
         initialNominal: 150_000,
         initialDescription: "Pinjam buat makan siang",
         initialParticipants: [
-            DraftParticipantUIModel(
+            ReviewParticipantUIModel(
                 name: "Dito Rizkaka",
                 linkState: .unlinked
             )

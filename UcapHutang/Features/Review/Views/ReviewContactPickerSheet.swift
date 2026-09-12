@@ -1,8 +1,8 @@
 import SwiftUI
 
-struct DraftContactPickerSheet: View {
+struct ReviewContactPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: DraftContactPickerViewModel
+    @State private var viewModel: ReviewContactPickerViewModel
 
     var onSelectSingle: ((ContactUIModel) -> Void)?
     var onSelectMultiple: (([SelectedContactUIModel]) -> Void)?
@@ -14,7 +14,7 @@ struct DraftContactPickerSheet: View {
         onSelectSingle: ((ContactUIModel) -> Void)? = nil,
         onSelectMultiple: (([SelectedContactUIModel]) -> Void)? = nil
     ) {
-        _viewModel = StateObject(wrappedValue: DraftContactPickerViewModel(
+        _viewModel = State(initialValue: ReviewContactPickerViewModel(
             isMultiSelect: isMultiSelect,
             totalAmount: totalAmount,
             initialSelected: initialSelected
@@ -23,7 +23,7 @@ struct DraftContactPickerSheet: View {
         self.onSelectMultiple = onSelectMultiple
     }
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 List {
@@ -166,9 +166,9 @@ struct DraftContactPickerSheet: View {
 }
 
 #Preview("Single Select") {
-    DraftContactPickerSheet(isMultiSelect: false)
+    ReviewContactPickerSheet(isMultiSelect: false)
 }
 
 #Preview("Multi Select") {
-    DraftContactPickerSheet(isMultiSelect: true, totalAmount: 300_000)
+    ReviewContactPickerSheet(isMultiSelect: true, totalAmount: 300_000)
 }

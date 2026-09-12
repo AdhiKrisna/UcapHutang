@@ -1,38 +1,25 @@
-import SwiftUI
-import Combine
+import Foundation
+import Observation
 
-@MainActor
-protocol DraftListViewModelProtocol: ObservableObject {
-    var drafts: [DraftItemUIModel] { get }
-    var selectedFilter: DraftFilterType { get set }
-    var filteredDrafts: [DraftItemUIModel] { get }
-    var isEmpty: Bool { get }
-    var errorMessage: String? { get set }
-
-    func loadDrafts() async
-    func selectFilter(_ filter: DraftFilterType)
-    func deleteDraft(id: UUID) async
-}
-
-@MainActor
-final class DraftListViewModel: ObservableObject, DraftListViewModelProtocol {
-    @Published private(set) var drafts: [DraftItemUIModel] = []
-    @Published var selectedFilter: DraftFilterType = .all
-    @Published var errorMessage: String?
+@Observable
+final class ReviewListViewModel {
+    private(set) var drafts: [ReviewItemUIModel] = []
+    var selectedFilter: ReviewFilterType = .all
+    var errorMessage: String?
 
     private let repository: (any TransactionRepository)?
 
-    init(repository: (any TransactionRepository)? = nil, previewDrafts: [DraftItemUIModel]? = nil) {
+    init(repository: (any TransactionRepository)? = nil, previewDrafts: [ReviewItemUIModel]? = nil) {
         self.repository = repository
         if let previewDrafts {
             self.drafts = previewDrafts
         } else if repository == nil {
             // Default mock data untuk slicing & preview
-            self.drafts = DraftMockData.sampleDrafts
+            self.drafts = ReviewMockData.sampleDrafts
         }
     }
 
-    var filteredDrafts: [DraftItemUIModel] {
+    var filteredDrafts: [ReviewItemUIModel] {
         drafts.filter { item in
             switch selectedFilter {
             case .all:
@@ -51,7 +38,7 @@ final class DraftListViewModel: ObservableObject, DraftListViewModelProtocol {
         filteredDrafts.isEmpty
     }
 
-    func selectFilter(_ filter: DraftFilterType) {
+    func selectFilter(_ filter: ReviewFilterType) {
         selectedFilter = filter
     }
 
@@ -59,7 +46,7 @@ final class DraftListViewModel: ObservableObject, DraftListViewModelProtocol {
         guard let repository else {
             // Jika dalam mode standalone/slicing preview tanpa repo
             if drafts.isEmpty {
-                drafts = DraftMockData.sampleDrafts
+                drafts = ReviewMockData.sampleDrafts
             }
             return
         }
@@ -96,7 +83,7 @@ final class DraftListViewModel: ObservableObject, DraftListViewModelProtocol {
                 formatter.locale = Locale(identifier: "id_ID")
                 let relTime = formatter.localizedString(for: entity.createdAt, relativeTo: Date())
 
-                return DraftItemUIModel(
+                return ReviewItemUIModel(
                     id: entity.id,
                     type: entity.type,
                     prefix: prefix,

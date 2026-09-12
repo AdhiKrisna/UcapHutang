@@ -1,9 +1,9 @@
 import SwiftUI
 
-struct DraftCardView: View {
-    let item: DraftItemUIModel
+struct ReviewCardView: View {
+    let item: ReviewItemUIModel
 
-    init(item: DraftItemUIModel) {
+    init(item: ReviewItemUIModel) {
         self.item = item
     }
 
@@ -40,7 +40,7 @@ struct DraftCardView: View {
 
                 Spacer()
 
-                Text(formattedAmount)
+                Text(item.amount.rupiahFormatted)
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color.primary)
             }
@@ -73,14 +73,6 @@ struct DraftCardView: View {
         }
     }
 
-    private var formattedAmount: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        let formattedNumber = formatter.string(from: NSNumber(value: item.amount)) ?? "\(item.amount)"
-        return "Rp. \(formattedNumber)"
-    }
-
     private var stackedAvatarsView: some View {
         HStack(spacing: -6) {
             ForEach(Array(item.avatarInitials.enumerated()), id: \.offset) { index, initial in
@@ -105,8 +97,8 @@ struct DraftCardView: View {
 
 #Preview {
     VStack(spacing: 12) {
-        ForEach(DraftMockData.sampleDrafts) { draft in
-            DraftCardView(item: draft)
+        ForEach(ReviewMockData.sampleDrafts) { draft in
+            ReviewCardView(item: draft)
         }
     }
     .padding()

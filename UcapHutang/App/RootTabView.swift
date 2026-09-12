@@ -20,7 +20,7 @@ struct RootTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            DraftListView(repository: container.repository) { draftID in
+            ReviewListView(repository: container.repository) { draftID in
                 reviewDraftItem = IdentifiableUUID(draftID)
             }
             .tabItem {
@@ -44,7 +44,7 @@ struct RootTabView: View {
         }
         .sheet(item: $reviewDraftItem) { item in
             NavigationStack {
-                DraftReviewView(draftID: item.id, repository: container.repository)
+                ReviewDetailView(draftID: item.id, repository: container.repository)
             }
         }
         .sheet(item: $selectedCaptureFlow) { flow in
