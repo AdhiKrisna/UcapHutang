@@ -222,7 +222,7 @@ struct ReviewDraftView: View {
                 ProgressView("Memuat data...")
             }
         }
-        .navigationTitle("Review Data")
+        .navigationTitle("Review Catatan")
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.load() }
         .onChange(of: viewModel.didFinish) { _, finished in
