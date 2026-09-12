@@ -13,68 +13,43 @@ struct CatatView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: AppSpacing.large) {
-                VStack(alignment: .leading, spacing: AppSpacing.small) {
-                    Label("UCAPANMU", systemImage: "quote.bubble.fill")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(AppColors.textSecondary)
-                    Text(viewModel.liveTranscript.isEmpty ? exampleText : viewModel.liveTranscript)
-                        .font(.body)
-                        .foregroundStyle(viewModel.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
-                        .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
-                        .padding(AppSpacing.medium)
-                        .background(AppColors.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium))
-                        .overlay(RoundedRectangle(cornerRadius: AppRadius.medium)
-                            .stroke(viewModel.speechRecognizer.isRecording ? AppColors.accent : .clear, lineWidth: 1.5))
-                }
-                .padding(.horizontal)
-
+            VStack(spacing: 0) {
                 Spacer()
 
-                VStack(spacing: AppSpacing.medium) {
+                VStack(spacing: 24) {
                     Button { viewModel.handleMicTap() } label: {
-                        ZStack {
-                            Circle()
-                                .fill(viewModel.micButtonGradient)
-                                .frame(width: 110, height: 110)
-                                .shadow(color: AppColors.accent.opacity(0.3), radius: 16, y: 6)
-                            if viewModel.isProcessing || viewModel.speechRecognizer.state == .finalizing {
-                                ProgressView().tint(.white).scaleEffect(1.4)
-                            } else {
-                                Image(systemName: viewModel.speechRecognizer.isRecording ? "stop.fill" : "mic.fill")
-                                    .font(.system(size: 40, weight: .bold)).foregroundStyle(.white)
-                            }
-                        }
+                        recordingControl
                     }
                     .disabled(viewModel.isProcessing)
-                    Text(viewModel.stageHeadline).font(.title3.weight(.bold))
-                    if viewModel.speechRecognizer.isRecording {
-                        Text("Tap lingkaran untuk berhenti & proses")
-                            .font(.caption).foregroundStyle(AppColors.textSecondary)
+
+                    if isListening {
+                        Button("Ulangi") { viewModel.restartRecording() }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(AppColors.textPrimary)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 10)
+                            .background(AppColors.surface)
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(AppColors.border))
+
+                        Text(viewModel.liveTranscript.isEmpty ? viewModel.stageHeadline : viewModel.liveTranscript)
+                            .font(viewModel.liveTranscript.isEmpty ? .body : .body.weight(.medium))
+                            .foregroundStyle(viewModel.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 300)
+                            .animation(.easeInOut(duration: 0.2), value: viewModel.liveTranscript)
+                    } else if !viewModel.isProcessing {
+                        Text("Tip: \(tipText)")
+                            .font(.body)
+                            .foregroundStyle(AppColors.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 300)
                     }
                 }
 
                 Spacer()
-
-                VStack(alignment: .leading, spacing: AppSpacing.small) {
-                    Text("PANDUAN BICARA").font(.caption.weight(.bold)).foregroundStyle(AppColors.textSecondary)
-                    Text(flow == .personal
-                         ? "• Sebutkan 1 orang, nominal, keperluan, dan siapa yang berutang."
-                         : "• Sebutkan teman-teman yang ikut patungan dan nominal/total.")
-                        .font(.caption)
-                    Text(flow == .personal
-                         ? "• Contoh: \"Dito pinjam 50 ribu buat beli bensin\""
-                         : "• Contoh: \"Split bill makan gacoan 100 ribu sama Satria dan Arif bagi rata\"")
-                        .font(.caption).foregroundStyle(flow == .personal ? AppColors.accent : AppColors.split)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(AppColors.surface.opacity(0.6))
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium))
-                .padding(.horizontal)
-                .padding(.bottom, AppSpacing.medium)
             }
+            .padding(.horizontal, 24)
             .navigationTitle(flow.title)
             .navigationBarTitleDisplayMode(.inline)
             .onDisappear { viewModel.cancel() }
@@ -92,15 +67,46 @@ struct CatatView: View {
             .onChange(of: viewModel.speechRecognizer.errorMessage) { _, message in
                 if let message { viewModel.errorMessage = message }
             }
+            .onChange(of: viewModel.speechRecognizer.state) { _, state in
+                viewModel.handleSpeechStateChange(state)
+            }
             .navigationDestination(item: $viewModel.createdDraftID) { draftID in
                 ReviewDraftView(draftID: draftID, repository: viewModel.container.repository)
             }
         }
     }
 
-    private var exampleText: String {
+    private var isListening: Bool {
+        viewModel.isStartingRecording || viewModel.speechRecognizer.isRecording
+    }
+
+    private var recordingControl: some View {
+        ZStack {
+            Circle()
+                .stroke(
+                    AppColors.textSecondary.opacity(0.65),
+                    style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 7])
+                )
+                .frame(width: 250, height: 250)
+            if viewModel.isProcessing || viewModel.speechRecognizer.state == .finalizing {
+                ProgressView().tint(AppColors.textPrimary).scaleEffect(1.3)
+            } else {
+                VStack(spacing: 12) {
+                    Image(systemName: isListening ? "stop.fill" : "play.fill")
+                        .font(.system(size: 34, weight: .bold))
+                    Text(isListening ? "Tekan untuk\nberhenti" : "Tekan untuk catat\nvia suara")
+                        .font(.title3.weight(.bold))
+                        .multilineTextAlignment(.center)
+                }
+                .foregroundStyle(AppColors.textPrimary)
+            }
+        }
+        .frame(width: 250, height: 250)
+    }
+
+    private var tipText: String {
         flow == .personal
-            ? "Contoh: \"Aku ngutang 20 ribu ke Budi buat beli kopi\""
-            : "Contoh: \"Aku bayarin makan 90 ribu bareng Budi dan Doni bagi rata\""
+            ? "Dito pinjam 50 ribu buat beli bensin"
+            : "Split bill makan 100 ribu sama Satria dan Arif bagi rata"
     }
 }

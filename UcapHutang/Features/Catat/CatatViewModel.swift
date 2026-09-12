@@ -12,6 +12,7 @@ final class CatatViewModel: ObservableObject {
     @Published var liveTranscript = ""
     @Published var isProcessing = false
     @Published var errorMessage: String?
+    @Published private(set) var isStartingRecording = false
 
     private var activeProcessingID: UUID?
     private var processingTask: Task<Void, Never>?
@@ -30,8 +31,8 @@ final class CatatViewModel: ObservableObject {
     var stageHeadline: String {
         if isProcessing { return "Menganalisis data..." }
         if speechRecognizer.state == .finalizing { return "Menyelesaikan transkrip..." }
-        if speechRecognizer.isRecording { return "Mendengarkan..." }
-        return "Tekan untuk catat suara"
+        if isStartingRecording || speechRecognizer.isRecording { return "Mendengarkan..." }
+        return ""
     }
 
     func handleMicTap() {
@@ -39,10 +40,32 @@ final class CatatViewModel: ObservableObject {
         if speechRecognizer.isRecording {
             finishAndProcess()
         } else {
-            liveTranscript = ""
-            speechRecognizer.startRecording { [weak self] transcript in
-                self?.liveTranscript = transcript
-            }
+            startRecording()
+        }
+    }
+
+    func restartRecording() {
+        guard activeProcessingID == nil else { return }
+        speechRecognizer.cancelRecording()
+        startRecording()
+    }
+
+    func handleSpeechStateChange(_ state: SpeechRecognizerState) {
+        switch state {
+        case .listening:
+            isStartingRecording = false
+        case .failed, .idle:
+            if !isProcessing { isStartingRecording = false }
+        case .finalizing:
+            break
+        }
+    }
+
+    private func startRecording() {
+        liveTranscript = ""
+        isStartingRecording = true
+        speechRecognizer.startRecording { [weak self] transcript in
+            self?.liveTranscript = transcript
         }
     }
 
@@ -85,5 +108,6 @@ final class CatatViewModel: ObservableObject {
         processingTask?.cancel()
         processingTask = nil
         activeProcessingID = nil
+        isStartingRecording = false
     }
 }
