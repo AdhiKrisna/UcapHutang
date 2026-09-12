@@ -72,6 +72,8 @@ All decisions below were made explicitly by the product owner on 2026-09-12.
 | Feature type names | Feature-layer `Draft*` types are renamed to `Review*` (§5.3). Domain/data names (`TransactionDraft`, `DraftStatus`, `DraftValidator`, `DraftMapper`, repository methods) do not change. |
 | Old Catat-path Review files | Moved to `Features/Review/Legacy/` in P1 (so P1 changes no behavior), deleted in P3. |
 | Uncommitted change in `QwenOutputDecoder.swift` | Owned by the developer. Agents never touch it; P1 starts only after the developer has committed or discarded it. |
+| Validation / repository / migration copy | Approved exactly as listed in §6.2, §6.4 and §12. |
+| Phase ordering P2/P3/P4 | Share-consistency rules land in P3 with the new Review; P3 temporarily routes Catat to the new `ReviewDetailView` so `Legacy/` can be deleted in P3; P4 switches Catat to close + banner. |
 | "Ingatkan lewat iMessage" label | Renamed to **"Ingatkan lewat Pesan"**. |
 | Linked contact later deleted from the iPhone | **Still treated as linked**; the stored name snapshot is shown. |
 | Legacy `discarded` drafts | **Purged during the Schema V2 migration**; the `discarded` status is removed from code. |
@@ -248,29 +250,50 @@ struct ReminderSettings: Equatable, Sendable {   // NEW
 `DraftValidator.validateForConfirmation(_:)` keeps all current rules and adds:
 
 - Every participant must have a non-empty `contactIdentifier`. Error message (Indonesian): `"Hubungkan setiap orang ke kontak sebelum menyimpan."`
-- Split Bill custom: `totalAmount` must equal `Σ shareAmount` (the ViewModel keeps them in sync; the validator guards it).
-- Split Bill equal: shares must equal `SplitCalculationEngine.calculateEqualShares(total, count)` for `count = friends + (includesUser ? 1 : 0)`, taking the first `friends` values.
+- **(P3)** Split Bill custom: `totalAmount` must equal `Σ shareAmount` (the ViewModel keeps them in sync; the validator guards it).
+- **(P3)** Split Bill equal: shares must equal `SplitCalculationEngine.calculateEqualShares(total, count)` for `count = friends + (includesUser ? 1 : 0)`, taking the first `friends` values.
 
 Add `DraftValidator.issues(for:) -> [DraftValidationIssue]` returning **all** problems (for the alert list and per-card labels). `validateForConfirmation` throws the first issue. The Review ViewModel uses `issues(for:)`; repositories call `validateForConfirmation`. There is **one** rule set.
 
 ```swift
-enum DraftValidationIssue: Equatable {
+enum DraftValidationIssue: Equatable, Sendable {
     case amountNotPositive
     case titleMissing
     case directionMissing
-    case participantsMissing
+    case participantsMissing(flow: CaptureFlow)
     case participantNameMissing(participantID: UUID)
     case participantNotLinked(participantID: UUID)
     case duplicateParticipant
     case personalRequiresExactlyOne
-    case shareNotPositive(participantID: UUID)
+    case splitTypeInvalid
+    case shareNotPositive(participantID: UUID, name: String)
     case sharesExceedTotal
-    case sharesDoNotMatchTotal
-    var message: String { /* Indonesian, field-specific */ }
+    case sharesDoNotMatchTotal      // produced from P3
+    var message: String { get }     // exact copy in the table below
 }
 ```
 
 Duplicate detection uses `contactIdentifier` when present, otherwise the normalized name.
+
+Issue order (the first one is what `validateForConfirmation` throws): amount → title → participants missing → each empty name → each unlinked participant → duplicate → Personal: direction, exactly one person / Split Bill: type, each non-positive share, shares exceed total, (P3) shares do not match.
+
+Approved messages (2026-09-12):
+
+| Issue | Message |
+|-------|---------|
+| `amountNotPositive` | Isi nominal transaksi dengan angka lebih dari Rp0. |
+| `titleMissing` | Isi deskripsi transaksi, misalnya “Kopi” atau “Makan malam”. |
+| `directionMissing` | Pilih siapa yang berutang: kamu atau orang tersebut. |
+| `participantsMissing(.personal)` | Pilih orang yang terkait dengan transaksi ini. |
+| `participantsMissing(.splitBill)` | Tambahkan minimal satu teman yang ikut split bill. |
+| `participantNameMissing` | Ada nama orang yang masih kosong. |
+| `participantNotLinked` | Hubungkan setiap orang ke kontak sebelum menyimpan. |
+| `duplicateParticipant` | Ada orang yang sama dalam satu transaksi. Hapus atau ganti salah satunya. |
+| `personalRequiresExactlyOne` | Utang atau piutang pribadi hanya boleh melibatkan satu orang. |
+| `splitTypeInvalid` | Jenis transaksi split bill tidak valid. |
+| `shareNotPositive(name)` | Isi nominal bagian untuk \<name\>. |
+| `sharesExceedTotal` | Total bagian teman melebihi nominal transaksi. |
+| `sharesDoNotMatchTotal` | Pembagian nominal belum sesuai dengan total transaksi. |
 
 ### 6.3 Ledger identity
 
@@ -297,8 +320,8 @@ protocol TransactionRepository: Sendable {
 
 enum RepositoryError: LocalizedError {
     case invalidAmount, paymentExceedsBalance, noOutstandingBalance
-    case personNotLinked          // NEW — recordPayment on an unlinked person
-    case personNotFound           // NEW — linkPerson with unknown personID
+    case personNotLinked          // NEW — "Hubungkan orang ini ke kontak sebelum mencatat pembayaran."
+    case personNotFound           // NEW — "Orang ini tidak ditemukan di Riwayat. Muat ulang Riwayat."
 }
 ```
 
@@ -587,7 +610,7 @@ Each screen must be checked in Light, Dark, and the largest accessibility text s
 | Situation | Behavior |
 |-----------|----------|
 | Storage cannot open | Existing blocking `ContentUnavailableView` (unchanged). |
-| Migration fails | Same blocking screen, message includes "migrasi data". No silent fallback. |
+| Migration fails | Same blocking screen with "Migrasi data ke versi terbaru gagal. Demi mencegah kehilangan data, pencatatan dinonaktifkan sementara. Tutup lalu buka kembali aplikasi. Detail: \<error\>". SwiftData has no migration-specific error type, so this message is used when opening the container fails **and a store file already exists** at the configuration URL; otherwise the existing storage message is shown. No silent fallback. |
 | Model missing | Flow chooser disabled with readiness text (unchanged). |
 | Mic/Speech permission denied | Inline message + "Buka Pengaturan". |
 | LLM/decoder failure | Draft saved with empty/partial fields; warning stored; user completes it in Review. |
@@ -626,8 +649,8 @@ One implementation plan per phase, executed in order. Each phase ends with a gre
 |-------|-------|-------------------|
 | **P0** | Bug guard: `DraftValidator` requires `contactIdentifier`; regression tests on both repositories. | Confirming an unlinked draft throws and writes nothing. (Temporary: the mock Draft-tab Review silently fails to save until P3.) |
 | **P1** | **Precondition:** `UcapHutang/Core/Utilities/QwenOutputDecoder.swift` has no uncommitted changes (the developer resolves it first; the agent stops otherwise). Folder restructure (§5.2–5.3) incl. `Features/Draft` → `Features/Review` with `Review*` renames and the old Catat-path Review files → `Features/Review/Legacy/`; `@Observable` migration; `Tab` API with the "Review" tab label and `doc.badge.clock` icon; P1 deletions (§5.3). **No behavior change** apart from the tab label/icon. | App builds; all tests green; no `ObservableObject`, `@Published`, `@StateObject`, `@EnvironmentObject` or `import Combine` outside `Features/Review/Legacy/`; no files left in old folders; `project.pbxproj` unchanged. |
-| **P2** | Domain model changes (§6.1), `DraftValidationIssue`, split helper, `SchemaV1/V2` + migration plan, repository API (§6.4). | Migration test + repository tests green. |
-| **P3** | Unified Review (§8) incl. `ContactsProviding`, picker, permission flow; delete `Features/Review/Legacy/`, `Int: @retroactive Identifiable`, and `ReviewMockData`. | ViewModel tests green; manual check of all card states. |
+| **P2** | Domain model changes (§6.1), `DraftValidationIssue` + `issues(for:)` with the existing rules plus the contact rule (the two Split Bill share-consistency rules are **not** added yet), split helper, `SchemaV1/V2` + migration plan, repository API (§6.4). Callers of the removed `discardDraft` — including `Features/Review/Legacy/ReviewDraftViewModel.swift` — switch to `deleteDraft`. | Migration test + repository tests green. |
+| **P3** | Unified Review (§8) incl. `ContactsProviding`, picker, permission flow; add the Split Bill share-consistency rules (§6.2 **(P3)**); point Catat's post-processing navigation to the new `ReviewDetailView` **temporarily** (P4 replaces it with close + banner); delete `Features/Review/Legacy/`, `Int: @retroactive Identifiable`, and `ReviewMockData`. | ViewModel tests green; manual check of all card states. |
 | **P4** | Pipeline split (§7), `VoiceCapturePipeline`, Catat close + banner + badge, on-device speech. | Mapper/pipeline tests green; Qwen tests green. |
 | **P5** | Riwayat link/merge/blocking (§9). | Link/merge/payment-guard tests green. |
 | **P6** | Reminder scheduler, onboarding primer, Pengaturan, notification routing (§10). | Scheduler + settings tests green; device reminder check. |
