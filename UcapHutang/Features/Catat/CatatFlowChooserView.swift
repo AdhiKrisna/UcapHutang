@@ -7,9 +7,6 @@ struct CatatFlowChooserView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: AppSpacing.large) {
-                Text("Pilih jenis pencatatan")
-                    .font(.largeTitle.weight(.semibold))
-
                 Label {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(readiness.title).font(.subheadline.weight(.semibold))
@@ -45,7 +42,7 @@ struct CatatFlowChooserView: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Catat")
+            .navigationTitle("Pilih jenis pencatatan")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
