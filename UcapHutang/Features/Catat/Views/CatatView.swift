@@ -70,8 +70,13 @@ struct CatatView: View {
             .onChange(of: viewModel.speechRecognizer.state) { _, state in
                 viewModel.handleSpeechStateChange(state)
             }
+            // Temporary until P4 replaces this with "close + banner".
             .navigationDestination(item: $viewModel.createdDraftID) { draftID in
-                ReviewDraftView(draftID: draftID, repository: viewModel.container.repository)
+                ReviewDetailView(
+                    draftID: draftID,
+                    repository: viewModel.container.repository,
+                    contacts: viewModel.container.contacts
+                )
             }
         }
     }

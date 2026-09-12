@@ -1,64 +1,35 @@
 import SwiftUI
 
+/// Shows one friend's share. Editable only in custom split mode.
 struct SplitParticipantRow: View {
-    let contact: SelectedContactUIModel
-    var onEditAmount: ((Int64) -> Void)?
+    let amount: Int64
+    let isEditable: Bool
+    let onAmountChange: (Int64) -> Void
 
-    @State private var isEditing: Bool = false
-    @State private var inputAmountText: String = ""
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("Nominal bagian")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
 
-    init(contact: SelectedContactUIModel, onEditAmount: ((Int64) -> Void)? = nil) {
-        self.contact = contact
-        self.onEditAmount = onEditAmount
-    }
+            Spacer(minLength: 8)
 
-    public var body: some View {
-        HStack {
-            Text(contact.name)
-                .font(.body.weight(.medium))
-                .foregroundStyle(AppColors.textPrimary)
-
-            Spacer()
-
-            if isEditing {
-                HStack(spacing: 4) {
-                    Text("Rp")
-                        .font(.subheadline)
-                        .foregroundStyle(AppColors.textSecondary)
-
-                    TextField("0", text: $inputAmountText)
-                        .keyboardType(.numberPad)
-                        .font(.subheadline.weight(.semibold))
-                        .frame(width: 80)
-                        .multilineTextAlignment(.trailing)
-
-                    Button("OK") {
-                        if let parsed = Int64(inputAmountText.filter(\.isNumber)) {
-                            onEditAmount?(parsed)
-                        }
-                        isEditing = false
-                    }
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(AppColors.accent)
-                }
+            if isEditable {
+                TextField(
+                    "Nominal bagian",
+                    value: Binding(get: { amount }, set: { onAmountChange($0) }),
+                    format: .number
+                )
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .font(.body.weight(.semibold))
+                .frame(minHeight: 44)
             } else {
-                Button {
-                    inputAmountText = "\(contact.amount)"
-                    isEditing = true
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(contact.amount.rupiahFormatted)
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(AppColors.textPrimary)
-
-                        Image(systemName: "pencil")
-                            .font(.caption)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-                }
-                .buttonStyle(.plain)
+                Text(amount.rupiahFormatted)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
             }
         }
-        .padding(.vertical, 4)
+        .accessibilityElement(children: isEditable ? .contain : .combine)
     }
 }

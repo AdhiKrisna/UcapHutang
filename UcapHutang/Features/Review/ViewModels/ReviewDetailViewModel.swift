@@ -3,137 +3,307 @@ import Observation
 
 @Observable
 final class ReviewDetailViewModel {
+    enum LoadState: Equatable {
+        case loading
+        case loaded
+        case notFound
+    }
+
     let draftID: UUID
-    var timeText: String = "Hari ini, 12:41"
-    var transactionDate: Date = Date()
-    var nominal: Int64 = 150_000
-    var description: String = "Pinjam buat makan siang"
-    var transactionType: TransactionType = .hutang
-    var participants: [ReviewParticipantUIModel] = []
-    var isSaving: Bool = false
-    var didFinish: Bool = false
-    var errorMessage: String?
-    var showDeleteConfirmation: Bool = false
-    var activeContactPickerParticipantID: UUID?
+    private(set) var loadState: LoadState = .loading
+    private(set) var draft: TransactionDraft?
+    private(set) var suggestions: [UUID: ContactRef] = [:]
+    private(set) var hasAttemptedSave = false
+    private(set) var isSaving = false
+    private(set) var didSave = false
+    private(set) var didFinish = false
+    var alert: ReviewAlert?
+    var pickerRequest: ContactPickerRequest?
+    var isConfirmingDelete = false
 
-    private let repository: (any TransactionRepository)?
+    @ObservationIgnored private var savedSnapshot: TransactionDraft?
+    private let repository: any TransactionRepository
+    private let contacts: any ContactsProviding
 
-    init(
-        draftID: UUID = UUID(),
-        repository: (any TransactionRepository)? = nil,
-        initialType: TransactionType = .hutang,
-        initialNominal: Int64 = 150_000,
-        initialDescription: String = "Pinjam buat makan siang",
-        initialParticipants: [ReviewParticipantUIModel]? = nil
-    ) {
+    init(draftID: UUID, repository: any TransactionRepository, contacts: any ContactsProviding) {
         self.draftID = draftID
         self.repository = repository
-        self.transactionType = initialType
-        self.nominal = initialNominal
-        self.description = initialDescription
+        self.contacts = contacts
+    }
 
-        if let initialParticipants {
-            self.participants = initialParticipants
-        } else {
-            // Default mock data untuk slicing & preview: 1 orang "Dito" terhubung otomatis
-            self.participants = [
-                ReviewParticipantUIModel(
-                    name: "Dito",
-                    shareAmount: initialNominal,
-                    linkState: .autoLinked(matchedContactName: "Andito Rizkika"),
-                    contactIdentifier: "1",
-                    phoneNumber: "+62 81234123123"
-                )
-            ]
+    // MARK: - Derived state
+
+    var issues: [DraftValidationIssue] {
+        guard let draft else { return [] }
+        return DraftValidator.issues(for: draft)
+    }
+
+    var isDirty: Bool {
+        draft != savedSnapshot
+    }
+
+    var isCustomSplit: Bool {
+        guard let draft, draft.flow == .splitBill else { return false }
+        return (draft.splitMethod ?? .equal) == .custom
+    }
+
+    var friendsTotal: Int64 {
+        SplitCalculationEngine.customTotal(draft?.participants.map(\.shareAmount) ?? []) ?? 0
+    }
+
+    var userShare: Int64 {
+        guard let draft, draft.flow == .splitBill, !isCustomSplit, draft.includesUser else { return 0 }
+        return max(0, draft.totalAmount - friendsTotal)
+    }
+
+    func cardState(for participant: TransactionParticipant) -> ContactCardState {
+        if Self.isLinked(participant), let identifier = participant.contactIdentifier {
+            return .linked(ContactRef(identifier: identifier, displayName: participant.name, phoneNumber: nil))
+        }
+        if let suggestion = suggestions[participant.id] {
+            return .suggestion(suggestion)
+        }
+        return .unlinked
+    }
+
+    func showsRequiredMarker(for participantID: UUID) -> Bool {
+        hasAttemptedSave && issues.contains(.participantNotLinked(participantID: participantID))
+    }
+
+    // MARK: - Loading
+
+    func load() async {
+        do {
+            guard var loaded = try await repository.draft(id: draftID) else {
+                loadState = .notFound
+                return
+            }
+            Self.recalculate(&loaded)
+            draft = loaded
+            savedSnapshot = loaded
+            loadState = .loaded
+            await refreshSuggestions()
+        } catch {
+            loadState = .notFound
         }
     }
 
-    var formattedNominal: String {
-        nominal.rupiahFormatted
+    // MARK: - Field edits
+
+    func setTransactionDate(_ date: Date) {
+        mutate { $0.transactionDate = date }
     }
 
-    func setTransactionType(_ type: TransactionType) {
-        self.transactionType = type
+    func setTotalAmount(_ amount: Int64) {
+        guard !isCustomSplit else { return }
+        mutate { $0.totalAmount = max(0, amount) }
     }
 
-    func confirmTypo(for participantID: UUID) {
-        guard let index = participants.firstIndex(where: { $0.id == participantID }) else { return }
-        if case .typoSuggestion(let suggestedName, _) = participants[index].linkState {
-            participants[index].name = suggestedName
-            participants[index].linkState = .autoLinked(matchedContactName: suggestedName)
+    func setTitle(_ title: String) {
+        mutate { $0.title = title }
+    }
+
+    func setType(_ type: TransactionType) {
+        mutate { $0.type = type }
+    }
+
+    func setSplitMethod(_ method: SplitMethod) {
+        mutate { $0.splitMethod = method }
+    }
+
+    func setIncludesUser(_ includesUser: Bool) {
+        mutate { $0.includesUser = includesUser }
+    }
+
+    func setShare(participantID: UUID, amount: Int64) {
+        mutate { draft in
+            guard let index = draft.participants.firstIndex(where: { $0.id == participantID }) else { return }
+            draft.participants[index].shareAmount = max(0, amount)
         }
-    }
-
-    func rejectTypo(for participantID: UUID) {
-        guard let index = participants.firstIndex(where: { $0.id == participantID }) else { return }
-        // Biarkan nama asli, set ke unlinked, dan buka modal picker
-        participants[index].linkState = .unlinked
-        activeContactPickerParticipantID = participantID
-    }
-
-    func openContactPicker(for participantID: UUID) {
-        activeContactPickerParticipantID = participantID
-    }
-
-    func addParticipant() {
-        let newParticipant = ReviewParticipantUIModel(
-            name: "Orang Baru",
-            shareAmount: 0,
-            linkState: .unlinked
-        )
-        participants.append(newParticipant)
-        recalculateEqualSplit()
     }
 
     func removeParticipant(id: UUID) {
-        participants.removeAll { $0.id == id }
-        recalculateEqualSplit()
-    }
-
-    func updateParticipantContact(id: UUID, contact: ContactUIModel) {
-        guard let index = participants.firstIndex(where: { $0.id == id }) else { return }
-        participants[index].name = contact.fullName
-        participants[index].phoneNumber = contact.phoneNumber
-        participants[index].contactIdentifier = contact.id
-        participants[index].linkState = .autoLinked(matchedContactName: contact.fullName)
-    }
-
-    private func recalculateEqualSplit() {
-        guard !participants.isEmpty, nominal > 0 else { return }
-        let share = nominal / Int64(participants.count)
-        for i in participants.indices {
-            participants[i].shareAmount = share
+        mutate { draft in
+            guard draft.flow == .splitBill else { return }
+            draft.participants.removeAll { $0.id == id }
         }
+        suggestions[id] = nil
     }
 
-    func saveDraft() async {
-        guard !isSaving else { return }
-        isSaving = true
-        defer { isSaving = false }
+    // MARK: - Contacts
 
-        if let repository {
-            do {
-                if var loaded = try await repository.draft(id: draftID) {
-                    loaded.type = transactionType
-                    loaded.totalAmount = nominal
-                    loaded.title = description
-                    loaded.transactionDate = transactionDate
-                    loaded.status = .confirmed
-                    try await repository.confirmDraft(loaded)
-                }
-            } catch {
-                self.errorMessage = error.localizedDescription
-                return
+    func requestPicker(_ request: ContactPickerRequest) async {
+        switch await contacts.access() {
+        case .authorized:
+            pickerRequest = request
+        case .denied:
+            alert = .contactsAccessRequired
+        case .notDetermined:
+            if await contacts.requestAccess() == .authorized {
+                pickerRequest = request
+                await refreshSuggestions()
+            } else {
+                alert = .contactsAccessRequired
             }
         }
-
-        didFinish = true
     }
 
-    func deleteDraft() async {
-        if let repository {
-            try? await repository.deleteDraft(id: draftID)
+    func confirmSuggestion(participantID: UUID) {
+        guard let contact = suggestions[participantID] else { return }
+        link(participantID: participantID, to: contact)
+    }
+
+    func handlePicked(_ picked: [ContactRef], for request: ContactPickerRequest) {
+        switch request {
+        case .link(let participantID, _):
+            guard let contact = picked.first else { return }
+            link(participantID: participantID, to: contact)
+        case .addParticipants:
+            addParticipants(picked)
         }
-        didFinish = true
+    }
+
+    // MARK: - Save / delete / close
+
+    func save() async {
+        guard !isSaving, let current = draft else { return }
+        hasAttemptedSave = true
+        let currentIssues = DraftValidator.issues(for: current)
+        guard currentIssues.isEmpty else {
+            alert = .incomplete(messages: Self.distinctMessages(currentIssues))
+            return
+        }
+        isSaving = true
+        defer { isSaving = false }
+        do {
+            try await repository.confirmDraft(current)
+            savedSnapshot = current
+            didSave = true
+            didFinish = true
+        } catch {
+            alert = .saveFailed(message: error.localizedDescription)
+        }
+    }
+
+    func delete() async {
+        do {
+            try await repository.deleteDraft(id: draftID)
+            didFinish = true
+        } catch {
+            alert = .deleteFailed(message: error.localizedDescription)
+        }
+    }
+
+    /// Called when the screen disappears. Writes unsaved edits back to the draft (never to Riwayat).
+    func persistEditsIfNeeded() async {
+        guard !didFinish, loadState == .loaded, let current = draft, current != savedSnapshot else { return }
+        do {
+            try await repository.saveDraft(current)
+            savedSnapshot = current
+        } catch {
+            // The screen is already gone; the stored draft keeps its previous values.
+        }
+    }
+
+    // MARK: - Split math
+
+    static func recalculate(_ draft: inout TransactionDraft) {
+        switch draft.flow {
+        case .personal:
+            for index in draft.participants.indices {
+                draft.participants[index].shareAmount = draft.totalAmount
+            }
+        case .splitBill:
+            if (draft.splitMethod ?? .equal) == .custom {
+                if let total = SplitCalculationEngine.customTotal(draft.participants.map(\.shareAmount)) {
+                    draft.totalAmount = total
+                }
+            } else {
+                let shares = SplitCalculationEngine.shares(
+                    total: draft.totalAmount,
+                    friendCount: draft.participants.count,
+                    includesUser: draft.includesUser
+                )
+                for (index, share) in shares.enumerated() {
+                    draft.participants[index].shareAmount = share
+                }
+            }
+        }
+    }
+
+    // MARK: - Private
+
+    private func mutate(_ change: (inout TransactionDraft) -> Void) {
+        guard var updated = draft else { return }
+        change(&updated)
+        Self.recalculate(&updated)
+        draft = updated
+    }
+
+    private func link(participantID: UUID, to contact: ContactRef) {
+        guard let current = draft else { return }
+        let usedByAnother = current.participants.contains {
+            $0.id != participantID && $0.contactIdentifier == contact.identifier
+        }
+        guard !usedByAnother else {
+            alert = .duplicateContact
+            return
+        }
+        mutate { draft in
+            guard let index = draft.participants.firstIndex(where: { $0.id == participantID }) else { return }
+            draft.participants[index].name = contact.displayName
+            draft.participants[index].contactIdentifier = contact.identifier
+        }
+        suggestions[participantID] = nil
+    }
+
+    private func addParticipants(_ picked: [ContactRef]) {
+        guard let current = draft, current.flow == .splitBill else { return }
+        var usedIdentifiers = Set(current.participants.compactMap(\.contactIdentifier))
+        var additions: [TransactionParticipant] = []
+        var foundDuplicate = false
+        for contact in picked {
+            guard !usedIdentifiers.contains(contact.identifier) else {
+                foundDuplicate = true
+                continue
+            }
+            usedIdentifiers.insert(contact.identifier)
+            additions.append(TransactionParticipant(
+                name: contact.displayName,
+                contactIdentifier: contact.identifier,
+                shareAmount: 0
+            ))
+        }
+        mutate { $0.participants.append(contentsOf: additions) }
+        if foundDuplicate {
+            alert = .duplicateContact
+        }
+    }
+
+    private func refreshSuggestions() async {
+        guard let current = draft, await contacts.access() == .authorized else {
+            suggestions = [:]
+            return
+        }
+        var result: [UUID: ContactRef] = [:]
+        for participant in current.participants where !Self.isLinked(participant) {
+            let name = participant.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { continue }
+            let matches = await contacts.search(name: name)
+            if matches.count == 1 {
+                result[participant.id] = matches[0]
+            }
+        }
+        suggestions = result
+    }
+
+    private static func isLinked(_ participant: TransactionParticipant) -> Bool {
+        let identifier = participant.contactIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return !identifier.isEmpty
+    }
+
+    private static func distinctMessages(_ issues: [DraftValidationIssue]) -> [String] {
+        var seen = Set<String>()
+        return issues.map(\.message).filter { seen.insert($0).inserted }
     }
 }

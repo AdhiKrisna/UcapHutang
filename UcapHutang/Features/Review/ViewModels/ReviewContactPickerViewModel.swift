@@ -3,104 +3,57 @@ import Observation
 
 @Observable
 final class ReviewContactPickerViewModel {
-    var searchQuery: String = ""
-    let isMultiSelect: Bool
-    var totalAmount: Int64
-    var selectedContacts: [SelectedContactUIModel] = []
-    private(set) var recentContacts: [ContactUIModel] = []
-    private(set) var deviceContacts: [ContactUIModel] = []
+    let allowsMultipleSelection: Bool
+    var searchQuery: String
+    private(set) var recentContacts: [ContactRef] = []
+    private(set) var deviceContacts: [ContactRef] = []
+    private(set) var selectedContacts: [ContactRef] = []
+
+    private let contacts: any ContactsProviding
+    private let repository: any TransactionRepository
 
     init(
-        isMultiSelect: Bool = false,
-        totalAmount: Int64 = 300_000,
-        initialSelected: [SelectedContactUIModel] = [],
-        recentContacts: [ContactUIModel] = ReviewMockData.sampleHistoryContacts,
-        deviceContacts: [ContactUIModel] = ReviewMockData.sampleDeviceContacts
+        allowsMultipleSelection: Bool,
+        initialQuery: String,
+        contacts: any ContactsProviding,
+        repository: any TransactionRepository
     ) {
-        self.isMultiSelect = isMultiSelect
-        self.totalAmount = totalAmount
-        self.recentContacts = recentContacts
-        self.deviceContacts = deviceContacts
-
-        if !initialSelected.isEmpty {
-            self.selectedContacts = initialSelected
-        } else if isMultiSelect {
-            // Mock sample multi-selection for preview if empty
-            self.selectedContacts = [
-                SelectedContactUIModel(id: "1", name: "Orang A", amount: 100_000),
-                SelectedContactUIModel(id: "2", name: "Orang B", amount: 100_000),
-                SelectedContactUIModel(id: "3", name: "Orang C", amount: 100_000)
-            ]
-        }
+        self.allowsMultipleSelection = allowsMultipleSelection
+        self.searchQuery = initialQuery
+        self.contacts = contacts
+        self.repository = repository
     }
 
-    var filteredRecentContacts: [ContactUIModel] {
-        guard !searchQuery.isEmpty else { return recentContacts }
-        return recentContacts.filter {
-            $0.fullName.localizedCaseInsensitiveContains(searchQuery) ||
-            ($0.phoneNumber?.localizedCaseInsensitiveContains(searchQuery) ?? false)
-        }
-    }
-
-    var filteredDeviceContacts: [ContactUIModel] {
-        guard !searchQuery.isEmpty else { return deviceContacts }
-        return deviceContacts.filter {
-            $0.fullName.localizedCaseInsensitiveContains(searchQuery) ||
-            ($0.phoneNumber?.localizedCaseInsensitiveContains(searchQuery) ?? false)
-        }
-    }
-
-    var totalAllocatedAmount: Int64 {
-        selectedContacts.reduce(0) { $0 + $1.amount }
+    var filteredRecentContacts: [ContactRef] {
+        let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return recentContacts }
+        return recentContacts.filter { $0.displayName.localizedCaseInsensitiveContains(query) }
     }
 
     var hasNoResults: Bool {
-        !searchQuery.isEmpty && filteredRecentContacts.isEmpty && filteredDeviceContacts.isEmpty
+        filteredRecentContacts.isEmpty && deviceContacts.isEmpty
     }
 
-    func isSelected(contactID: String) -> Bool {
-        selectedContacts.contains { $0.id == contactID }
+    /// Loads contacts that already have Riwayat history.
+    func load() async {
+        let identifiers = (try? await repository.linkedContactIdentifiers()) ?? []
+        recentContacts = await contacts.contacts(withIdentifiers: identifiers)
     }
 
-    func toggleSelection(for contact: ContactUIModel) {
-        if isMultiSelect {
-            if let index = selectedContacts.firstIndex(where: { $0.id == contact.id }) {
-                selectedContacts.remove(at: index)
-            } else {
-                selectedContacts.append(SelectedContactUIModel(id: contact.id, name: contact.fullName, amount: 0))
-            }
-            recalculateEqualSplit()
+    /// Refreshes "Kontak di iPhone" for the current query (blank query → all contacts A–Z).
+    func search() async {
+        deviceContacts = await contacts.search(name: searchQuery)
+    }
+
+    func toggle(_ contact: ContactRef) {
+        if let index = selectedContacts.firstIndex(of: contact) {
+            selectedContacts.remove(at: index)
         } else {
-            selectedContacts = [SelectedContactUIModel(id: contact.id, name: contact.fullName, amount: totalAmount)]
+            selectedContacts.append(contact)
         }
     }
 
-    func updateCustomAmount(for contactID: String, amount: Int64) {
-        guard let index = selectedContacts.firstIndex(where: { $0.id == contactID }) else { return }
-        selectedContacts[index].amount = amount
-        selectedContacts[index].isCustomAmount = true
-    }
-
-    func createNewContact(name: String) -> ContactUIModel {
-        let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let newContact = ContactUIModel(id: UUID().uuidString, fullName: clean, phoneNumber: nil, isFromHistory: true)
-        recentContacts.insert(newContact, at: 0)
-        toggleSelection(for: newContact)
-        searchQuery = ""
-        return newContact
-    }
-
-    private func recalculateEqualSplit() {
-        guard !selectedContacts.isEmpty, totalAmount > 0 else { return }
-        let uncustomized = selectedContacts.filter { !$0.isCustomAmount }
-        let customTotal = selectedContacts.filter { $0.isCustomAmount }.reduce(Int64(0)) { $0 + $1.amount }
-        let remaining = max(0, totalAmount - customTotal)
-
-        guard !uncustomized.isEmpty else { return }
-        let share = remaining / Int64(uncustomized.count)
-
-        for i in selectedContacts.indices where !selectedContacts[i].isCustomAmount {
-            selectedContacts[i].amount = share
-        }
+    func isSelected(_ contact: ContactRef) -> Bool {
+        selectedContacts.contains(contact)
     }
 }

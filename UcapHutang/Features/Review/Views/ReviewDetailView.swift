@@ -2,259 +2,340 @@ import SwiftUI
 
 struct ReviewDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @State private var viewModel: ReviewDetailViewModel
-    @State private var isShowingDatePicker = false
+    private let repository: any TransactionRepository
+    private let contacts: any ContactsProviding
 
-    init(
-        draftID: UUID = UUID(),
-        repository: (any TransactionRepository)? = nil,
-        initialType: TransactionType = .hutang,
-        initialNominal: Int64 = 150_000,
-        initialDescription: String = "Pinjam buat makan siang",
-        initialParticipants: [ReviewParticipantUIModel]? = nil
-    ) {
+    init(draftID: UUID, repository: any TransactionRepository, contacts: any ContactsProviding) {
+        self.repository = repository
+        self.contacts = contacts
         _viewModel = State(initialValue: ReviewDetailViewModel(
             draftID: draftID,
             repository: repository,
-            initialType: initialType,
-            initialNominal: initialNominal,
-            initialDescription: initialDescription,
-            initialParticipants: initialParticipants
+            contacts: contacts
         ))
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // MARK: - Waktu
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Waktu")
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textSecondary)
-
-                        Button {
-                            isShowingDatePicker.toggle()
-                        } label: {
-                            HStack {
-                                Text(viewModel.timeText)
-                                    .font(.body.weight(.semibold))
-                                    .foregroundStyle(AppColors.textPrimary)
-                                Spacer()
-                                Image(systemName: "calendar")
-                                    .foregroundStyle(AppColors.textSecondary)
-                            }
-                            .padding(.vertical, 4)
+        content
+            .navigationTitle("Review Catatan")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Tutup") { dismiss() }
+                }
+            }
+            .task { await viewModel.load() }
+            .onDisappear {
+                Task { await viewModel.persistEditsIfNeeded() }
+            }
+            .onChange(of: viewModel.didFinish) { _, finished in
+                if finished { dismiss() }
+            }
+            .sensoryFeedback(.success, trigger: viewModel.didSave)
+            .sheet(item: $viewModel.pickerRequest) { request in
+                ReviewContactPickerSheet(request: request, contacts: contacts, repository: repository) { picked in
+                    viewModel.handlePicked(picked, for: request)
+                }
+            }
+            .confirmationDialog("Hapus catatan ini?", isPresented: $viewModel.isConfirmingDelete, titleVisibility: .visible) {
+                Button("Hapus", role: .destructive) {
+                    Task { await viewModel.delete() }
+                }
+                Button("Batal", role: .cancel) {}
+            } message: {
+                Text("Catatan dan transkripnya akan dihapus permanen.")
+            }
+            .alert(
+                viewModel.alert?.title ?? "",
+                isPresented: Binding(
+                    get: { viewModel.alert != nil },
+                    set: { if !$0 { viewModel.alert = nil } }
+                ),
+                presenting: viewModel.alert
+            ) { alert in
+                switch alert {
+                case .incomplete:
+                    Button("Periksa Lagi", role: .cancel) {}
+                case .contactsAccessRequired:
+                    Button("Buka Pengaturan") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            openURL(url)
                         }
-                        .buttonStyle(.plain)
-
-                        if isShowingDatePicker {
-                            DatePicker(
-                                "",
-                                selection: $viewModel.transactionDate,
-                                displayedComponents: [.date, .hourAndMinute]
-                            )
-                            .datePickerStyle(.graphical)
-                            .onChange(of: viewModel.transactionDate) { _, newDate in
-                                let formatter = DateFormatter()
-                                formatter.locale = Locale(identifier: "id_ID")
-                                formatter.dateFormat = "d MMM, HH:mm"
-                                viewModel.timeText = "Hari ini, " + formatter.string(from: newDate)
-                            }
-                        }
                     }
+                    Button("Nanti", role: .cancel) {}
+                case .duplicateContact, .saveFailed, .deleteFailed:
+                    Button("OK", role: .cancel) {}
+                }
+            } message: { alert in
+                if let message = alert.message {
+                    Text(message)
+                }
+            }
+    }
 
-                    // MARK: - Nominal
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Nominal")
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textSecondary)
+    @ViewBuilder
+    private var content: some View {
+        switch viewModel.loadState {
+        case .loading:
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .notFound:
+            ContentUnavailableView("Catatan ini tidak ditemukan.", systemImage: "doc.questionmark")
+        case .loaded:
+            if let draft = viewModel.draft {
+                form(draft)
+            }
+        }
+    }
 
-                        Text(viewModel.formattedNominal)
+    private func form(_ draft: TransactionDraft) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                field("Waktu") {
+                    DatePicker(
+                        "Waktu",
+                        selection: Binding(
+                            get: { viewModel.draft?.transactionDate ?? Date() },
+                            set: { viewModel.setTransactionDate($0) }
+                        ),
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                    .labelsHidden()
+                    .environment(\.locale, Locale(identifier: "id_ID"))
+                }
+
+                field("Nominal") {
+                    if viewModel.isCustomSplit {
+                        Text(draft.totalAmount.rupiahFormatted)
                             .font(.body.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary)
+                    } else {
+                        TextField(
+                            "Nominal",
+                            value: Binding(
+                                get: { viewModel.draft?.totalAmount ?? 0 },
+                                set: { viewModel.setTotalAmount($0) }
+                            ),
+                            format: .number
+                        )
+                        .keyboardType(.numberPad)
+                        .font(.body.weight(.semibold))
+                        .frame(minHeight: 44)
                     }
+                }
 
-                    // MARK: - Deskripsi
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Deskripsi")
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textSecondary)
+                field("Deskripsi") {
+                    TextField(
+                        "Deskripsi transaksi",
+                        text: Binding(
+                            get: { viewModel.draft?.title ?? "" },
+                            set: { viewModel.setTitle($0) }
+                        )
+                    )
+                    .font(.body.weight(.semibold))
+                    .frame(minHeight: 44)
+                }
 
-                        TextField("Deskripsi transaksi", text: $viewModel.description)
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                    }
-
-                    // MARK: - Jenis (Segmented Control)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Jenis")
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textSecondary)
-
+                if draft.flow == .personal {
+                    field("Jenis") {
                         Picker("Jenis", selection: Binding(
-                            get: { viewModel.transactionType },
-                            set: { viewModel.setTransactionType($0) }
+                            get: { viewModel.draft?.type ?? .unknown },
+                            set: { viewModel.setType($0) }
                         )) {
                             Text("Utang").tag(TransactionType.hutang)
                             Text("Piutang").tag(TransactionType.piutang)
                         }
                         .pickerStyle(.segmented)
                     }
-
-                    // MARK: - Orang (Smart Contact Cards)
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Orang")
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textSecondary)
-
-                        ForEach(viewModel.participants) { participant in
-                            SmartContactCardView(
-                                participant: participant,
-                                onConfirmTypo: {
-                                    viewModel.confirmTypo(for: participant.id)
-                                },
-                                onRejectTypo: {
-                                    viewModel.rejectTypo(for: participant.id)
-                                },
-                                onOpenPicker: {
-                                    viewModel.openContactPicker(for: participant.id)
-                                }
-                            )
+                } else {
+                    field("Metode bagi") {
+                        Picker("Metode bagi", selection: Binding(
+                            get: { viewModel.draft?.splitMethod ?? .equal },
+                            set: { viewModel.setSplitMethod($0) }
+                        )) {
+                            Text("Bagi Rata").tag(SplitMethod.equal)
+                            Text("Custom").tag(SplitMethod.custom)
                         }
+                        .pickerStyle(.segmented)
+                    }
+                    if !viewModel.isCustomSplit {
+                        Toggle("Saya ikut dihitung", isOn: Binding(
+                            get: { viewModel.draft?.includesUser ?? true },
+                            set: { viewModel.setIncludesUser($0) }
+                        ))
+                        .font(.body)
+                    }
+                }
 
-                        // Tombol Tambah Orang (Outlined / Dotted)
-                        Button {
-                            viewModel.addParticipant()
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Text("+ Tambah orang")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(AppColors.textSecondary)
-                                Spacer()
+                peopleSection(draft)
+
+                if draft.flow == .splitBill {
+                    splitSummary(draft)
+                }
+
+                actions
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            content()
+        }
+    }
+
+    private func peopleSection(_ draft: TransactionDraft) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Orang")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            ForEach(draft.participants) { participant in
+                if draft.flow == .splitBill {
+                    participantBlock(participant, in: draft)
+                        .contextMenu {
+                            Button("Hapus dari catatan", role: .destructive) {
+                                viewModel.removeParticipant(id: participant.id)
                             }
-                            .frame(minHeight: 44)
-                            .background(Color(.secondarySystemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(style: StrokeStyle(lineWidth: 1, dash: [4]))
-                                    .foregroundStyle(Color.secondary.opacity(0.4))
-                            )
                         }
-                        .buttonStyle(.plain)
-                    }
-
-                    Spacer(minLength: 40)
-
-                    // MARK: - Action Buttons (Bottom)
-                    VStack(spacing: 12) {
-                        Button {
-                            Task { await viewModel.saveDraft() }
-                        } label: {
-                            Text("Simpan Catatan")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity, minHeight: 50)
-                                .background(Color.primary)
-                                .foregroundStyle(Color(.systemBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .accessibilityAction(named: "Hapus dari catatan") {
+                            viewModel.removeParticipant(id: participant.id)
                         }
-                        .buttonStyle(.plain)
+                } else {
+                    participantBlock(participant, in: draft)
+                }
+            }
 
-                        Button {
-                            viewModel.showDeleteConfirmation = true
-                        } label: {
-                            Text("Hapus catatan ini")
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(AppColors.textSecondary)
-                                .frame(maxWidth: .infinity, minHeight: 36)
-                        }
-                        .buttonStyle(.plain)
-                    }
+            if draft.flow == .splitBill {
+                Button {
+                    Task { await viewModel.requestPicker(.addParticipants) }
+                } label: {
+                    Text("+ Tambah orang")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-            }
-            .navigationTitle("Review Catatan")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                    }
-                }
-            }
-            .onChange(of: viewModel.didFinish) { _, finished in
-                if finished {
-                    dismiss()
-                }
-            }
-            .sheet(item: Binding<IdentifiableUUID?>(
-                get: { viewModel.activeContactPickerParticipantID.map { IdentifiableUUID($0) } },
-                set: { viewModel.activeContactPickerParticipantID = $0?.id }
-            )) { identifiable in
-                ReviewContactPickerSheet(
-                    isMultiSelect: false,
-                    onSelectSingle: { selected in
-                        viewModel.updateParticipantContact(id: identifiable.id, contact: selected)
-                    }
-                )
-            }
-            .confirmationDialog("Hapus catatan ini?", isPresented: $viewModel.showDeleteConfirmation, titleVisibility: .visible) {
-                Button("Hapus Catatan", role: .destructive) {
-                    Task { await viewModel.deleteDraft() }
-                }
-                Button("Batal", role: .cancel) {}
-            } message: {
-                Text("Draf transaksi ini akan dihapus permanen.")
+                .buttonStyle(.bordered)
+                .tint(.secondary)
             }
         }
     }
+
+    private func participantBlock(_ participant: TransactionParticipant, in draft: TransactionDraft) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SmartContactCardView(
+                name: participant.name,
+                state: viewModel.cardState(for: participant),
+                showsRequiredMarker: viewModel.showsRequiredMarker(for: participant.id),
+                onLink: { openPicker(for: participant) },
+                onConfirmSuggestion: { viewModel.confirmSuggestion(participantID: participant.id) },
+                onChooseOther: { openPicker(for: participant) },
+                onChange: { openPicker(for: participant) }
+            )
+            if draft.flow == .splitBill {
+                SplitParticipantRow(
+                    amount: participant.shareAmount,
+                    isEditable: viewModel.isCustomSplit,
+                    onAmountChange: { viewModel.setShare(participantID: participant.id, amount: $0) }
+                )
+                .padding(.horizontal, 14)
+            }
+        }
+    }
+
+    private func openPicker(for participant: TransactionParticipant) {
+        Task {
+            await viewModel.requestPicker(.link(participantID: participant.id, prefill: participant.name))
+        }
+    }
+
+    private func splitSummary(_ draft: TransactionDraft) -> some View {
+        VStack(spacing: 8) {
+            summaryRow("Bagian teman", viewModel.friendsTotal)
+            if !viewModel.isCustomSplit && draft.includesUser {
+                summaryRow("Bagian kamu", viewModel.userShare)
+            }
+            Divider()
+            summaryRow("Total transaksi", draft.totalAmount)
+                .font(.body.weight(.semibold))
+        }
+        .padding(14)
+        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 12))
+    }
+
+    private func summaryRow(_ label: String, _ amount: Int64) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text(amount.rupiahFormatted)
+        }
+        .font(.body)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var actions: some View {
+        VStack(spacing: 12) {
+            Button {
+                Task { await viewModel.save() }
+            } label: {
+                Group {
+                    if viewModel.isSaving {
+                        ProgressView()
+                            .tint(Color(.systemBackground))
+                    } else {
+                        Text("Simpan Catatan")
+                            .font(.headline)
+                    }
+                }
+                .foregroundStyle(Color(.systemBackground))
+                .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .tint(.primary)
+            .disabled(viewModel.isSaving)
+
+            Button("Hapus catatan ini", role: .destructive) {
+                viewModel.isConfirmingDelete = true
+            }
+            .font(.subheadline.weight(.medium))
+            .frame(maxWidth: .infinity, minHeight: 44)
+        }
+        .padding(.top, 12)
+    }
 }
 
-#Preview("Review - Connected") {
-    ReviewDetailView(
-        initialType: .hutang,
-        initialNominal: 150_000,
-        initialDescription: "Pinjam buat makan siang",
-        initialParticipants: [
-            ReviewParticipantUIModel(
-                name: "Dito",
-                linkState: .autoLinked(matchedContactName: "Andito Rizkika")
-            )
-        ]
-    )
+#if DEBUG
+private final class PreviewContactsProvider: ContactsProviding {
+    func access() async -> ContactsAccess { .authorized }
+    func requestAccess() async -> ContactsAccess { .authorized }
+    func search(name: String) async -> [ContactRef] {
+        [ContactRef(identifier: "preview-dito", displayName: "Andito Rizkika", phoneNumber: "+62 812")]
+    }
+    func contacts(withIdentifiers ids: [String]) async -> [ContactRef] { [] }
 }
 
-#Preview("Review - Typo Suggestion") {
-    ReviewDetailView(
-        initialType: .hutang,
-        initialNominal: 150_000,
-        initialDescription: "Pinjam buat makan siang",
-        initialParticipants: [
-            ReviewParticipantUIModel(
-                name: "Dito Rizkaka",
-                linkState: .typoSuggestion(suggestedName: "Dito Rizkika", originalName: "Dito Rizkaka")
-            )
-        ]
+#Preview("Review Personal") {
+    let draft = TransactionDraft(
+        flow: .personal,
+        type: .hutang,
+        title: "Pinjam buat makan siang",
+        totalAmount: 150_000,
+        participants: [TransactionParticipant(name: "Dito", shareAmount: 150_000)],
+        rawTranscript: "Pinjam 150 ribu ke Dito buat makan siang"
     )
+    return NavigationStack {
+        ReviewDetailView(
+            draftID: draft.id,
+            repository: InMemoryTransactionRepository(seedDrafts: [draft]),
+            contacts: PreviewContactsProvider()
+        )
+    }
 }
-
-#Preview("Review - Unlinked") {
-    ReviewDetailView(
-        initialType: .hutang,
-        initialNominal: 150_000,
-        initialDescription: "Pinjam buat makan siang",
-        initialParticipants: [
-            ReviewParticipantUIModel(
-                name: "Dito Rizkaka",
-                linkState: .unlinked
-            )
-        ]
-    )
-}
+#endif

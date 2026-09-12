@@ -1,160 +1,93 @@
 import SwiftUI
 
 struct SmartContactCardView: View {
-    let participant: ReviewParticipantUIModel
-    var onConfirmTypo: (() -> Void)?
-    var onRejectTypo: (() -> Void)?
-    var onOpenPicker: (() -> Void)?
-
-    init(
-        participant: ReviewParticipantUIModel,
-        onConfirmTypo: (() -> Void)? = nil,
-        onRejectTypo: (() -> Void)? = nil,
-        onOpenPicker: (() -> Void)? = nil
-    ) {
-        self.participant = participant
-        self.onConfirmTypo = onConfirmTypo
-        self.onRejectTypo = onRejectTypo
-        self.onOpenPicker = onOpenPicker
-    }
+    let name: String
+    let state: ContactCardState
+    let showsRequiredMarker: Bool
+    let onLink: () -> Void
+    let onConfirmSuggestion: () -> Void
+    let onChooseOther: () -> Void
+    let onChange: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            switch participant.linkState {
-            case .autoLinked:
-                // State A: Terhubung otomatis
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(participant.name)
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(AppColors.textPrimary)
-
-                        Text("Terhubung otomatis ke kontak")
-                            .font(.caption)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-
-                    Spacer()
-
-                    Button {
-                        onOpenPicker?()
-                    } label: {
-                        Text("Bukan dia?")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(AppColors.textPrimary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color(.tertiarySystemFill))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                    }
-                    .buttonStyle(.plain)
-                }
-
-            case .typoSuggestion(let suggestedName, _):
-                // State B: Nama Orang Typo
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(participant.name)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(AppColors.textPrimary)
-
-                    Text("Mirip kontak \"\(suggestedName)\" — Typo?")
-                        .font(.caption)
-                        .foregroundStyle(AppColors.textSecondary)
-
-                    HStack(spacing: 8) {
-                        Button {
-                            onConfirmTypo?()
-                        } label: {
-                            Text("Ya, hubungkan")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(AppColors.textPrimary)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Color(.secondarySystemFill))
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            onRejectTypo?()
-                        } label: {
-                            Text("Bukan, ganti")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(AppColors.textPrimary)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Color(.secondarySystemFill))
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
+            switch state {
             case .unlinked:
-                // State C: Orangnya belum terhubung
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(participant.name)
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(AppColors.textPrimary)
-
-                        Text("Belum terhubung")
-                            .font(.caption)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-
-                    Spacer()
-
-                    Button {
-                        onOpenPicker?()
-                    } label: {
-                        Text("Hubungkan")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color(.secondarySystemFill))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                    }
-                    .buttonStyle(.plain)
+                HStack(alignment: .center, spacing: 12) {
+                    labels(title: displayName, subtitle: "Belum terhubung")
+                    Spacer(minLength: 8)
+                    cardButton("Hubungkan", accessibilityLabel: "Hubungkan \(displayName) ke kontak", action: onLink)
                 }
+
+            case .suggestion(let contact):
+                labels(title: displayName, subtitle: "Mirip kontak “\(contact.displayName)”")
+                HStack(spacing: 8) {
+                    cardButton("Ya, hubungkan", accessibilityLabel: "Hubungkan ke \(contact.displayName)", action: onConfirmSuggestion)
+                    cardButton("Bukan, pilih lain", accessibilityLabel: "Pilih kontak lain untuk \(displayName)", action: onChooseOther)
+                }
+
+            case .linked(let contact):
+                HStack(alignment: .center, spacing: 12) {
+                    labels(title: contact.displayName, subtitle: "Terhubung ke kontak")
+                    Spacer(minLength: 8)
+                    cardButton("Ganti", accessibilityLabel: "Ganti kontak \(contact.displayName)", action: onChange)
+                }
+            }
+
+            if showsRequiredMarker {
+                Label("Wajib dihubungkan", systemImage: "exclamationmark.circle")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.orange)
             }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
-        )
+        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 12))
+    }
+
+    private var displayName: String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Belum ada nama" : trimmed
+    }
+
+    private func labels(title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.primary)
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func cardButton(_ title: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .frame(minHeight: 44)
+        }
+        .buttonStyle(.bordered)
+        .tint(.primary)
+        .accessibilityLabel(accessibilityLabel)
     }
 }
 
 #Preview("3 States") {
     VStack(spacing: 16) {
-        // State A
+        SmartContactCardView(name: "Dito", state: .unlinked, showsRequiredMarker: true, onLink: {}, onConfirmSuggestion: {}, onChooseOther: {}, onChange: {})
         SmartContactCardView(
-            participant: ReviewParticipantUIModel(
-                name: "Dito",
-                linkState: .autoLinked(matchedContactName: "Andito Rizkika")
-            )
+            name: "Dito",
+            state: .suggestion(ContactRef(identifier: "1", displayName: "Andito Rizkika", phoneNumber: nil)),
+            showsRequiredMarker: false,
+            onLink: {}, onConfirmSuggestion: {}, onChooseOther: {}, onChange: {}
         )
-
-        // State B
         SmartContactCardView(
-            participant: ReviewParticipantUIModel(
-                name: "Dito Rizkaka",
-                linkState: .typoSuggestion(suggestedName: "Dito Rizkika", originalName: "Dito Rizkaka")
-            )
-        )
-
-        // State C
-        SmartContactCardView(
-            participant: ReviewParticipantUIModel(
-                name: "Dito Rizkaka",
-                linkState: .unlinked
-            )
+            name: "Andito Rizkika",
+            state: .linked(ContactRef(identifier: "1", displayName: "Andito Rizkika", phoneNumber: nil)),
+            showsRequiredMarker: false,
+            onLink: {}, onConfirmSuggestion: {}, onChooseOther: {}, onChange: {}
         )
     }
     .padding()

@@ -10,34 +10,13 @@ enum ReviewFilterType: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
 }
 
-// MARK: - Smart Contact Linking State
-enum ContactLinkState: Equatable, Sendable {
-    /// Terhubung langsung tanpa keraguan
-    case autoLinked(matchedContactName: String)
-    /// AI mendeteksi kemiripan nama / potensi typo
-    case typoSuggestion(suggestedName: String, originalName: String)
-    /// Belum terhubung ke kontak manapun
-    case unlinked
-
-    var statusText: String {
-        switch self {
-        case .autoLinked:
-            return "Terhubung otomatis ke kontak"
-        case .typoSuggestion(let suggestedName, _):
-            return "Mirip kontak \"\(suggestedName)\" — Typo?"
-        case .unlinked:
-            return "Belum terhubung"
-        }
-    }
-}
-
 // MARK: - Review Item UI Model
 struct ReviewItemUIModel: Identifiable, Equatable, Sendable {
     let id: UUID
     var type: TransactionType
     var prefix: String // "ke" atau "dari"
-    var personName: String // "Dito", "Krisna", "3 Orang"
-    var avatarInitials: [String] // ["E", "C", "D"] untuk split bill
+    var personName: String // "Dito", "Belum ada nama", "3 Orang"
+    var avatarInitials: [String]
     var description: String
     var relativeTime: String
     var amount: Int64
@@ -66,109 +45,79 @@ struct ReviewItemUIModel: Identifiable, Equatable, Sendable {
     }
 }
 
-// MARK: - Review Participant UI Model
-struct ReviewParticipantUIModel: Identifiable, Equatable, Sendable {
-    let id: UUID
-    var name: String
-    var shareAmount: Int64
-    var linkState: ContactLinkState
-    var contactIdentifier: String?
-    var phoneNumber: String?
+// MARK: - Contact card state
+enum ContactCardState: Equatable, Sendable {
+    /// Not linked and no single matching contact.
+    case unlinked
+    /// Exactly one contact matches the name; the user must confirm.
+    case suggestion(ContactRef)
+    /// Linked to an iPhone contact.
+    case linked(ContactRef)
+}
 
-    init(
-        id: UUID = UUID(),
-        name: String,
-        shareAmount: Int64 = 0,
-        linkState: ContactLinkState = .unlinked,
-        contactIdentifier: String? = nil,
-        phoneNumber: String? = nil
-    ) {
-        self.id = id
-        self.name = name
-        self.shareAmount = shareAmount
-        self.linkState = linkState
-        self.contactIdentifier = contactIdentifier
-        self.phoneNumber = phoneNumber
+// MARK: - Picker request
+enum ContactPickerRequest: Identifiable, Hashable, Sendable {
+    case link(participantID: UUID, prefill: String)
+    case addParticipants
+
+    var id: String {
+        switch self {
+        case .link(let participantID, _):
+            return "link-\(participantID.uuidString)"
+        case .addParticipants:
+            return "add-participants"
+        }
+    }
+
+    var allowsMultipleSelection: Bool {
+        if case .addParticipants = self { return true }
+        return false
+    }
+
+    var initialQuery: String {
+        if case .link(_, let prefill) = self { return prefill }
+        return ""
     }
 }
 
-// MARK: - Contact Picker UI Models
-struct ContactUIModel: Identifiable, Equatable, Sendable {
-    let id: String
-    var fullName: String
-    var phoneNumber: String?
-    var isFromHistory: Bool
+// MARK: - Alerts
+enum ReviewAlert: Identifiable, Equatable {
+    case incomplete(messages: [String])
+    case contactsAccessRequired
+    case duplicateContact
+    case saveFailed(message: String)
+    case deleteFailed(message: String)
 
-    init(
-        id: String = UUID().uuidString,
-        fullName: String,
-        phoneNumber: String? = nil,
-        isFromHistory: Bool = false
-    ) {
-        self.id = id
-        self.fullName = fullName
-        self.phoneNumber = phoneNumber
-        self.isFromHistory = isFromHistory
+    var id: String {
+        switch self {
+        case .incomplete: return "incomplete"
+        case .contactsAccessRequired: return "contacts-access"
+        case .duplicateContact: return "duplicate-contact"
+        case .saveFailed: return "save-failed"
+        case .deleteFailed: return "delete-failed"
+        }
     }
-}
 
-struct SelectedContactUIModel: Identifiable, Equatable, Sendable {
-    let id: String
-    var name: String
-    var amount: Int64
-    var isCustomAmount: Bool
-
-    init(
-        id: String,
-        name: String,
-        amount: Int64 = 0,
-        isCustomAmount: Bool = false
-    ) {
-        self.id = id
-        self.name = name
-        self.amount = amount
-        self.isCustomAmount = isCustomAmount
+    var title: String {
+        switch self {
+        case .incomplete: return "Data Belum Lengkap"
+        case .contactsAccessRequired: return "Akses Kontak Diperlukan"
+        case .duplicateContact: return "Orang ini sudah ada di catatan."
+        case .saveFailed: return "Data Belum Bisa Disimpan"
+        case .deleteFailed: return "Catatan Belum Bisa Dihapus"
+        }
     }
-}
 
-// MARK: - Mock / Preview Data (removed from production code in P3)
-enum ReviewMockData {
-    static let sampleDrafts: [ReviewItemUIModel] = [
-        ReviewItemUIModel(
-            type: .piutang,
-            prefix: "ke",
-            personName: "Dito",
-            description: "“pinjam buat makan siang”",
-            relativeTime: "5 menit lalu",
-            amount: 15_000
-        ),
-        ReviewItemUIModel(
-            type: .hutang,
-            prefix: "dari",
-            personName: "Krisna",
-            description: "“buat bayar kost”",
-            relativeTime: "5 menit lalu",
-            amount: 500_000
-        ),
-        ReviewItemUIModel(
-            type: .splitBill,
-            prefix: "ke",
-            personName: "3 Orang",
-            avatarInitials: ["E", "C", "D"],
-            description: "“makan malam, bagi rata”",
-            relativeTime: "5 menit lalu",
-            amount: 300_000
-        )
-    ]
-
-    static let sampleHistoryContacts: [ContactUIModel] = [
-        ContactUIModel(fullName: "Budi Santoso", phoneNumber: "+62 81234123123", isFromHistory: true),
-        ContactUIModel(fullName: "Andito Rizkika", phoneNumber: "+62 81234123123", isFromHistory: true)
-    ]
-
-    static let sampleDeviceContacts: [ContactUIModel] = [
-        ContactUIModel(fullName: "Budi Santoso", phoneNumber: "+62 81234123123", isFromHistory: false),
-        ContactUIModel(fullName: "Budi Santoso", phoneNumber: "+62 81234123123", isFromHistory: false),
-        ContactUIModel(fullName: "Andito Rizkika", phoneNumber: "+62 81234123123", isFromHistory: false)
-    ]
+    var message: String? {
+        switch self {
+        case .incomplete(let messages):
+            return messages.map { "• " + $0 }.joined(separator: "\n")
+        case .contactsAccessRequired:
+            return "UcapHutang perlu akses penuh ke Kontak agar setiap catatan terhubung ke orang yang tepat."
+        case .duplicateContact:
+            return nil
+        case .saveFailed(let message), .deleteFailed(let message):
+            return message
+        }
+    }
 }
