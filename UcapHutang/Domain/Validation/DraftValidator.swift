@@ -101,16 +101,37 @@ enum DraftValidator {
             if draft.type != .splitBill {
                 issues.append(.splitTypeInvalid)
             }
+            var hasShareProblem = false
             for participant in draft.participants where participant.shareAmount <= 0 {
                 let name = participant.name.trimmingCharacters(in: .whitespacesAndNewlines)
                 issues.append(.shareNotPositive(participantID: participant.id, name: name))
+                hasShareProblem = true
             }
-            if let allocated = SplitCalculationEngine.customTotal(draft.participants.map(\.shareAmount)) {
+            let shares = draft.participants.map(\.shareAmount)
+            if let allocated = SplitCalculationEngine.customTotal(shares) {
                 if allocated > draft.totalAmount {
                     issues.append(.sharesExceedTotal)
+                    hasShareProblem = true
                 }
             } else {
                 issues.append(.sharesExceedTotal)
+                hasShareProblem = true
+            }
+            if !hasShareProblem && !draft.participants.isEmpty {
+                let sharesMatch: Bool
+                if draft.splitMethod == .custom {
+                    sharesMatch = SplitCalculationEngine.customTotal(shares) == draft.totalAmount
+                } else {
+                    let expected = SplitCalculationEngine.shares(
+                        total: draft.totalAmount,
+                        friendCount: draft.participants.count,
+                        includesUser: draft.includesUser
+                    )
+                    sharesMatch = shares == expected
+                }
+                if !sharesMatch {
+                    issues.append(.sharesDoNotMatchTotal)
+                }
             }
         }
 
