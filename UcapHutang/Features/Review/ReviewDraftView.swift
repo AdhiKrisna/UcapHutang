@@ -30,11 +30,11 @@ struct ReviewDraftView: View {
                     .padding(.bottom, 28)
                 }
                 .scrollContentBackground(.hidden)
-                .background(Color.white)
+                .background(AppColors.background)
             } else {
                 ProgressView("Memuat data...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.white)
+                    .background(AppColors.background)
             }
         }
         }
@@ -98,7 +98,7 @@ struct ReviewDraftView: View {
         .padding(.horizontal, 24)
         .padding(.top, 12)
         .padding(.bottom, 18)
-        .background(Color.white)
+        .background(AppColors.background)
     }
 
     private func transcriptCard(_ transcript: String) -> some View {
