@@ -3,9 +3,11 @@ import SwiftUI
 struct LedgerListView: View {
     @State private var viewModel: LedgerListViewModel
     private let repository: any TransactionRepository
+    private let contacts: any ContactsProviding
 
-    init(repository: any TransactionRepository) {
+    init(repository: any TransactionRepository, contacts: any ContactsProviding) {
         self.repository = repository
+        self.contacts = contacts
         _viewModel = State(initialValue: LedgerListViewModel(repository: repository))
     }
 
@@ -140,7 +142,7 @@ struct LedgerListView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: PersonLedgerSummary.self) { person in
-                PersonLedgerDetailView(person: person, entries: viewModel.entries(for: person), repository: repository)
+                PersonLedgerDetailView(person: person, entries: viewModel.entries(for: person), repository: repository, contacts: contacts)
             }
             .task { await viewModel.load() }
             .refreshable { await viewModel.load() }

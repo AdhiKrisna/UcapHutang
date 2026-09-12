@@ -6,18 +6,34 @@ struct ReviewContactPickerSheet: View {
     private let onPick: ([ContactRef]) -> Void
 
     init(
-        request: ContactPickerRequest,
+        allowsMultipleSelection: Bool,
+        initialQuery: String,
         contacts: any ContactsProviding,
         repository: any TransactionRepository,
         onPick: @escaping ([ContactRef]) -> Void
     ) {
         _viewModel = State(initialValue: ReviewContactPickerViewModel(
-            allowsMultipleSelection: request.allowsMultipleSelection,
-            initialQuery: request.initialQuery,
+            allowsMultipleSelection: allowsMultipleSelection,
+            initialQuery: initialQuery,
             contacts: contacts,
             repository: repository
         ))
         self.onPick = onPick
+    }
+
+    init(
+        request: ContactPickerRequest,
+        contacts: any ContactsProviding,
+        repository: any TransactionRepository,
+        onPick: @escaping ([ContactRef]) -> Void
+    ) {
+        self.init(
+            allowsMultipleSelection: request.allowsMultipleSelection,
+            initialQuery: request.initialQuery,
+            contacts: contacts,
+            repository: repository,
+            onPick: onPick
+        )
     }
 
     var body: some View {

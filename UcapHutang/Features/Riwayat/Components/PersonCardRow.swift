@@ -13,6 +13,12 @@ struct PersonCardRow: View {
                 Text("\(person.entryCount) Catatan")
                     .font(.caption)
                     .foregroundStyle(Color.secondary)
+
+                if !person.isLinked {
+                    Label("Belum terhubung ke kontak", systemImage: "person.crop.circle.badge.exclamationmark")
+                        .font(.caption)
+                        .foregroundStyle(Color.secondary)
+                }
             }
 
             Spacer()

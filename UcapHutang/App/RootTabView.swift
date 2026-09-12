@@ -29,7 +29,7 @@ struct RootTabView: View {
             }
 
             Tab("Riwayat", systemImage: "book.closed", value: AppTab.ledger) {
-                LedgerListView(repository: container.repository)
+                LedgerListView(repository: container.repository, contacts: container.contacts)
             }
         }
         .sensoryFeedback(.success, trigger: container.router.savedBannerID) { _, newValue in
