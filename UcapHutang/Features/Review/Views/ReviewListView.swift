@@ -4,7 +4,7 @@ struct ReviewListView: View {
     @State private var viewModel: ReviewListViewModel
     let onSelect: (UUID) -> Void
 
-    init(repository: (any TransactionRepository)? = nil, onSelect: @escaping (UUID) -> Void) {
+    init(repository: any TransactionRepository, onSelect: @escaping (UUID) -> Void) {
         _viewModel = State(initialValue: ReviewListViewModel(repository: repository))
         self.onSelect = onSelect
     }
@@ -47,5 +47,16 @@ struct ReviewListView: View {
 }
 
 #Preview {
-    ReviewListView(repository: nil) { _ in }
+    ReviewListView(
+        repository: InMemoryTransactionRepository(seedDrafts: [
+            TransactionDraft(
+                flow: .personal,
+                type: .piutang,
+                title: "Makan siang",
+                totalAmount: 15_000,
+                participants: [TransactionParticipant(name: "Dito", shareAmount: 15_000)],
+                rawTranscript: "Dito pinjam 15 ribu buat makan siang"
+            )
+        ])
+    ) { _ in }
 }

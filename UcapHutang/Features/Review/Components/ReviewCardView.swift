@@ -97,10 +97,23 @@ struct ReviewCardView: View {
 
 #Preview {
     VStack(spacing: 12) {
-        ForEach(ReviewMockData.sampleDrafts) { draft in
-            ReviewCardView(item: draft)
-        }
+        ReviewCardView(item: ReviewItemUIModel(
+            type: .piutang,
+            prefix: "ke",
+            personName: "Dito",
+            description: "“pinjam buat makan siang”",
+            relativeTime: "5 menit yang lalu",
+            amount: 15_000
+        ))
+        ReviewCardView(item: ReviewItemUIModel(
+            type: .splitBill,
+            prefix: "ke",
+            personName: "3 Orang",
+            avatarInitials: ["S", "A", "R"],
+            description: "“makan malam”",
+            relativeTime: "1 jam yang lalu",
+            amount: 300_000
+        ))
     }
     .padding()
-    .background(Color(.systemBackground))
 }
