@@ -50,4 +50,24 @@ public enum SplitCalculationEngine {
         let allNonNegative = shares.allSatisfy { $0 >= 0 }
         return allNonNegative && sum == totalAmount
     }
+
+    /// Equal split for a user-paid bill. Returns one share per friend, in list order.
+    /// When `includesUser` is true the user also takes a share (total ÷ (friends + 1)); that share is not returned.
+    /// The integer Rupiah remainder goes to the first shares, so friends absorb it before the user.
+    public static func shares(total: Int64, friendCount: Int, includesUser: Bool) -> [Int64] {
+        guard friendCount > 0 else { return [] }
+        let headCount = friendCount + (includesUser ? 1 : 0)
+        return Array(calculateEqualShares(totalAmount: total, participantCount: headCount).prefix(friendCount))
+    }
+
+    /// Sum of custom shares, or `nil` when the sum overflows `Int64`.
+    public static func customTotal(_ shares: [Int64]) -> Int64? {
+        var total: Int64 = 0
+        for share in shares {
+            let (next, overflow) = total.addingReportingOverflow(share)
+            if overflow { return nil }
+            total = next
+        }
+        return total
+    }
 }
