@@ -25,6 +25,13 @@ enum DraftValidator {
         guard names.allSatisfy({ !$0.isEmpty }) else {
             throw DraftValidationError.invalid("Ada nama orang yang masih kosong.")
         }
+        let everyParticipantIsLinked = draft.participants.allSatisfy { participant in
+            let identifier = participant.contactIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return !identifier.isEmpty
+        }
+        guard everyParticipantIsLinked else {
+            throw DraftValidationError.invalid("Hubungkan setiap orang ke kontak sebelum menyimpan.")
+        }
         guard Set(names.map { $0.lowercased() }).count == names.count else {
             throw DraftValidationError.invalid("Ada nama orang yang sama dalam satu transaksi.")
         }

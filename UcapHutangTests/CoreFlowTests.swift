@@ -37,7 +37,7 @@ final class CoreFlowTests: XCTestCase {
             type: .piutang,
             title: "Kopi",
             totalAmount: 20_000,
-            participants: [TransactionParticipant(name: "Satria", shareAmount: 20_000)],
+            participants: [TransactionParticipant(name: "Satria", contactIdentifier: "contact-satria", shareAmount: 20_000)],
             rawTranscript: "Satria ngutang 20 ribu beli kopi"
         )
         try await repository.saveDraft(draft)
@@ -55,12 +55,12 @@ final class CoreFlowTests: XCTestCase {
             type: .piutang,
             title: "Kopi",
             totalAmount: 20_000,
-            participants: [TransactionParticipant(name: "Satria", shareAmount: 20_000)],
+            participants: [TransactionParticipant(name: "Satria", contactIdentifier: "contact-satria", shareAmount: 20_000)],
             rawTranscript: "Satria ngutang 20 ribu beli kopi"
         )
         try await repository.saveDraft(draft)
         try await repository.confirmDraft(draft)
-        let stale = PersonLedgerSummary(id: "satria", displayName: "Satria", balance: 100_000, entryCount: 1, lastActivity: .now)
+        let stale = PersonLedgerSummary(id: "contact-satria", displayName: "Satria", balance: 100_000, entryCount: 1, lastActivity: .now)
         do {
             try await repository.recordPayment(for: stale, amount: 30_000, date: .now, notes: nil)
             XCTFail("Payment above latest balance should fail")
