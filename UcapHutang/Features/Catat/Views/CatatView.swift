@@ -3,6 +3,8 @@ import SwiftUI
 struct CatatView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .largeTitle) private var scaledControlDiameter: CGFloat = 250
     @State private var viewModel: CatatViewModel
     private let router: AppRouter
 
@@ -18,17 +20,21 @@ struct CatatView: View {
         ))
     }
 
+    /// Grows with Dynamic Type but never wider than a phone screen allows.
+    private var controlDiameter: CGFloat {
+        min(scaledControlDiameter, 320)
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                Spacer()
-
+            ScrollView {
                 VStack(spacing: 24) {
                     Button {
                         Task { await viewModel.handleMicTap() }
                     } label: {
                         recordingControl
                     }
+                    .buttonStyle(.plain)
                     .disabled(viewModel.isProcessing)
                     .accessibilityLabel(viewModel.recordButtonLabel)
                     .accessibilityValue(viewModel.stageHeadline)
@@ -40,9 +46,8 @@ struct CatatView: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppColors.textPrimary)
                         .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
-                        .background(AppColors.surface)
-                        .clipShape(Capsule())
+                        .frame(minHeight: 44)
+                        .background(AppColors.surface, in: Capsule())
                         .overlay(Capsule().stroke(AppColors.border))
 
                         Text(viewModel.speech.liveTranscript.isEmpty ? viewModel.stageHeadline : viewModel.speech.liveTranscript)
@@ -50,7 +55,7 @@ struct CatatView: View {
                             .foregroundStyle(viewModel.speech.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 300)
-                            .animation(.easeInOut(duration: 0.2), value: viewModel.speech.liveTranscript)
+                            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.speech.liveTranscript)
                     } else if !viewModel.isProcessing {
                         Text("Tip: \(tipText)")
                             .font(.body)
@@ -75,19 +80,18 @@ struct CatatView: View {
                         }
                         .frame(maxWidth: 300)
                     }
-                }
 
-                Spacer()
-
-                if !viewModel.speech.usesOnDeviceRecognition {
-                    Text("Ucapan diproses oleh server Apple.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.bottom, 12)
+                    if !viewModel.speech.usesOnDeviceRecognition {
+                        Text("Ucapan diproses oleh server Apple.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 32)
             }
-            .padding(.horizontal, 24)
             .navigationTitle(flow.title)
             .navigationBarTitleDisplayMode(.inline)
             .onDisappear { viewModel.cancel() }
@@ -121,21 +125,25 @@ struct CatatView: View {
                     AppColors.textSecondary.opacity(0.65),
                     style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 7])
                 )
-                .frame(width: 250, height: 250)
             if viewModel.isProcessing || viewModel.speech.state == .finalizing {
-                ProgressView().tint(AppColors.textPrimary).scaleEffect(1.3)
+                ProgressView()
+                    .controlSize(.large)
+                    .tint(AppColors.textPrimary)
             } else {
                 VStack(spacing: 12) {
                     Image(systemName: viewModel.isListening ? "stop.fill" : "play.fill")
-                        .font(.system(size: 34, weight: .bold))
+                        .font(.largeTitle.weight(.bold))
+                        .accessibilityHidden(true)
                     Text(viewModel.isListening ? "Tekan untuk\nberhenti" : "Tekan untuk catat\nvia suara")
                         .font(.title3.weight(.bold))
                         .multilineTextAlignment(.center)
                 }
                 .foregroundStyle(AppColors.textPrimary)
+                .padding(24)
             }
         }
-        .frame(width: 250, height: 250)
+        .frame(width: controlDiameter, height: controlDiameter)
+        .contentShape(Circle())
     }
 
     private var tipText: String {
