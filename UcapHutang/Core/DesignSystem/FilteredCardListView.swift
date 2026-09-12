@@ -12,25 +12,41 @@ struct FilterSegmentBar<T: Identifiable & RawRepresentable & CaseIterable & Equa
     let onSelect: (T) -> Void
 
     var body: some View {
-        HStack(spacing: 8) {
-            ForEach(Array(T.allCases)) { filter in
-                Button {
-                    onSelect(filter)
-                } label: {
-                    Text(filter.rawValue)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.primary)
-                        .frame(maxWidth: .infinity, minHeight: 38)
-                        .background(selection == filter ? Color(.systemGray5) : Color.clear)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .stroke(Color(.separator), lineWidth: 1)
-                        )
+        // Equal-width segments when they fit; horizontal scrolling at large Dynamic Type sizes.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                ForEach(Array(T.allCases)) { filter in
+                    segment(filter)
                 }
-                .buttonStyle(.plain)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(Array(T.allCases)) { filter in
+                        segment(filter)
+                    }
+                }
             }
         }
+    }
+
+    private func segment(_ filter: T) -> some View {
+        Button {
+            onSelect(filter)
+        } label: {
+            Text(filter.rawValue)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color.primary)
+                .padding(.horizontal, 12)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background(selection == filter ? Color(.systemGray5) : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color(.separator), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selection == filter ? .isSelected : [])
     }
 }
 
@@ -66,7 +82,8 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
             VStack(alignment: .leading, spacing: 20) {
                 // Header Title
                 Text(title)
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.title.bold())
+                    .accessibilityAddTraits(.isHeader)
                     .foregroundStyle(Color.primary)
                     .lineSpacing(4)
                     .padding(.horizontal, 20)
@@ -172,7 +189,7 @@ private struct FilteredCardListViewPreviewContainer: View {
                 onSelectItem: { id in selectedItemId = id}, emptyState: {
                     VStack(spacing: 12) {
                         Image(systemName: "tray")
-                            .font(.system(size: 44))
+                            .font(.largeTitle)
                             .foregroundStyle(.secondary)
                         Text("Tidak Ada Data")
                             .font(.headline)
@@ -241,7 +258,7 @@ private struct FilterSegmentBarPreviewContainer: View {
         selectedFilter: MockFilter.all, onSelectFilter: { _ in }, onSelectItem: { _ in }, emptyState: {
             VStack(spacing: 8) {
                 Image(systemName: "checkmark.seal")
-                    .font(.system(size: 40))
+                    .font(.largeTitle)
                     .foregroundStyle(.green)
                 Text("Semua draft selesai!")
                     .font(.headline)

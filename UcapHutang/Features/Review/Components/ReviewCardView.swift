@@ -3,6 +3,8 @@ import SwiftUI
 struct ReviewCardView: View {
     let item: ReviewItemUIModel
 
+    @ScaledMetric(relativeTo: .caption) private var avatarSize: CGFloat = 20
+
     init(item: ReviewItemUIModel) {
         self.item = item
     }
@@ -10,46 +12,48 @@ struct ReviewCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Baris 1: Tipe & Waktu Relatif
-            HStack {
+            HStack(alignment: .firstTextBaseline) {
                 Text(typeLabel)
-                    .font(.body.weight(.regular))
-                    .foregroundStyle(Color.primary)
+                    .font(.body)
+                    .foregroundStyle(.primary)
 
-                Spacer()
+                Spacer(minLength: 8)
 
                 Text(item.relativeTime)
                     .font(.subheadline)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
             }
 
             // Baris 2: Subjek & Nominal
             HStack(alignment: .center, spacing: 6) {
                 if !item.avatarInitials.isEmpty {
                     stackedAvatarsView
+                        .accessibilityHidden(true)
                 }
 
                 if !item.prefix.isEmpty {
                     Text(item.prefix)
                         .font(.body)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(.primary)
                 }
 
                 Text(item.personName)
                     .font(.body.weight(.bold))
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(.primary)
 
-                Spacer()
+                Spacer(minLength: 8)
 
                 Text(item.amount.rupiahFormatted)
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(.primary)
             }
 
             // Baris 3: Deskripsi / Quotes
             Text(item.description)
                 .font(.body)
-                .foregroundStyle(Color.primary)
-                .lineLimit(2)
+                .foregroundStyle(.primary)
+                .lineLimit(3)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -60,6 +64,7 @@ struct ReviewCardView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(Color(.separator), lineWidth: 1)
         )
+        .accessibilityElement(children: .combine)
     }
 
     private var typeLabel: String {
@@ -78,11 +83,11 @@ struct ReviewCardView: View {
             ForEach(Array(item.avatarInitials.enumerated()), id: \.offset) { index, initial in
                 Circle()
                     .fill(Color(.systemGray4))
-                    .frame(width: 20, height: 20)
+                    .frame(width: avatarSize, height: avatarSize)
                     .overlay(
                         Text(initial)
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(Color(.systemGray))
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Color(.label))
                     )
                     .overlay(
                         Circle()
