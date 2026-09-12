@@ -1,0 +1,2219 @@
+[
+  {
+    "input": "Gua beli tiket konser nalangin Satria Arif dan Ros totalnya 800.000",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Satria",
+      "Arif",
+      "Ros"
+    ],
+    "split_count": 4,
+    "total_amount": 800000,
+    "title": "tiket konser",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin split bill makan Pizza Hut dengan Satria Arif dan rose totalnya 200.000",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Satria",
+      "Arif",
+      "Rose"
+    ],
+    "split_count": 4,
+    "total_amount": 200000,
+    "title": "makan Pizza Hut",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin tiket konser dengan Satria dan Arif totalnya 600.000",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Satria",
+      "Arif"
+    ],
+    "split_count": 3,
+    "total_amount": 600000,
+    "title": "tiket konser",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin tiket konser untuk JIA Krisna dan Teo totalnya 150.000 dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Jia",
+      "Krisna",
+      "Teo"
+    ],
+    "split_count": 4,
+    "total_amount": 150000,
+    "title": "tiket konser",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Agung Rafael nada beli tiket konser harganya 1.000.000 jadi dibagi tiga",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Agung",
+      "Rafael",
+      "Nada"
+    ],
+    "split_count": 3,
+    "total_amount": 1000000,
+    "title": "tiket konser",
+    "date": null,
+    "notes": "dibagi tiga"
+  },
+  {
+    "input": "Aku nge split bill konser untuk Satria dan Arif totalnya 150.000",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Satria",
+      "Arif"
+    ],
+    "split_count": 3,
+    "total_amount": 150000,
+    "title": "konser",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku baru keluarin duit 1.000.000 buat beli tiket konser berempat bareng Aldo Ben Rozz",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Aldo",
+      "Ben",
+      "Rozz"
+    ],
+    "split_count": 4,
+    "total_amount": 1000000,
+    "title": "tiket konser",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Oke jadi aku abis nalangin tiket konsernya Linux dan Krisna totalnya itu 600.000",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Linux",
+      "Krisna"
+    ],
+    "split_count": 3,
+    "total_amount": 600000,
+    "title": "tiket konser",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan shabu hachi berempat bareng Dimas Rian Eko abis 600rb gw yang bayar dulu",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Dimas",
+      "Rian",
+      "Eko"
+    ],
+    "split_count": 4,
+    "total_amount": 600000,
+    "title": "makan shabu hachi",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Patungan kado pernikahan buat Sarah bareng Citra Dina Salsa total 300k gua talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 300000,
+    "title": "kado pernikahan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill kopi Janji Jiwa bertiga sama Hendra dan Gilang 75 ribu gw yang tf",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hendra",
+      "Gilang"
+    ],
+    "split_count": 3,
+    "total_amount": 75000,
+    "title": "kopi Janji Jiwa",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Sewa villa di Puncak 1.200.000 dibagi berempat aku Kevin Danu Fajar tanggal 15 Agustus 2026",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kevin",
+      "Danu",
+      "Fajar"
+    ],
+    "split_count": 4,
+    "total_amount": 1200000,
+    "title": "sewa villa di Puncak",
+    "date": "2026-08-15",
+    "notes": null
+  },
+  {
+    "input": "Beli McD rame-rame 180k aku bayarin, orangnya Bimo Wahyu Cindy dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Bimo",
+      "Wahyu",
+      "Cindy"
+    ],
+    "split_count": 4,
+    "total_amount": 180000,
+    "title": "beli McD",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Nongkrong di Starbucks 150rb patungan berdua sama Clarissa",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Clarissa"
+    ],
+    "split_count": 2,
+    "total_amount": 150000,
+    "title": "Starbucks",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan di Gacoan berlima bareng Tari Rina Yoga Bagas total 100.000 gua bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Tari",
+      "Rina",
+      "Yoga",
+      "Bagas"
+    ],
+    "split_count": 5,
+    "total_amount": 100000,
+    "title": "makan di Gacoan",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Gua nalangin GrabCar ke bandara bareng Vino Laras Adit 120k",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Laras",
+      "Adit"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "GrabCar ke bandara",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli pizza domino 2 box 130rb buat aku Gita Qori dibagi 3",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Gita",
+      "Qori"
+    ],
+    "split_count": 3,
+    "total_amount": 130000,
+    "title": "pizza domino",
+    "date": null,
+    "notes": "dibagi 3"
+  },
+  {
+    "input": "Futsal bareng Taufik Zaki Naufal sewa lapangan 150rb gw nalangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Zaki",
+      "Naufal"
+    ],
+    "split_count": 4,
+    "total_amount": 150000,
+    "title": "sewa lapangan futsal",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Belanja bahan masak 240 ribu patungan berempat bareng Wulan Kiki Ulfa",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Wulan",
+      "Kiki",
+      "Ulfa"
+    ],
+    "split_count": 4,
+    "total_amount": 240000,
+    "title": "belanja bahan masak",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Nonton bioskop IMAX 300.000 bertiga bareng Pras dan Bella aku yang beli tiket",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Pras",
+      "Bella"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket bioskop IMAX",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill nasi padang bareng Adit dan Bagas total 60rb gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin kopi kulo untuk Citra, Dina dan Eka totalnya 45k dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli ayam geprek sama Fauzan dan Gita seharga 80.000 ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan bbq grill bareng Hafiz, Indah dan Joko habis 400 ribu gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli martabak manis bareng Kiki, Laras, Mega dan Naufal total 50rb tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan tiket wahana bareng Oki dan Pras total 300k bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan snack nonton buat Qori, Rizal dan Salsa total 90.000 qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill makan suki bareng Taufik dan Ulfa total 350 ribu gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin sewa badminton untuk Vino, Wulan dan Yoga totalnya 120k dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli kue ulang tahun sama Zahra, Aldo, Bella dan Candra seharga 200.000 ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan nasi padang bareng Adit dan Bagas habis 60rb gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli kopi kulo bareng Citra, Dina dan Eka total 45k tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan ayam geprek bareng Fauzan dan Gita total 80.000 bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan bbq grill buat Hafiz, Indah dan Joko total 400 ribu qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill martabak manis bareng Kiki, Laras, Mega dan Naufal total 50rb gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin tiket wahana untuk Oki dan Pras totalnya 300k dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli snack nonton sama Qori, Rizal dan Salsa seharga 90.000 ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan makan suki bareng Taufik dan Ulfa habis 350 ribu gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli sewa badminton bareng Vino, Wulan dan Yoga total 120k tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan kue ulang tahun bareng Zahra, Aldo, Bella dan Candra total 200.000 bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan nasi padang buat Adit dan Bagas total 60rb qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill kopi kulo bareng Citra, Dina dan Eka total 45k gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin ayam geprek untuk Fauzan dan Gita totalnya 80.000 dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli bbq grill sama Hafiz, Indah dan Joko seharga 400 ribu ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan martabak manis bareng Kiki, Laras, Mega dan Naufal habis 50rb gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli tiket wahana bareng Oki dan Pras total 300k tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan snack nonton bareng Qori, Rizal dan Salsa total 90.000 bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan makan suki buat Taufik dan Ulfa total 350 ribu qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill sewa badminton bareng Vino, Wulan dan Yoga total 120k gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin kue ulang tahun untuk Zahra, Aldo, Bella dan Candra totalnya 200.000 dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli nasi padang sama Adit dan Bagas seharga 60rb ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan kopi kulo bareng Citra, Dina dan Eka habis 45k gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli ayam geprek bareng Fauzan dan Gita total 80.000 tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan bbq grill bareng Hafiz, Indah dan Joko total 400 ribu bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan martabak manis buat Kiki, Laras, Mega dan Naufal total 50rb qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill tiket wahana bareng Oki dan Pras total 300k gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin snack nonton untuk Qori, Rizal dan Salsa totalnya 90.000 dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli makan suki sama Taufik dan Ulfa seharga 350 ribu ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan sewa badminton bareng Vino, Wulan dan Yoga habis 120k gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli kue ulang tahun bareng Zahra, Aldo, Bella dan Candra total 200.000 tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan nasi padang bareng Adit dan Bagas total 60rb bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan kopi kulo buat Citra, Dina dan Eka total 45k qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill ayam geprek bareng Fauzan dan Gita total 80.000 gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin bbq grill untuk Hafiz, Indah dan Joko totalnya 400 ribu dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli martabak manis sama Kiki, Laras, Mega dan Naufal seharga 50rb ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan tiket wahana bareng Oki dan Pras habis 300k gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli snack nonton bareng Qori, Rizal dan Salsa total 90.000 tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan makan suki bareng Taufik dan Ulfa total 350 ribu bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan sewa badminton buat Vino, Wulan dan Yoga total 120k qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill kue ulang tahun bareng Zahra, Aldo, Bella dan Candra total 200.000 gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin nasi padang untuk Adit dan Bagas totalnya 60rb dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli kopi kulo sama Citra, Dina dan Eka seharga 45k ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan ayam geprek bareng Fauzan dan Gita habis 80.000 gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli bbq grill bareng Hafiz, Indah dan Joko total 400 ribu tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan martabak manis bareng Kiki, Laras, Mega dan Naufal total 50rb bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan tiket wahana buat Oki dan Pras total 300k qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill snack nonton bareng Qori, Rizal dan Salsa total 90.000 gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin makan suki untuk Taufik dan Ulfa totalnya 350 ribu dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli sewa badminton sama Vino, Wulan dan Yoga seharga 120k ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan kue ulang tahun bareng Zahra, Aldo, Bella dan Candra habis 200.000 gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli nasi padang bareng Adit dan Bagas total 60rb tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan kopi kulo bareng Citra, Dina dan Eka total 45k bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan ayam geprek buat Fauzan dan Gita total 80.000 qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill bbq grill bareng Hafiz, Indah dan Joko total 400 ribu gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin martabak manis untuk Kiki, Laras, Mega dan Naufal totalnya 50rb dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli tiket wahana sama Oki dan Pras seharga 300k ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan snack nonton bareng Qori, Rizal dan Salsa habis 90.000 gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli makan suki bareng Taufik dan Ulfa total 350 ribu tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan sewa badminton bareng Vino, Wulan dan Yoga total 120k bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan kue ulang tahun buat Zahra, Aldo, Bella dan Candra total 200.000 qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill nasi padang bareng Adit dan Bagas total 60rb gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin kopi kulo untuk Citra, Dina dan Eka totalnya 45k dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli ayam geprek sama Fauzan dan Gita seharga 80.000 ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan bbq grill bareng Hafiz, Indah dan Joko habis 400 ribu gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli martabak manis bareng Kiki, Laras, Mega dan Naufal total 50rb tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan tiket wahana bareng Oki dan Pras total 300k bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan snack nonton buat Qori, Rizal dan Salsa total 90.000 qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill makan suki bareng Taufik dan Ulfa total 350 ribu gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin sewa badminton untuk Vino, Wulan dan Yoga totalnya 120k dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli kue ulang tahun sama Zahra, Aldo, Bella dan Candra seharga 200.000 ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan nasi padang bareng Adit dan Bagas habis 60rb gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli kopi kulo bareng Citra, Dina dan Eka total 45k tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan ayam geprek bareng Fauzan dan Gita total 80.000 bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan bbq grill buat Hafiz, Indah dan Joko total 400 ribu qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill martabak manis bareng Kiki, Laras, Mega dan Naufal total 50rb gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin tiket wahana untuk Oki dan Pras totalnya 300k dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli snack nonton sama Qori, Rizal dan Salsa seharga 90.000 ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan makan suki bareng Taufik dan Ulfa habis 350 ribu gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli sewa badminton bareng Vino, Wulan dan Yoga total 120k tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan kue ulang tahun bareng Zahra, Aldo, Bella dan Candra total 200.000 bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan nasi padang buat Adit dan Bagas total 60rb qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill kopi kulo bareng Citra, Dina dan Eka total 45k gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin ayam geprek untuk Fauzan dan Gita totalnya 80.000 dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli bbq grill sama Hafiz, Indah dan Joko seharga 400 ribu ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan martabak manis bareng Kiki, Laras, Mega dan Naufal habis 50rb gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli tiket wahana bareng Oki dan Pras total 300k tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan snack nonton bareng Qori, Rizal dan Salsa total 90.000 bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan makan suki buat Taufik dan Ulfa total 350 ribu qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill sewa badminton bareng Vino, Wulan dan Yoga total 120k gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin kue ulang tahun untuk Zahra, Aldo, Bella dan Candra totalnya 200.000 dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli nasi padang sama Adit dan Bagas seharga 60rb ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan kopi kulo bareng Citra, Dina dan Eka habis 45k gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli ayam geprek bareng Fauzan dan Gita total 80.000 tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan bbq grill bareng Hafiz, Indah dan Joko total 400 ribu bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan martabak manis buat Kiki, Laras, Mega dan Naufal total 50rb qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill tiket wahana bareng Oki dan Pras total 300k gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin snack nonton untuk Qori, Rizal dan Salsa totalnya 90.000 dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli makan suki sama Taufik dan Ulfa seharga 350 ribu ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan sewa badminton bareng Vino, Wulan dan Yoga habis 120k gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli kue ulang tahun bareng Zahra, Aldo, Bella dan Candra total 200.000 tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan nasi padang bareng Adit dan Bagas total 60rb bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan kopi kulo buat Citra, Dina dan Eka total 45k qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill ayam geprek bareng Fauzan dan Gita total 80.000 gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin bbq grill untuk Hafiz, Indah dan Joko totalnya 400 ribu dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli martabak manis sama Kiki, Laras, Mega dan Naufal seharga 50rb ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan tiket wahana bareng Oki dan Pras habis 300k gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli snack nonton bareng Qori, Rizal dan Salsa total 90.000 tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan makan suki bareng Taufik dan Ulfa total 350 ribu bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan sewa badminton buat Vino, Wulan dan Yoga total 120k qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill kue ulang tahun bareng Zahra, Aldo, Bella dan Candra total 200.000 gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin nasi padang untuk Adit dan Bagas totalnya 60rb dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Adit",
+      "Bagas"
+    ],
+    "split_count": 3,
+    "total_amount": 60000,
+    "title": "nasi padang",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli kopi kulo sama Citra, Dina dan Eka seharga 45k ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Citra",
+      "Dina",
+      "Eka"
+    ],
+    "split_count": 4,
+    "total_amount": 45000,
+    "title": "kopi kulo",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan ayam geprek bareng Fauzan dan Gita habis 80.000 gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Fauzan",
+      "Gita"
+    ],
+    "split_count": 3,
+    "total_amount": 80000,
+    "title": "ayam geprek",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Beli bbq grill bareng Hafiz, Indah dan Joko total 400 ribu tanggal 20 Juli 2026 aku talangin",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Hafiz",
+      "Indah",
+      "Joko"
+    ],
+    "split_count": 4,
+    "total_amount": 400000,
+    "title": "bbq grill",
+    "date": "2026-07-20",
+    "notes": null
+  },
+  {
+    "input": "Nongkrong pesan martabak manis bareng Kiki, Laras, Mega dan Naufal total 50rb bagi rata ya",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Kiki",
+      "Laras",
+      "Mega",
+      "Naufal"
+    ],
+    "split_count": 5,
+    "total_amount": 50000,
+    "title": "martabak manis",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Talangan tiket wahana buat Oki dan Pras total 300k qris pake akun gua",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Oki",
+      "Pras"
+    ],
+    "split_count": 3,
+    "total_amount": 300000,
+    "title": "tiket wahana",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Split bill snack nonton bareng Qori, Rizal dan Salsa total 90.000 gw yang bayar",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Qori",
+      "Rizal",
+      "Salsa"
+    ],
+    "split_count": 4,
+    "total_amount": 90000,
+    "title": "snack nonton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Aku nalangin makan suki untuk Taufik dan Ulfa totalnya 350 ribu dibagi rata",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Taufik",
+      "Ulfa"
+    ],
+    "split_count": 3,
+    "total_amount": 350000,
+    "title": "makan suki",
+    "date": null,
+    "notes": "dibagi rata"
+  },
+  {
+    "input": "Patungan beli sewa badminton sama Vino, Wulan dan Yoga seharga 120k ditalangin aku",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Vino",
+      "Wulan",
+      "Yoga"
+    ],
+    "split_count": 4,
+    "total_amount": 120000,
+    "title": "sewa badminton",
+    "date": null,
+    "notes": null
+  },
+  {
+    "input": "Makan kue ulang tahun bareng Zahra, Aldo, Bella dan Candra habis 200.000 gua bayar duluan",
+    "payer": "user",
+    "payer_person": null,
+    "members": [
+      "Zahra",
+      "Aldo",
+      "Bella",
+      "Candra"
+    ],
+    "split_count": 5,
+    "total_amount": 200000,
+    "title": "kue ulang tahun",
+    "date": null,
+    "notes": null
+  }
+]

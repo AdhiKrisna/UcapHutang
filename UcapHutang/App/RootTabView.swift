@@ -28,7 +28,7 @@ struct RootTabView: View {
             }
             .tag(AppTab.draft)
 
-            CaptureFlowChooserView { flow in
+            CatatFlowChooserView { flow in
                 selectedCaptureFlow = flow
             }
             .tabItem {
@@ -48,9 +48,7 @@ struct RootTabView: View {
             }
         }
         .sheet(item: $selectedCaptureFlow) { flow in
-            CaptureView(flow: flow) { newDraftID in
-                self.reviewDraftItem = IdentifiableUUID(newDraftID)
-            }
+            CatatView(flow: flow, container: container)
         }
     }
 }

@@ -46,7 +46,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
             existing.rawTranscript = draft.rawTranscript
             existing.rawModelResponse = draft.rawModelResponse
             existing.reviewWarningsRaw = draft.reviewWarnings
-            existing.participants = draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle) }
+            existing.participants = draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) }
         } else {
             let sd = SDTransactionDraft(
                 id: draft.id,
@@ -62,7 +62,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
                 rawModelResponse: draft.rawModelResponse,
                 reviewWarningsRaw: draft.reviewWarnings,
                 createdAt: draft.createdAt,
-                participants: draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle) }
+                participants: draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) }
             )
             context.insert(sd)
         }
@@ -118,7 +118,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
             existing.rawTranscript = draft.rawTranscript
             existing.rawModelResponse = draft.rawModelResponse
             existing.reviewWarningsRaw = draft.reviewWarnings
-            existing.participants = draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle) }
+            existing.participants = draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) }
         } else {
             let sd = SDTransactionDraft(
                 id: draft.id,
@@ -134,7 +134,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
                 rawModelResponse: draft.rawModelResponse,
                 reviewWarningsRaw: draft.reviewWarnings,
                 createdAt: draft.createdAt,
-                participants: draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle) }
+                participants: draft.participants.map { SDTransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) }
             )
             context.insert(sd)
         }
@@ -214,7 +214,7 @@ final class SwiftDataTransactionRepository: TransactionRepository {
             title: sd.title,
             totalAmount: sd.totalAmount,
             splitMethod: sd.splitMethodRaw.flatMap(SplitMethod.init(rawValue:)),
-            participants: sd.participants.map { TransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle) },
+            participants: sd.participants.map { TransactionParticipant(id: $0.id, name: $0.name, contactIdentifier: $0.contactIdentifier, shareAmount: $0.shareAmount, itemTitle: $0.itemTitle, notes: $0.notes) },
             notes: sd.notes,
             rawTranscript: sd.rawTranscript,
             rawModelResponse: sd.rawModelResponse,

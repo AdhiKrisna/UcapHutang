@@ -1,199 +1,6 @@
 import SwiftUI
 import Combine
 
-@MainActor
-final class ReviewDraftViewModel: ObservableObject {
-    @Published var draft: TransactionDraft?
-    @Published var errorMessage: String?
-    @Published private(set) var didFinish = false
-    @Published private(set) var isSaving = false
-    @Published var newParticipantName = ""
-
-    private let draftID: UUID
-    private let repository: any TransactionRepository
-
-    init(draftID: UUID, repository: any TransactionRepository) {
-        self.draftID = draftID
-        self.repository = repository
-    }
-
-    var validationMessages: [String] {
-        guard let draft else { return ["Data transaksi belum selesai dimuat."] }
-        var messages: [String] = []
-        let cleanTitle = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if draft.totalAmount <= 0 {
-            messages.append("Isi nominal transaksi dengan angka lebih dari Rp0.")
-        }
-        if draft.flow == .personal && draft.type == .unknown {
-            messages.append("Pilih siapa yang berutang: kamu atau orang tersebut.")
-        }
-        if cleanTitle.isEmpty || cleanTitle.caseInsensitiveCompare("Transaksi") == .orderedSame {
-            messages.append("Isi judul transaksi, misalnya “Kopi” atau “Makan malam”.")
-        }
-        if draft.participants.isEmpty {
-            messages.append(draft.flow == .personal
-                ? "Isi nama orang yang terkait dengan transaksi ini."
-                : "Tambahkan minimal satu teman yang ikut split bill.")
-        }
-
-        let genericNames = ["teman", "teman 1", "teman 2", "orang", "orang a", "orang b"]
-        for (index, participant) in draft.participants.enumerated() {
-            let name = participant.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            if name.isEmpty || genericNames.contains(where: { name.caseInsensitiveCompare($0) == .orderedSame }) {
-                let label = draft.flow == .personal ? "orang terkait" : "peserta ke-\(index + 1)"
-                messages.append("Ganti nama \(label) dengan nama yang bisa kamu kenali.")
-            }
-            if draft.flow == .splitBill && participant.shareAmount <= 0 {
-                messages.append("Isi nominal bagian untuk \(name.isEmpty ? "peserta ke-\(index + 1)" : name).")
-            }
-        }
-
-        let normalizedNames = draft.participants
-            .map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .filter { !$0.isEmpty }
-        if Set(normalizedNames).count != normalizedNames.count {
-            messages.append("Ada nama peserta yang sama. Hapus atau ubah salah satunya.")
-        }
-
-        if draft.flow == .splitBill {
-            let allocated = draft.participants.reduce(Int64(0)) { $0 + max(0, $1.shareAmount) }
-            if allocated > draft.totalAmount {
-                messages.append("Total bagian teman melebihi nominal transaksi.")
-            }
-        }
-        return messages
-    }
-
-    var isValid: Bool { validationMessages.isEmpty }
-
-    var friendsAllocatedAmount: Int64 {
-        draft?.participants.reduce(Int64(0)) { $0 + max(0, $1.shareAmount) } ?? 0
-    }
-
-    var userShareAmount: Int64 {
-        max(0, (draft?.totalAmount ?? 0) - friendsAllocatedAmount)
-    }
-
-    var saveExplanation: String {
-        guard let draft else { return "" }
-        let linkedCount = draft.participants.filter { $0.contactIdentifier != nil }.count
-        let usernameCount = draft.participants.count - linkedCount
-        if linkedCount > 0 && usernameCount > 0 {
-            return "Saat disimpan, transaksi akan masuk ke Riwayat berdasarkan \(linkedCount) kontak yang terhubung dan \(usernameCount) nama biasa."
-        }
-        if linkedCount == draft.participants.count, linkedCount > 0 {
-            return "Saat disimpan, transaksi akan masuk ke Riwayat setiap kontak yang sudah terhubung."
-        }
-        return "Kontak bersifat opsional. Saat disimpan, nama biasa tetap dibuat sebagai orang baru di Riwayat utang/piutang."
-    }
-
-    func load() async {
-        do {
-            if let loaded = try await repository.draft(id: draftID) {
-                draft = loaded
-            } else {
-                errorMessage = "Draft ini tidak ditemukan. Kembali ke daftar Draft lalu coba lagi."
-            }
-        } catch {
-            errorMessage = friendlyMessage(for: error)
-        }
-    }
-
-    func addParticipant() {
-        guard var draft else { return }
-        let clean = newParticipantName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !clean.isEmpty else { return }
-        guard !draft.participants.contains(where: { $0.name.caseInsensitiveCompare(clean) == .orderedSame }) else {
-            errorMessage = "Nama \(clean) sudah ada di daftar peserta."
-            return
-        }
-        draft.participants.append(TransactionParticipant(name: clean, shareAmount: 0))
-        newParticipantName = ""
-        recalculateSplits(in: &draft)
-        self.draft = draft
-    }
-
-    func removeParticipant(at offsets: IndexSet) {
-        guard var draft else { return }
-        draft.participants.remove(atOffsets: offsets)
-        recalculateSplits(in: &draft)
-        self.draft = draft
-    }
-
-    func recalculateSplits(in draft: inout TransactionDraft) {
-        guard draft.flow == .splitBill, draft.totalAmount > 0, !draft.participants.isEmpty else { return }
-        if draft.splitMethod == .equal || draft.splitMethod == nil {
-            let shares = SplitCalculationEngine.calculateEqualShares(
-                totalAmount: draft.totalAmount,
-                participantCount: draft.participants.count + 1
-            )
-            for (index, share) in shares.prefix(draft.participants.count).enumerated() {
-                draft.participants[index].shareAmount = share
-            }
-        }
-    }
-
-    func updateParticipantName(index: Int, name: String) {
-        guard var draft, draft.participants.indices.contains(index) else { return }
-        draft.participants[index].name = name
-        draft.participants[index].contactIdentifier = nil
-        self.draft = draft
-    }
-
-    func updateParticipantShare(index: Int, amount: Int64) {
-        guard var draft, draft.participants.indices.contains(index) else { return }
-        draft.participants[index].shareAmount = amount
-        self.draft = draft
-    }
-
-    func showValidationMessage() {
-        guard !validationMessages.isEmpty else { return }
-        errorMessage = "Lengkapi data berikut sebelum menyimpan:\n\n• " + validationMessages.joined(separator: "\n• ")
-    }
-
-    func save() async {
-        guard !isSaving else { return }
-        guard var draft else {
-            errorMessage = "Data transaksi belum selesai dimuat."
-            return
-        }
-        guard isValid else {
-            showValidationMessage()
-            return
-        }
-
-        if draft.flow == .personal, !draft.participants.isEmpty {
-            draft.participants[0].shareAmount = draft.totalAmount
-        }
-        isSaving = true
-        defer { isSaving = false }
-        do {
-            draft.status = .confirmed
-            try await repository.confirmDraft(draft)
-            didFinish = true
-        } catch {
-            errorMessage = friendlyMessage(for: error)
-        }
-    }
-
-    func discard() async {
-        do {
-            try await repository.discardDraft(id: draftID)
-            didFinish = true
-        } catch {
-            errorMessage = friendlyMessage(for: error)
-        }
-    }
-
-    private func friendlyMessage(for error: Error) -> String {
-        if let localized = error as? LocalizedError, let description = localized.errorDescription {
-            return description
-        }
-        return "Data belum berhasil disimpan. Periksa kembali nama orang, nominal, dan judul transaksi, lalu coba lagi."
-    }
-}
-
 struct ReviewDraftView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: ReviewDraftViewModel
@@ -205,25 +12,33 @@ struct ReviewDraftView: View {
     }
 
     var body: some View {
-        Group {
-            if let draft = viewModel.draft {
-                Form {
-                    transcriptSection(transcript: draft.rawTranscript)
-                    warningsSection(warnings: draft.reviewWarnings)
-                    timeSection
-                    amountSection
-                    typeSection(isPersonal: draft.flow == .personal)
-                    participantsSection(draft: draft)
-                    notesSection
-                    saveGuidanceSection
-                    actionsSection
+        VStack(spacing: 0) {
+            reviewHeader
+            Group {
+                if let draft = viewModel.draft {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 28) {
+                        qwenResultSection(draft)
+                        personSection(draft)
+                        if draft.flow == .splitBill {
+                            splitParticipantsSection(draft)
+                        }
+                        actionSection
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 18)
+                    .padding(.bottom, 28)
                 }
+                .scrollContentBackground(.hidden)
+                .background(AppColors.background)
             } else {
                 ProgressView("Memuat data...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppColors.background)
             }
         }
-        .navigationTitle("Review Data")
-        .navigationBarTitleDisplayMode(.inline)
+        }
+        .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
         .onChange(of: viewModel.didFinish) { _, finished in
             if finished { dismiss() }
@@ -256,6 +71,169 @@ struct ReviewDraftView: View {
         } message: {
             Text(viewModel.errorMessage ?? "Periksa kembali data transaksi.")
         }
+    }
+
+    private var reviewHeader: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.headline.weight(.semibold))
+                    .frame(width: 44, height: 44)
+                    .background(Color(.systemGray6))
+                    .clipShape(Circle())
+            }
+            .foregroundStyle(AppColors.textPrimary)
+
+            Spacer()
+            Text("Review Catatan")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(AppColors.textPrimary)
+            Spacer()
+
+            Color.clear.frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 12)
+        .padding(.bottom, 18)
+        .background(AppColors.background)
+    }
+
+    private func transcriptCard(_ transcript: String) -> some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Ucapan Asli Rekaman")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(AppColors.textSecondary)
+            HStack(alignment: .top, spacing: 16) {
+                Image(systemName: "quote.bubble.fill")
+                    .font(.system(size: 34))
+                    .foregroundStyle(AppColors.accent)
+                Text(transcript.isEmpty ? "Tidak ada ucapan yang tersimpan." : transcript)
+                    .font(.body)
+                    .foregroundStyle(AppColors.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Divider().overlay(AppColors.border)
+            Text("Gunakan ucapan ini untuk mengecek hasil pengisian otomatis di bawah.")
+                .font(.subheadline)
+                .foregroundStyle(AppColors.textSecondary)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private func qwenResultSection(_ draft: TransactionDraft) -> some View {
+        VStack(alignment: .leading, spacing: 18) {
+            reviewValue(label: "Waktu", value: reviewDate(draft.transactionDate))
+            reviewValue(label: "Nominal", value: draft.totalAmount.rupiahFormatted)
+            reviewValue(label: "Deskripsi", value: draft.title)
+            if draft.flow == .personal {
+                Text("Jenis").font(.body).foregroundStyle(AppColors.textPrimary)
+                Picker("Jenis", selection: Binding(
+                    get: { viewModel.draft?.type ?? .unknown },
+                    set: { viewModel.draft?.type = $0 }
+                )) {
+                    Text("Utang").tag(TransactionType.hutang)
+                    Text("Piutang").tag(TransactionType.piutang)
+                }
+                .pickerStyle(.segmented)
+            }
+        }
+    }
+
+    private func reviewValue(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(.body).foregroundStyle(AppColors.textPrimary)
+            Text(value).font(.body.weight(.bold)).foregroundStyle(AppColors.textPrimary)
+        }
+    }
+
+    private func reviewDate(_ date: Date) -> String {
+        let dateValue = Calendar.current.isDateInToday(date)
+            ? "Hari Ini"
+            : date.formatted(date: .abbreviated, time: .omitted)
+        return "\(dateValue), \(date.formatted(date: .omitted, time: .shortened))"
+    }
+
+    private func personSection(_ draft: TransactionDraft) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(draft.flow == .personal ? "Orang" : "Peserta")
+                .font(.body).foregroundStyle(AppColors.textPrimary)
+            ForEach(Array(draft.participants.enumerated()), id: \.element.id) { index, participant in
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(participant.name).font(.body.weight(.bold))
+                            Text(participant.contactIdentifier == nil ? "Nama belum terhubung" : "Terhubung otomatis ke kontak")
+                                .font(.subheadline).foregroundStyle(AppColors.textSecondary)
+                        }
+                        Spacer()
+                        Button(participant.contactIdentifier == nil ? "Hubungkan" : "Bukan dia?") {
+                            contactPickerIndex = index
+                        }
+                        .underline()
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.textPrimary)
+                    }
+                    TextField(
+                        "Optional Notes",
+                        text: Binding(
+                            get: { viewModel.draft?.participants[safe: index]?.notes ?? "" },
+                            set: { viewModel.updateParticipantNotes(index: index, notes: $0) }
+                        ),
+                        axis: .vertical
+                    )
+                    .lineLimit(1...3)
+                    .textFieldStyle(.plain)
+                    .font(.subheadline)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 10)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .padding(14)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppColors.border))
+            }
+            if draft.flow == .splitBill {
+                Button("+ Tambah orang") { viewModel.newParticipantName = "" }
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .background(AppColors.surface)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(AppColors.textSecondary))
+                    .foregroundStyle(AppColors.textPrimary)
+            }
+        }
+    }
+
+    private func splitParticipantsSection(_ draft: TransactionDraft) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(draft.participants) { participant in
+                HStack {
+                    Text(participant.name)
+                    Spacer()
+                    Text(participant.shareAmount.rupiahFormatted).fontWeight(.semibold)
+                }
+            }
+            Divider()
+            HStack { Text("Total").fontWeight(.bold); Spacer(); Text(draft.totalAmount.rupiahFormatted).fontWeight(.bold) }
+        }
+        .padding(16)
+        .background(AppColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var actionSection: some View {
+        VStack(spacing: 10) {
+            Button("Simpan Catatan") {
+                if viewModel.isValid { Task { await viewModel.save() } } else { viewModel.showValidationMessage() }
+            }
+            .buttonStyle(AppPrimaryButtonStyle())
+            .disabled(viewModel.isSaving)
+            Button("Hapus catatan ini", role: .destructive) { confirmsDeletion = true }
+        }
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
