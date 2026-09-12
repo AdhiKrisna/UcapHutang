@@ -1,3 +1,4 @@
+import Foundation
 import XCTest
 @testable import UcapHutang
 
@@ -8,6 +9,15 @@ private struct StubLLMClient: LLMClientProtocol {
 }
 
 final class QwenMigrationTests: XCTestCase {
+    func testPOCFixturesContainBothComplete150CaseSuites() throws {
+        let personal = try loadFixture(named: "personal_150_cases")
+        let splitBill = try loadFixture(named: "splitbill_150_cases")
+        XCTAssertEqual(personal.count, 150)
+        XCTAssertEqual(splitBill.count, 150)
+        XCTAssertTrue(personal.allSatisfy { $0["input"] is String && $0["type"] is String })
+        XCTAssertTrue(splitBill.allSatisfy { $0["input"] is String && $0["members"] is [Any] })
+    }
+
     func testPromptUsesModeSpecificFinalQwenContracts() {
         let personal = QwenPromptBuilder.prompt(for: DraftExtractionRequest(flow: .personal, transcript: "Aku ngutang 20 ribu ke Budi"))
         XCTAssertTrue(personal.contains("Indonesian informal personal debt"))
@@ -87,5 +97,20 @@ final class QwenMigrationTests: XCTestCase {
         XCTAssertEqual(draft.type, .unknown)
         XCTAssertEqual(draft.participants.first?.name, "")
         XCTAssertFalse(draft.reviewWarnings.isEmpty)
+    }
+
+    private func loadFixture(named name: String) throws -> [[String: Any]] {
+        let bundle = Bundle(for: QwenMigrationTests.self)
+        guard let url = bundle.url(forResource: name, withExtension: "json") else {
+            XCTFail("Fixture tidak ditemukan: \(name).json")
+            return []
+        }
+        let data = try Data(contentsOf: url)
+        let json = try JSONSerialization.jsonObject(with: data)
+        guard let cases = json as? [[String: Any]] else {
+            XCTFail("Fixture bukan array object: \(name).json")
+            return []
+        }
+        return cases
     }
 }

@@ -220,6 +220,9 @@ enum QwenOutputDecoder {
         if firstJSONObjectRange(in: String(after)) != nil {
             throw CaptureOutputError.multipleJSONObjects
         }
+        guard String(after).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CaptureOutputError.invalidSchema("Output setelah JSON tidak diizinkan")
+        }
         let jsonStr = String(withoutThink[range])
         guard let data = jsonStr.data(using: .utf8) else {
             throw CaptureOutputError.invalidSchema("UTF-8 encoding error")
@@ -305,11 +308,11 @@ enum QwenOutputDecoder {
         guard double.isFinite, double.rounded(.towardZero) == double else {
             throw CaptureOutputError.invalidSchema("\(key) tidak boleh pecahan")
         }
-        let value = number.int64Value
-        guard value > 0, value <= maximum else {
+        let parsedValue = number.int64Value
+        guard parsedValue > 0, parsedValue <= maximum else {
             throw CaptureOutputError.invalidSchema("\(key) di luar batas domain")
         }
-        return value
+        return parsedValue
     }
 
     private static func optionalTemporalComponents(_ value: Any?) throws -> TransactionTemporalComponents? {
@@ -328,11 +331,17 @@ enum QwenOutputDecoder {
     }
 
     private static func optionalTemporalInt(_ value: Any?, key: String, min: Int, max: Int) throws -> Int? {
-        guard let parsed = try optionalInt(value, key: key, maximum: max) else { return nil }
-        guard parsed >= min else {
+        guard let value, !(value is NSNull) else { return nil }
+        guard let number = value as? NSNumber, String(cString: number.objCType) != "c" else {
+            throw CaptureOutputError.invalidSchema("\(key) harus integer atau null")
+        }
+        let double = number.doubleValue
+        let parsed = number.int64Value
+        guard double.isFinite, double.rounded(.towardZero) == double,
+              parsed >= Int64(min), parsed <= Int64(max) else {
             throw CaptureOutputError.invalidSchema("\(key) di luar batas domain")
         }
-        return parsed
+        return Int(parsed)
     }
 
     private static func receivables(from value: Any?) throws -> [SplitReceivable] {
