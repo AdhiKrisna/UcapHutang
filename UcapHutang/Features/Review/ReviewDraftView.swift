@@ -12,14 +12,12 @@ struct ReviewDraftView: View {
     }
 
     var body: some View {
-        Group {
-            if let draft = viewModel.draft {
+        VStack(spacing: 0) {
+            reviewHeader
+            Group {
+                if let draft = viewModel.draft {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 28) {
-                        transcriptCard(draft.rawTranscript)
-                        if !draft.reviewWarnings.isEmpty {
-                            warningsSection(warnings: draft.reviewWarnings)
-                        }
                         qwenResultSection(draft)
                         personSection(draft)
                         if draft.flow == .splitBill {
@@ -32,12 +30,13 @@ struct ReviewDraftView: View {
                     .padding(.bottom, 28)
                 }
                 .scrollContentBackground(.hidden)
-                .background(AppColors.background)
+                .background(Color.white)
             } else {
                 ProgressView("Memuat data...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(AppColors.background)
+                    .background(Color.white)
             }
+        }
         }
         .navigationTitle("Review Catatan")
         .navigationBarTitleDisplayMode(.inline)
@@ -75,6 +74,33 @@ struct ReviewDraftView: View {
         }
     }
 
+    private var reviewHeader: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.headline.weight(.semibold))
+                    .frame(width: 44, height: 44)
+                    .background(Color(.systemGray6))
+                    .clipShape(Circle())
+            }
+            .foregroundStyle(AppColors.textPrimary)
+
+            Spacer()
+            Text("Review Catatan")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(AppColors.textPrimary)
+            Spacer()
+
+            Color.clear.frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 12)
+        .padding(.bottom, 18)
+        .background(Color.white)
+    }
+
     private func transcriptCard(_ transcript: String) -> some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Ucapan Asli Rekaman")
@@ -102,7 +128,7 @@ struct ReviewDraftView: View {
 
     private func qwenResultSection(_ draft: TransactionDraft) -> some View {
         VStack(alignment: .leading, spacing: 18) {
-            reviewValue(label: "Waktu", value: draft.transactionDate.formatted(date: .abbreviated, time: .shortened))
+            reviewValue(label: "Waktu", value: reviewDate(draft.transactionDate))
             reviewValue(label: "Nominal", value: draft.totalAmount.rupiahFormatted)
             reviewValue(label: "Deskripsi", value: draft.title)
             if draft.flow == .personal {
@@ -124,6 +150,11 @@ struct ReviewDraftView: View {
             Text(label).font(.body).foregroundStyle(AppColors.textPrimary)
             Text(value).font(.body.weight(.bold)).foregroundStyle(AppColors.textPrimary)
         }
+    }
+
+    private func reviewDate(_ date: Date) -> String {
+        if Calendar.current.isDateInToday(date) { return "Hari Ini" }
+        return date.formatted(date: .abbreviated, time: .shortened)
     }
 
     private func personSection(_ draft: TransactionDraft) -> some View {
