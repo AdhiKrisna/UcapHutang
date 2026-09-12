@@ -8,6 +8,8 @@ final class AppContainer {
     let extraction: any DraftExtracting
     let capture: any VoiceCapturing
     let contacts: any ContactsProviding
+    let reminderSettings: any ReminderSettingsStore
+    let reminderScheduler: any ReminderScheduling
     let router: AppRouter
     let makeSpeechTranscriber: @MainActor () -> any SpeechTranscribing
     let storageErrorMessage: String?
@@ -16,6 +18,8 @@ final class AppContainer {
         repository: any TransactionRepository,
         extraction: any DraftExtracting,
         contacts: any ContactsProviding,
+        reminderSettings: any ReminderSettingsStore,
+        reminderScheduler: any ReminderScheduling,
         router: AppRouter = AppRouter(),
         makeSpeechTranscriber: @escaping @MainActor () -> any SpeechTranscribing = { SpeechRecognizer() },
         storageErrorMessage: String? = nil
@@ -24,6 +28,8 @@ final class AppContainer {
         self.extraction = extraction
         self.capture = VoiceCapturePipeline(extraction: extraction, repository: repository)
         self.contacts = contacts
+        self.reminderSettings = reminderSettings
+        self.reminderScheduler = reminderScheduler
         self.router = router
         self.makeSpeechTranscriber = makeSpeechTranscriber
         self.storageErrorMessage = storageErrorMessage
@@ -34,6 +40,8 @@ final class AppContainer {
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         let contacts = SystemContactsProvider()
         let extraction = QwenDraftExtractionService(llmClient: MLXQwenClient())
+        let reminderSettings = UserDefaultsReminderSettingsStore()
+        let notificationCenter = SystemNotificationCenterClient()
         do {
             let container = try ModelContainer(
                 for: schema,
@@ -41,7 +49,17 @@ final class AppContainer {
                 configurations: config
             )
             let repo = SwiftDataTransactionRepository(modelContainer: container)
-            return AppContainer(repository: repo, extraction: extraction, contacts: contacts)
+            return AppContainer(
+                repository: repo,
+                extraction: extraction,
+                contacts: contacts,
+                reminderSettings: reminderSettings,
+                reminderScheduler: ReviewReminderScheduler(
+                    center: notificationCenter,
+                    settingsStore: reminderSettings,
+                    repository: repo
+                )
+            )
         } catch {
             let fallbackRepo = InMemoryTransactionRepository()
             // SwiftData has no migration-specific error type. If a store file already exists,
@@ -54,6 +72,12 @@ final class AppContainer {
                 repository: fallbackRepo,
                 extraction: extraction,
                 contacts: contacts,
+                reminderSettings: reminderSettings,
+                reminderScheduler: ReviewReminderScheduler(
+                    center: notificationCenter,
+                    settingsStore: reminderSettings,
+                    repository: fallbackRepo
+                ),
                 storageErrorMessage: message
             )
         }

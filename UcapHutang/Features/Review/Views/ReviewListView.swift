@@ -3,10 +3,16 @@ import SwiftUI
 struct ReviewListView: View {
     @State private var viewModel: ReviewListViewModel
     let onSelect: (UUID) -> Void
+    let onOpenSettings: () -> Void
 
-    init(repository: any TransactionRepository, onSelect: @escaping (UUID) -> Void) {
+    init(
+        repository: any TransactionRepository,
+        onSelect: @escaping (UUID) -> Void,
+        onOpenSettings: @escaping () -> Void
+    ) {
         _viewModel = State(initialValue: ReviewListViewModel(repository: repository))
         self.onSelect = onSelect
+        self.onOpenSettings = onOpenSettings
     }
 
     var body: some View {
@@ -29,6 +35,14 @@ struct ReviewListView: View {
                 }
             )
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: onOpenSettings) {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Pengaturan")
+                }
+            }
             .task { await viewModel.loadDrafts() }
             .refreshable { await viewModel.loadDrafts() }
             .onReceive(NotificationCenter.default.publisher(for: .transactionRepositoryDidChange)) { _ in
@@ -57,6 +71,8 @@ struct ReviewListView: View {
                 participants: [TransactionParticipant(name: "Dito", shareAmount: 15_000)],
                 rawTranscript: "Dito pinjam 15 ribu buat makan siang"
             )
-        ])
-    ) { _ in }
+        ]),
+        onSelect: { _ in },
+        onOpenSettings: {}
+    )
 }
