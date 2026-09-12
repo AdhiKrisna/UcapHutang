@@ -15,6 +15,16 @@
 		A10000000000000000000006 /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000016 /* Tokenizers */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B2000000000000000000000B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6509AD923053F0AB00B67E93 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6509AD993053F0AB00B67E93;
+			remoteInfo = UcapHutang;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		6509AD9A3053F0AB00B67E93 /* UcapHutang.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UcapHutang.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B20000000000000000000001 /* UcapHutangTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UcapHutangTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -55,24 +65,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
-
-/* Begin PBXContainerItemProxy section */
-		B2000000000000000000000B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6509AD923053F0AB00B67E93 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 6509AD993053F0AB00B67E93;
-			remoteInfo = UcapHutang;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXTargetDependency section */
-		B2000000000000000000000C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 6509AD993053F0AB00B67E93 /* UcapHutang */;
-			targetProxy = B2000000000000000000000B /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXGroup section */
 		6509AD913053F0AB00B67E93 = {
@@ -219,6 +211,14 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		B2000000000000000000000C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6509AD993053F0AB00B67E93 /* UcapHutang */;
+			targetProxy = B2000000000000000000000B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		6509ADA33053F0AC00B67E93 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -346,6 +346,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UXUX3MUJJF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = UcapHutang;
@@ -381,6 +382,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UXUX3MUJJF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = UcapHutang;
