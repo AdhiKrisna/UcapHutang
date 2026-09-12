@@ -74,6 +74,15 @@ All decisions below were made explicitly by the product owner on 2026-09-12.
 | Uncommitted change in `QwenOutputDecoder.swift` | Owned by the developer. Agents never touch it; P1 starts only after the developer has committed or discarded it. |
 | Validation / repository / migration copy | Approved exactly as listed in §6.2, §6.4 and §12. |
 | Phase ordering P2/P3/P4 | Share-consistency rules land in P3 with the new Review; P3 temporarily routes Catat to the new `ReviewDetailView` so `Legacy/` can be deleted in P3; P4 switches Catat to close + banner. |
+| Removing a Split Bill participant | Long-press **context menu** item "Hapus dari catatan"; the same action is exposed to VoiceOver as a custom accessibility action. |
+| Review list card with an empty person name | Shows **"Belum ada nama"**. Split Bill cards show the real participant count and initials only from real names — no invented "Teman", "E C D", "1 Orang", or "5 menit lalu". |
+| Personal draft with unknown direction in the Review list | **Unchanged**: labeled "Utang" and included in the Utang filter. |
+| Contact picker with an empty search field | Shows "Kontak yang pernah dicatat" plus **all iPhone contacts sorted A–Z**. |
+| Speech permission-denied copy | "Izin mikrofon ditolak. Buka Pengaturan untuk mengaktifkan." / "Izin Speech Recognition ditolak. Buka Pengaturan untuk mengaktifkan." |
+| VoiceOver hint on blocked Riwayat actions | "Hubungkan orang ini ke kontak terlebih dahulu." |
+| Primary button color | System prominent style tinted `.primary` (black in Light, white in Dark). |
+| Review / Riwayat alert copy | Approved as written in §8.1, §8.3–8.5 and §9 (Periksa Lagi, Data Belum Bisa Disimpan, Catatan Belum Bisa Dihapus, Orang ini sudah ada di catatan., Belum Bisa Menghubungkan, Cari kontak, card VoiceOver labels). |
+| Reminder button color | Asset `ReminderButtonBackground`: Light `#FFF5E0`, Dark `#3A3222`. |
 | "Ingatkan lewat iMessage" label | Renamed to **"Ingatkan lewat Pesan"**. |
 | Linked contact later deleted from the iPhone | **Still treated as linked**; the stored name snapshot is shown. |
 | Legacy `discarded` drafts | **Purged during the Schema V2 migration**; the `discarded` status is removed from code. |
@@ -144,7 +153,7 @@ UcapHutang/
 │   ├── Models/                        (TransactionModels.swift, ContactModels.swift, ReminderSettings.swift)
 │   ├── Validation/                    (DraftValidator.swift)
 │   └── Protocols/                     (TransactionRepository, ContactsProviding, SpeechTranscribing,
-│                                       DraftExtracting, ReminderScheduling, ReminderSettingsStore)
+│                                       VoiceCapturing, ReminderScheduling, ReminderSettingsStore)
 ├── Data/
 │   └── Persistence/                   (SchemaV1.swift, SchemaV2.swift, UcapHutangMigrationPlan.swift,
 │                                       SwiftDataTransactionRepository.swift, InMemoryTransactionRepository.swift,
@@ -152,7 +161,7 @@ UcapHutang/
 ├── Services/
 │   ├── Speech/                        (stage 1: SpeechRecognizer.swift)
 │   ├── AI/                            (stage 2: MLXQwenClient, QwenPromptBuilder, QwenOutputDecoder,
-│                                       TransactionDateResolver, QwenDraftExtractionService)
+│                                       TransactionDateResolver, DraftExtracting, QwenDraftExtractionService)
 │   ├── Capture/                       (stage 3: DraftMapper.swift, VoiceCapturePipeline.swift)
 │   ├── Contacts/                      (SystemContactsProvider.swift)
 │   └── Notifications/                 (ReviewReminderScheduler.swift)
@@ -192,7 +201,7 @@ A feature only gets a subfolder when it has at least one file for it. `Models/` 
 
 ### 5.4 Composition root and injection
 
-- `AppContainer` becomes `@Observable` and owns: `repository`, `contacts: ContactsProviding`, `makeSpeechTranscriber: () -> any SpeechTranscribing` (a fresh recognizer per Catat session), `extraction: DraftExtracting`, `capturePipeline: VoiceCapturePipeline`, `reminderScheduler: ReminderScheduling`, `reminderSettings: ReminderSettingsStore`, `router: AppRouter`.
+- `AppContainer` becomes `@Observable` and owns: `repository`, `contacts: ContactsProviding`, `makeSpeechTranscriber: () -> any SpeechTranscribing` (a fresh recognizer per Catat session), `extraction: any DraftExtracting`, `capture: any VoiceCapturing` (a `VoiceCapturePipeline`), `reminderScheduler: ReminderScheduling`, `reminderSettings: ReminderSettingsStore`, `router: AppRouter`.
 - `UcapHutangApp` holds it with `@State` and injects it with `.environment(container)`.
 - Feature views construct their ViewModel in `init` from injected dependencies and hold it with `@State`.
 - The storage-failure path in `AppContainer.makeDefault()` is unchanged in behavior (blocking error screen).
@@ -232,9 +241,9 @@ struct ContactRef: Hashable, Sendable {     // NEW, Domain/Models/ContactModels.
 enum ContactsAccess: Sendable { case notDetermined, authorized, denied }  // limited/restricted map to .denied
 
 protocol ContactsProviding: Sendable {                   // NEW, Domain/Protocols/ContactsProviding.swift
-    func access() -> ContactsAccess
+    func access() async -> ContactsAccess                 // async so MainActor conformers are always valid
     func requestAccess() async -> ContactsAccess
-    func search(name: String) async -> [ContactRef]       // [] when access() != .authorized
+    func search(name: String) async -> [ContactRef]       // [] when access() != .authorized; blank name → all contacts A–Z
     func contacts(withIdentifiers ids: [String]) async -> [ContactRef]  // skips identifiers not found
 }
 
@@ -371,7 +380,8 @@ Used by `DraftMapper`, `ReviewDetailViewModel`, and `DraftValidator`. No other c
 ### 7.1 Stage 1 — Speech (`Services/Speech`)
 
 ```swift
-protocol SpeechTranscribing: AnyObject {
+@MainActor
+protocol SpeechTranscribing: AnyObject {      // Domain/Protocols; SpeechRecognizerState + SpeechPermissionError live in Domain/Models/SpeechModels.swift
     var state: SpeechRecognizerState { get }      // idle, listening, finalizing, failed(String)
     var liveTranscript: String { get }
     var usesOnDeviceRecognition: Bool { get }
@@ -382,7 +392,7 @@ protocol SpeechTranscribing: AnyObject {
 ```
 
 - Set `request.requiresOnDeviceRecognition = true` when `speechRecognizer.supportsOnDeviceRecognition` is `true`; expose it via `usesOnDeviceRecognition`.
-- Permission errors are typed (`SpeechPermissionError.microphoneDenied`, `.speechDenied`, `.restricted`) so the Catat UI can show "Buka Pengaturan".
+- Permission errors are typed (`SpeechPermissionError.microphoneDenied`, `.speechDenied`, `.restricted`) so the Catat UI can show "Buka Pengaturan". Messages: microphone denied → "Izin mikrofon ditolak. Buka Pengaturan untuk mengaktifkan."; speech denied → "Izin Speech Recognition ditolak. Buka Pengaturan untuk mengaktifkan."; restricted → "Speech Recognition dibatasi pada perangkat ini." (unchanged).
 - Keep the existing contextual vocabulary.
 - Known limitation (documented, not fixed): server-based recognition has a per-request duration limit imposed by Apple.
 
@@ -390,7 +400,8 @@ protocol SpeechTranscribing: AnyObject {
 
 ```swift
 protocol DraftExtracting: Sendable {
-    func extract(flow: CaptureFlow, transcript: String, referenceDate: Date) async -> ExtractionResult
+    // Lives in Services/AI (not Domain) because ExtractionResult exposes the Qwen decoder's CaptureOutput.
+    func extract(flow: CaptureFlow, transcript: String, referenceDate: Date) async throws -> ExtractionResult
 }
 
 struct ExtractionResult: Sendable {
@@ -422,9 +433,13 @@ Rules:
 - `rawTranscript`, `rawModelResponse`, `reviewWarnings`, `transactionDate` copied from inputs.
 
 ```swift
-final class VoiceCapturePipeline {
+protocol VoiceCapturing: Sendable {               // Domain/Protocols — what CatatViewModel depends on
     func process(flow: CaptureFlow, transcript: String) async throws -> UUID
-    // 1) extraction.extract  2) DraftMapper.makeDraft  3) repository.saveDraft  4) reminderScheduler.sync()
+}
+
+final class VoiceCapturePipeline: VoiceCapturing { // Services/Capture
+    // 1) extraction.extract  2) DraftMapper.makeDraft  3) repository.saveDraft
+    // 4) reminderScheduler.sync() — added in P6
 }
 ```
 
@@ -454,7 +469,7 @@ Entry points: tapping a card in the Review tab (and, indirectly, a reminder noti
 ### 8.1 Loading
 
 - `init(draftID:)` → `.task { await viewModel.load() }` → loads the draft from the repository. **No default/mock values.**
-- States: loading (`ProgressView`), loaded, not found (`ContentUnavailableView` with the text "Catatan ini tidak ditemukan." + "Tutup").
+- States: loading (`ProgressView`), loaded, not found (`ContentUnavailableView` with the text "Catatan ini tidak ditemukan." + "Tutup"). A repository error while loading shows the same not-found state.
 - After load, compute contact suggestions (8.3).
 
 ### 8.2 Fields
@@ -467,7 +482,7 @@ Entry points: tapping a card in the Review tab (and, indirectly, a reminder noti
 | Jenis (Personal) | Segmented `Picker`: Utang / Piutang | `unknown` shows no selection and produces a validation issue. |
 | Metode bagi (Split) | Segmented `Picker`: Bagi Rata / Custom | |
 | Saya ikut dihitung (Split + Bagi Rata) | `Toggle`, default ON | Recomputes shares. Hidden in Custom. |
-| Orang / Peserta | `SmartContactCardView` per participant | Personal: exactly one card, no "+ Tambah orang". Split: "+ Tambah orang" opens the picker in multi-select; swipe or a remove button deletes a participant. |
+| Orang / Peserta | `SmartContactCardView` per participant | Personal: exactly one card, no "+ Tambah orang". Split: "+ Tambah orang" opens the picker in multi-select; a long-press context menu item "Hapus dari catatan" removes a participant (also available to VoiceOver as a custom action with the same name). |
 | Bagian per peserta (Split) | Text (equal) or number `TextField` (custom) | Custom edits update `totalAmount = Σ shares`. |
 
 A summary row for Split shows friends' total, the user's share (equal + ON only), and the transaction total.
@@ -480,45 +495,53 @@ A summary row for Split shows friends' total, the user's share (equal + ON only)
 | `suggestion(ContactRef)` | `<name>` · "Mirip kontak “<displayName>”" | **Ya, hubungkan** · **Bukan, pilih lain** |
 | `linked(ContactRef)` | `<displayName>` · "Terhubung ke kontak" | **Ganti** |
 
-- A suggestion is computed **only** if `contacts.access() == .authorized` and `contacts.search(name: participant.name)` returns **exactly one** contact. It never counts as linked.
+- A suggestion is computed **only** if `await contacts.access() == .authorized` and `contacts.search(name: participant.name)` returns **exactly one** contact. It never counts as linked.
 - When validation fails, an unlinked/suggestion card additionally shows the text **"Wajib dihubungkan"** with a `exclamationmark.circle` symbol in `.orange` (meaning is carried by the text, not color).
-- Buttons have ≥ 44×44 pt hit targets and accessibility labels that include the person's name.
+- Buttons have ≥ 44×44 pt hit targets and these accessibility labels: **Hubungkan** → "Hubungkan \<nama\> ke kontak"; **Ya, hubungkan** → "Hubungkan ke \<nama kontak\>"; **Bukan, pilih lain** → "Pilih kontak lain untuk \<nama\>"; **Ganti** → "Ganti kontak \<nama\>".
+- A blank participant name is displayed as "Belum ada nama" (same approved copy as the list card, §8.6).
 
 ### 8.4 Linking flow
 
 1. User taps **Hubungkan / Bukan, pilih lain / Ganti / + Tambah orang**.
-2. `contacts.access()`:
+2. `await contacts.access()`:
    - `.notDetermined` → `await contacts.requestAccess()`; re-evaluate.
    - `.denied` (includes `restricted` and `limited`) → alert **"Akses Kontak Diperlukan"**, message "UcapHutang perlu akses penuh ke Kontak agar setiap catatan terhubung ke orang yang tepat.", buttons **"Buka Pengaturan"** / **"Nanti"**. Stop.
    - `.authorized` → present `ReviewContactPickerSheet`.
-3. Picker (native `List` + `.searchable`, prefilled with the participant's name when relinking):
+3. Picker (native `List` + `.searchable` with prompt **"Cari kontak"**, prefilled with the participant's name when relinking):
    - Section **"Kontak yang pernah dicatat"**: contacts whose identifiers are in `repository.linkedContactIdentifiers()`, resolved through `ContactsProviding`; missing contacts are skipped.
-   - Section **"Kontak di iPhone"**: search results from `ContactsProviding`.
+   - Section **"Kontak di iPhone"**: search results from `ContactsProviding`; when the search field is empty it lists all contacts sorted A–Z.
    - No "Buat kontak baru" row. Empty search: `ContentUnavailableView.search`.
    - Single-select (Personal / relink): tapping a row selects and dismisses. Multi-select (Split add): checkmarks + "Selesai".
    - Toolbar: "Batal" (cancellation) and, for multi-select, "Selesai" (confirmation). No custom chevrons.
-4. Selecting a contact sets `participant.name = contact.displayName`, `participant.contactIdentifier = contact.identifier`. Selecting a contact already used by another participant shows "Orang ini sudah ada di catatan." and does nothing.
+4. Selecting a contact sets `participant.name = contact.displayName`, `participant.contactIdentifier = contact.identifier`. Selecting a contact already used by another participant shows an alert titled "Orang ini sudah ada di catatan." with **OK** and changes nothing.
 
 ### 8.5 Save and delete
 
-- **Simpan Catatan** (primary, bottom, full-width, system prominent style):
+- **Simpan Catatan** (primary, bottom, full-width, system prominent style tinted `.primary`):
   1. `issues = DraftValidator.issues(for: draft)`.
-  2. If not empty → alert **"Data Belum Lengkap"** listing `issue.message` bullets; mark cards (8.3). **No repository call.**
+  2. If not empty → alert **"Data Belum Lengkap"** listing the distinct `issue.message` values as bullets, with button **"Periksa Lagi"**; mark cards (8.3). **No repository call.**
   3. Else → `repository.confirmDraft(draft)` → success haptic → dismiss.
-  4. Repository error → alert with the error's Indonesian message; draft unchanged.
+  4. Repository error → alert **"Data Belum Bisa Disimpan"** with the error's message and **OK**; draft unchanged.
   - The button is disabled while saving (with a `ProgressView`).
-- **Hapus catatan ini** (destructive text button) → `confirmationDialog` "Hapus catatan ini?" / "Catatan dan transkripnya akan dihapus permanen." / **Hapus** (destructive) / **Batal** → `repository.deleteDraft(id:)` → dismiss.
+- **Hapus catatan ini** (destructive text button) → `confirmationDialog` "Hapus catatan ini?" / "Catatan dan transkripnya akan dihapus permanen." / **Hapus** (destructive) / **Batal** → `repository.deleteDraft(id:)` → dismiss. A failure shows alert **"Catatan Belum Bisa Dihapus"** with the error's message and **OK**.
 - **Closing without saving** (toolbar **"Tutup"** in the cancellation placement, or swipe-down): if the ViewModel is dirty, its edits are written back with `repository.saveDraft(draft)` — status stays `needsReview`, no validation, no ledger write — and the Review list refreshes. No confirmation dialog. `ReviewDetailView` calls `viewModel.persistEditsIfNeeded()` from `.onDisappear` inside a `Task` (the task retains the ViewModel until the write finishes). The method is idempotent and a no-op after a successful save or delete, or when nothing changed.
+
+### 8.6 Review list cards
+
+- Personal: `<prefix> <person name>`; when the stored name is blank, the name reads **"Belum ada nama"**.
+- Split Bill: `<count> Orang` using the real participant count (including 0); avatar initials come only from non-blank participant names (no placeholder initials).
+- Relative time comes only from `RelativeDateTimeFormatter` (`id_ID`); no hard-coded fallback.
+- Personal drafts with `type == .unknown` keep today's behavior: labeled "Utang" and included in the Utang filter.
 
 ## 9. Riwayat (legacy unlinked people)
 
 - `PersonCardRow`: when `!person.isLinked`, show "Belum terhubung ke kontak" (secondary text + `person.crop.circle.badge.exclamationmark`).
 - `PersonLedgerDetailView` when `!person.isLinked`:
   - An inset card: "Hubungkan orang ini ke kontak untuk mencatat pembayaran atau mengirim pengingat." + **"Hubungkan ke Kontak"**.
-  - "Catat Bayar" and "Ingatkan" are `.disabled(true)` with `accessibilityHint` explaining why.
+  - "Catat Bayar" and "Ingatkan lewat Pesan" are `.disabled(true)` with `accessibilityHint("Hubungkan orang ini ke kontak terlebih dahulu.")`.
 - Linking uses the same permission flow (8.4 step 2) and a single-select picker.
 - After a contact is picked, if `ledgerEntries` already contain `personID == contact.identifier`: `confirmationDialog` **"Gabungkan riwayat?"** / "Riwayat “<old name>” akan digabung dengan “<contact name>”. Saldo akan dijumlahkan." / **Gabungkan** / **Batal**. Otherwise link directly.
-- Then `repository.linkPerson(personID:to:)`; the detail view switches to the new `personID` and reloads.
+- Then `repository.linkPerson(personID:to:)`; the detail view switches to the new `personID` and reloads. A failure shows alert **"Belum Bisa Menghubungkan"** with the error's message and **OK**.
 - `recordPayment` enforces `personNotLinked` at the repository.
 - "Ingatkan lewat iMessage" is relabeled **"Ingatkan lewat Pesan"** (it opens the Messages composer via `sms:`).
 
@@ -591,12 +614,12 @@ Current estimate: **5/10** on the HIG quick diagnostic (safe areas OK; Dark Mode
 | Area | Current problem (evidence) | Required fix |
 |------|----------------------------|--------------|
 | Typography | Hard-coded sizes: `.system(size: 26, …)` in `Components.swift:69`, `LedgerListView.swift:19`; `.system(size: 32, …)` in `PersonLedgerDetailView.swift:38`; `.system(size: 9, …)` in `DraftCardView.swift:92`; `.system(size: 34, …)` in `CatatView.swift:96` | Semantic text styles; `@ScaledMetric` for custom sizes (avatars, record control). |
-| Color / Dark Mode | `Color(red: 1.0, green: 0.96, blue: 0.88)` in `PersonLedgerDetailView.swift:53`; `.white` on accent in `ContactPickerSheet.swift:52`; raw `Color.green/.red` | Semantic colors only; add named colors with light/dark variants to the asset catalog if a brand tint is needed; route through `AppColors`. |
+| Color / Dark Mode | `Color(red: 1.0, green: 0.96, blue: 0.88)` in `PersonLedgerDetailView.swift:53`; `.white` on accent in `ContactPickerSheet.swift:52`; raw `Color.green/.red` | Semantic colors only, routed through `AppColors`. The reminder button background becomes asset color **`ReminderButtonBackground`** (Light `#FFF5E0`, Dark `#3A3222`) exposed as `AppColors.reminderButtonBackground`. |
 | Navigation | Custom chevron back buttons: `DraftReviewView.swift:183-189`, `ReviewDraftView.swift:76-101`, `DraftContactPickerSheet.swift:104-110` | System back; sheets use text "Batal"/"Selesai"/"Tutup". |
 | Tab bar | `.tabItem` in `RootTabView.swift`; Draft tab icon `exclamationmark.triangle` implies an error | `Tab` API with `.badge`; tabs **Review** (`doc.badge.clock`, formerly "Draft"), **Catat** (`mic.fill`, unchanged), **Riwayat** (`book.closed`, unchanged). |
 | Touch targets | Card buttons with 6 pt vertical padding (`SmartContactCardView.swift:45-48,71-74`); filter buttons 38 pt (`Components.swift:23`) | ≥ 44×44 pt. |
 | Search | Custom floating field with a non-functional mic icon (`LedgerListView.swift:120-139`) | `.searchable(text:prompt:)`; remove the mic icon. |
-| Controls | Custom `Text` buttons with manual backgrounds for primary actions | `.buttonStyle(.borderedProminent)` / `.bordered` / plain text, `.controlSize(.large)` for primary. |
+| Controls | Custom `Text` buttons with manual backgrounds for primary actions | `.buttonStyle(.borderedProminent)` / `.bordered` / plain text, `.controlSize(.large)` for primary; primary actions are tinted `.primary` (black in Light, white in Dark). |
 | Accessibility | No labels on record control, avatars, amounts, filter state | Labels, values, hints; `.accessibilityElement(children: .combine)` for cards; `.isSelected` trait on filters; hide decorative avatars. |
 | Dynamic Type | Fixed 250 pt record circle, `lineLimit(1)` + `minimumScaleFactor` on balances | Layouts verified at `accessibility5`; allow wrapping. |
 | Motion | Implicit animations without Reduce Motion checks | Respect `accessibilityReduceMotion`. |
