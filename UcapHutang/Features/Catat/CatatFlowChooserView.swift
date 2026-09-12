@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct CaptureFlowChooserView: View {
+struct CatatFlowChooserView: View {
     let onSelect: (CaptureFlow) -> Void
     private let readiness = MLXQwenClient.readiness()
 
