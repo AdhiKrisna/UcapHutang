@@ -10,54 +10,122 @@ enum DraftValidationError: LocalizedError, Equatable {
     }
 }
 
+enum DraftValidationIssue: Equatable, Sendable {
+    case amountNotPositive
+    case titleMissing
+    case directionMissing
+    case participantsMissing(flow: CaptureFlow)
+    case participantNameMissing(participantID: UUID)
+    case participantNotLinked(participantID: UUID)
+    case duplicateParticipant
+    case personalRequiresExactlyOne
+    case splitTypeInvalid
+    case shareNotPositive(participantID: UUID, name: String)
+    case sharesExceedTotal
+    case sharesDoNotMatchTotal
+
+    var message: String {
+        switch self {
+        case .amountNotPositive:
+            "Isi nominal transaksi dengan angka lebih dari Rp0."
+        case .titleMissing:
+            "Isi deskripsi transaksi, misalnya “Kopi” atau “Makan malam”."
+        case .directionMissing:
+            "Pilih siapa yang berutang: kamu atau orang tersebut."
+        case .participantsMissing(let flow):
+            flow == .personal
+                ? "Pilih orang yang terkait dengan transaksi ini."
+                : "Tambahkan minimal satu teman yang ikut split bill."
+        case .participantNameMissing:
+            "Ada nama orang yang masih kosong."
+        case .participantNotLinked:
+            "Hubungkan setiap orang ke kontak sebelum menyimpan."
+        case .duplicateParticipant:
+            "Ada orang yang sama dalam satu transaksi. Hapus atau ganti salah satunya."
+        case .personalRequiresExactlyOne:
+            "Utang atau piutang pribadi hanya boleh melibatkan satu orang."
+        case .splitTypeInvalid:
+            "Jenis transaksi split bill tidak valid."
+        case .shareNotPositive(_, let name):
+            "Isi nominal bagian untuk \(name)."
+        case .sharesExceedTotal:
+            "Total bagian teman melebihi nominal transaksi."
+        case .sharesDoNotMatchTotal:
+            "Pembagian nominal belum sesuai dengan total transaksi."
+        }
+    }
+}
+
 enum DraftValidator {
+    /// Throws the first issue so repositories can refuse to write invalid drafts.
     static func validateForConfirmation(_ draft: TransactionDraft) throws {
-        guard draft.totalAmount > 0 else {
-            throw DraftValidationError.invalid("Nominal transaksi harus lebih dari Rp0.")
+        if let firstIssue = issues(for: draft).first {
+            throw DraftValidationError.invalid(firstIssue.message)
         }
-        guard !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw DraftValidationError.invalid("Judul transaksi belum diisi.")
+    }
+
+    /// Every problem that blocks confirmation, in display order.
+    static func issues(for draft: TransactionDraft) -> [DraftValidationIssue] {
+        var issues: [DraftValidationIssue] = []
+
+        if draft.totalAmount <= 0 {
+            issues.append(.amountNotPositive)
         }
-        guard !draft.participants.isEmpty else {
-            throw DraftValidationError.invalid("Nama orang yang terkait belum diisi.")
+        if draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            issues.append(.titleMissing)
         }
-        let names = draft.participants.map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }
-        guard names.allSatisfy({ !$0.isEmpty }) else {
-            throw DraftValidationError.invalid("Ada nama orang yang masih kosong.")
+        if draft.participants.isEmpty {
+            issues.append(.participantsMissing(flow: draft.flow))
         }
-        let everyParticipantIsLinked = draft.participants.allSatisfy { participant in
-            let identifier = participant.contactIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return !identifier.isEmpty
+        for participant in draft.participants
+        where participant.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            issues.append(.participantNameMissing(participantID: participant.id))
         }
-        guard everyParticipantIsLinked else {
-            throw DraftValidationError.invalid("Hubungkan setiap orang ke kontak sebelum menyimpan.")
+        for participant in draft.participants where !isLinked(participant) {
+            issues.append(.participantNotLinked(participantID: participant.id))
         }
-        guard Set(names.map { $0.lowercased() }).count == names.count else {
-            throw DraftValidationError.invalid("Ada nama orang yang sama dalam satu transaksi.")
+        let identities = draft.participants.map(identityKey).filter { $0 != "name:" }
+        if Set(identities).count != identities.count {
+            issues.append(.duplicateParticipant)
         }
 
         switch draft.flow {
         case .personal:
-            guard draft.type == .hutang || draft.type == .piutang else {
-                throw DraftValidationError.invalid("Pilih siapa yang berutang sebelum menyimpan.")
+            if draft.type != .hutang && draft.type != .piutang {
+                issues.append(.directionMissing)
             }
-            guard draft.participants.count == 1 else {
-                throw DraftValidationError.invalid("Utang atau piutang pribadi hanya boleh melibatkan satu orang.")
+            if draft.participants.count > 1 {
+                issues.append(.personalRequiresExactlyOne)
             }
         case .splitBill:
-            guard draft.type == .splitBill else {
-                throw DraftValidationError.invalid("Jenis transaksi split bill tidak valid.")
+            if draft.type != .splitBill {
+                issues.append(.splitTypeInvalid)
             }
-            guard draft.participants.allSatisfy({ $0.shareAmount > 0 }) else {
-                throw DraftValidationError.invalid("Nominal bagian setiap teman harus lebih dari Rp0.")
+            for participant in draft.participants where participant.shareAmount <= 0 {
+                let name = participant.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                issues.append(.shareNotPositive(participantID: participant.id, name: name))
             }
-            let allocated = draft.participants.reduce(Int64(0)) { partial, participant in
-                let (sum, overflow) = partial.addingReportingOverflow(participant.shareAmount)
-                return overflow ? Int64.max : sum
-            }
-            guard allocated <= draft.totalAmount else {
-                throw DraftValidationError.invalid("Total bagian teman melebihi nominal transaksi.")
+            if let allocated = SplitCalculationEngine.customTotal(draft.participants.map(\.shareAmount)) {
+                if allocated > draft.totalAmount {
+                    issues.append(.sharesExceedTotal)
+                }
+            } else {
+                issues.append(.sharesExceedTotal)
             }
         }
+
+        return issues
+    }
+
+    private static func isLinked(_ participant: TransactionParticipant) -> Bool {
+        let identifier = participant.contactIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return !identifier.isEmpty
+    }
+
+    private static func identityKey(_ participant: TransactionParticipant) -> String {
+        if isLinked(participant), let identifier = participant.contactIdentifier {
+            return "contact:" + identifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return "name:" + participant.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 }
