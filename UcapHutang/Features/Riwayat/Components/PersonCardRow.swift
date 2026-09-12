@@ -23,11 +23,11 @@ struct PersonCardRow: View {
                         .font(.body.weight(.semibold))
                         .foregroundStyle(Color.secondary)
                 } else if person.balance > 0 {
-                    Text(formatRupiah(person.balance))
+                    Text(person.balance.rupiahFormatted)
                         .font(.body.weight(.bold))
                         .foregroundStyle(Color.green)
                 } else {
-                    Text(formatRupiah(abs(person.balance)))
+                    Text(abs(person.balance).rupiahFormatted)
                         .font(.body.weight(.bold))
                         .foregroundStyle(Color.red)
                 }
@@ -46,13 +46,5 @@ struct PersonCardRow: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(Color(.separator), lineWidth: 1)
         )
-    }
-
-    private func formatRupiah(_ amount: Int64) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        let numStr = formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
-        return "Rp. \(numStr)"
     }
 }

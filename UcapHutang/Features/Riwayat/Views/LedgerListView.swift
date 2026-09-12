@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct LedgerListView: View {
-    @StateObject private var viewModel: LedgerListViewModel
+    @State private var viewModel: LedgerListViewModel
     private let repository: any TransactionRepository
 
     init(repository: any TransactionRepository) {
         self.repository = repository
-        _viewModel = StateObject(wrappedValue: LedgerListViewModel(repository: repository))
+        _viewModel = State(initialValue: LedgerListViewModel(repository: repository))
     }
 
     var body: some View {
@@ -34,7 +34,7 @@ struct LedgerListView: View {
                                         .foregroundStyle(Color.green)
                                 }
 
-                                Text(formatRupiah(viewModel.totalReceivable))
+                                Text(viewModel.totalReceivable.rupiahFormatted)
                                     .font(.headline.weight(.bold))
                                     .foregroundStyle(Color.green)
                                     .lineLimit(1)
@@ -60,7 +60,7 @@ struct LedgerListView: View {
                                         .foregroundStyle(Color.red)
                                 }
 
-                                Text(formatRupiah(viewModel.totalDebt))
+                                Text(viewModel.totalDebt.rupiahFormatted)
                                     .font(.headline.weight(.bold))
                                     .foregroundStyle(Color.red)
                                     .lineLimit(1)
@@ -148,13 +148,5 @@ struct LedgerListView: View {
                 Task { await viewModel.load() }
             }
         }
-    }
-
-    private func formatRupiah(_ amount: Int64) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        let numStr = formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
-        return "Rp. \(numStr)"
     }
 }

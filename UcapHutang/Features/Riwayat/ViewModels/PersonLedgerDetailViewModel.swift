@@ -1,24 +1,12 @@
-import SwiftUI
-import Combine
+import Foundation
+import Observation
 
-@MainActor
-protocol PersonLedgerDetailViewModelProtocol: ObservableObject {
-    var person: PersonLedgerSummary { get }
-    var entries: [LedgerEntry] { get }
-    var selectedFilter: DetailFilter { get set }
-    var showingPayment: Bool { get set }
-    var filteredEntries: [LedgerEntry] { get }
-
-    func reload() async
-    func sendReminderMessage()
-}
-
-@MainActor
-final class PersonLedgerDetailViewModel: ObservableObject, PersonLedgerDetailViewModelProtocol {
-    @Published private(set) var person: PersonLedgerSummary
-    @Published private(set) var entries: [LedgerEntry]
-    @Published var selectedFilter: DetailFilter = .all
-    @Published var showingPayment: Bool = false
+@Observable
+final class PersonLedgerDetailViewModel {
+    private(set) var person: PersonLedgerSummary
+    private(set) var entries: [LedgerEntry]
+    var selectedFilter: DetailFilter = .all
+    var showingPayment: Bool = false
 
     private let repository: any TransactionRepository
 
@@ -43,6 +31,13 @@ final class PersonLedgerDetailViewModel: ObservableObject, PersonLedgerDetailVie
         }
     }
 
+    /// The `sms:` URL the View opens with `openURL`. ViewModels never call UIKit directly.
+    var reminderMessageURL: URL? {
+        let text = "Halo \(person.displayName), mengingatkan kembali ada catatan saldo \(abs(person.balance).rupiahFormatted) di UcapHutang ya."
+        guard let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return nil }
+        return URL(string: "sms:&body=\(encoded)")
+    }
+
     func reload() async {
         guard let allEntries = try? await repository.ledgerEntries() else { return }
         let currentEntries = allEntries.filter { $0.personID == person.id }.sorted { $0.date > $1.date }
@@ -55,18 +50,5 @@ final class PersonLedgerDetailViewModel: ObservableObject, PersonLedgerDetailVie
             entryCount: currentEntries.count,
             lastActivity: currentEntries.first?.date ?? person.lastActivity
         )
-    }
-
-    func sendReminderMessage() {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        let amountFormatted = "Rp. " + (formatter.string(from: NSNumber(value: abs(person.balance))) ?? "\(abs(person.balance))")
-        let text = "Halo \(person.displayName), mengingatkan kembali ada catatan saldo \(amountFormatted) di UcapHutang ya."
-
-        if let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-           let url = URL(string: "sms:&body=\(encoded)") {
-            UIApplication.shared.open(url)
-        }
     }
 }

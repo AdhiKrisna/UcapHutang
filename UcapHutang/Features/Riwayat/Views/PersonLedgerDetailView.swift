@@ -1,12 +1,13 @@
 import SwiftUI
 
 struct PersonLedgerDetailView: View {
-    @StateObject private var viewModel: PersonLedgerDetailViewModel
+    @State private var viewModel: PersonLedgerDetailViewModel
+    @Environment(\.openURL) private var openURL
     private let repository: any TransactionRepository
 
     init(person: PersonLedgerSummary, entries: [LedgerEntry], repository: any TransactionRepository) {
         self.repository = repository
-        _viewModel = StateObject(wrappedValue: PersonLedgerDetailViewModel(
+        _viewModel = State(initialValue: PersonLedgerDetailViewModel(
             person: person,
             entries: entries,
             repository: repository
@@ -34,13 +35,15 @@ struct PersonLedgerDetailView: View {
                     .clipShape(Capsule())
 
                     // Big Balance Text
-                    Text(formatRupiah(abs(viewModel.person.balance)))
+                    Text(abs(viewModel.person.balance).rupiahFormatted)
                         .font(.system(size: 32, weight: .bold))
                         .foregroundStyle(Color.primary)
 
                     // Ingatkan Action Button
                     Button {
-                        viewModel.sendReminderMessage()
+                        if let url = viewModel.reminderMessageURL {
+                            openURL(url)
+                        }
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "message.fill")
@@ -118,13 +121,5 @@ struct PersonLedgerDetailView: View {
         .onReceive(NotificationCenter.default.publisher(for: .transactionRepositoryDidChange)) { _ in
             Task { await viewModel.reload() }
         }
-    }
-
-    private func formatRupiah(_ amount: Int64) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        let numStr = formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
-        return "Rp. \(numStr)"
     }
 }

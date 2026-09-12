@@ -31,7 +31,7 @@ struct DetailEntryCardRow: View {
             Spacer()
 
             // Amount
-            Text(formatRupiah(abs(entry.balanceDelta)))
+            Text(abs(entry.balanceDelta).rupiahFormatted)
                 .font(.body.weight(.bold))
                 .foregroundStyle(bubbleColor)
         }
@@ -75,13 +75,5 @@ struct DetailEntryCardRow: View {
         formatter.locale = Locale(identifier: "id_ID")
         formatter.dateFormat = "d MMMM yyyy"
         return formatter.string(from: date)
-    }
-
-    private func formatRupiah(_ amount: Int64) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        let numStr = formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
-        return "Rp. \(numStr)"
     }
 }

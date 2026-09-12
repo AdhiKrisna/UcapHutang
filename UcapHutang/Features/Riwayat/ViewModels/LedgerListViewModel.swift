@@ -1,29 +1,13 @@
-import SwiftUI
-import Combine
+import Foundation
+import Observation
 
-@MainActor
-protocol LedgerListViewModelProtocol: ObservableObject {
-    var summaries: [PersonLedgerSummary] { get }
-    var filter: LedgerFilter { get set }
-    var searchQuery: String { get set }
-    var totalReceivable: Int64 { get }
-    var receivableCount: Int { get }
-    var totalDebt: Int64 { get }
-    var debtCount: Int { get }
-    var filteredSummaries: [PersonLedgerSummary] { get }
-    var errorMessage: String? { get set }
-
-    func load() async
-    func entries(for person: PersonLedgerSummary) -> [LedgerEntry]
-}
-
-@MainActor
-final class LedgerListViewModel: ObservableObject, LedgerListViewModelProtocol {
-    @Published private(set) var summaries: [PersonLedgerSummary] = []
-    @Published private(set) var entries: [LedgerEntry] = []
-    @Published var filter: LedgerFilter = .all
-    @Published var searchQuery: String = ""
-    @Published var errorMessage: String?
+@Observable
+final class LedgerListViewModel {
+    private(set) var summaries: [PersonLedgerSummary] = []
+    private(set) var entries: [LedgerEntry] = []
+    var filter: LedgerFilter = .all
+    var searchQuery: String = ""
+    var errorMessage: String?
 
     private let repository: any TransactionRepository
 
