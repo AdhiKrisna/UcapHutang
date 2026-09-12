@@ -13,136 +13,77 @@ struct LedgerListView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        // Title
-                        Text("Ringkasan Saldo")
-                            .font(.system(size: 26, weight: .bold))
-                            .foregroundStyle(Color.primary)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 8)
-
-                        // 2 Metric Summary Cards
-                        HStack(spacing: 12) {
-                            // Piutang
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "arrow.down.left")
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(Color.green)
-                                    Text("Piutang")
-                                        .font(.subheadline.weight(.medium))
-                                        .foregroundStyle(Color.green)
-                                }
-
-                                Text(viewModel.totalReceivable.rupiahFormatted)
-                                    .font(.headline.weight(.bold))
-                                    .foregroundStyle(Color.green)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-
-                                Text("\(viewModel.receivableCount) orang berutang")
-                                    .font(.caption)
-                                    .foregroundStyle(Color.secondary)
-                            }
-                            .padding(14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.green.opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-                            // Utang
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "arrow.up.right")
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(Color.red)
-                                    Text("Utang")
-                                        .font(.subheadline.weight(.medium))
-                                        .foregroundStyle(Color.red)
-                                }
-
-                                Text(viewModel.totalDebt.rupiahFormatted)
-                                    .font(.headline.weight(.bold))
-                                    .foregroundStyle(Color.red)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-
-                                Text("\(viewModel.debtCount) tanggungan aktif")
-                                    .font(.caption)
-                                    .foregroundStyle(Color.secondary)
-                            }
-                            .padding(14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.red.opacity(0.06))
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("Ringkasan Saldo")
+                        .font(.title.bold())
+                        .foregroundStyle(.primary)
+                        .accessibilityAddTraits(.isHeader)
                         .padding(.horizontal, 20)
+                        .padding(.top, 8)
 
-                        // Filter Pills
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(LedgerFilter.allCases) { filter in
-                                    LedgerFilterPill(
-                                        filter: filter,
-                                        isSelected: viewModel.filter == filter
-                                    ) {
-                                        viewModel.filter = filter
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
+                    // Side by side when they fit; stacked at large Dynamic Type sizes.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .top, spacing: 12) {
+                            receivableCard
+                            debtCard
                         }
-
-                        // Person Card List
-                        if viewModel.filteredSummaries.isEmpty {
-                            AppEmptyState(
-                                icon: "book.closed",
-                                title: "Belum ada riwayat",
-                                message: "Data yang sudah dikonfirmasi akan dikelompokkan per orang."
-                            )
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 30)
-                        } else {
-                            LazyVStack(spacing: 12) {
-                                ForEach(viewModel.filteredSummaries) { person in
-                                    NavigationLink(value: person) {
-                                        PersonCardRow(person: person)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.horizontal, 20)
+                        VStack(spacing: 12) {
+                            receivableCard
+                            debtCard
                         }
                     }
-                    .padding(.bottom, 80)
+                    .padding(.horizontal, 20)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(LedgerFilter.allCases) { filter in
+                                LedgerFilterPill(
+                                    filter: filter,
+                                    isSelected: viewModel.filter == filter
+                                ) {
+                                    viewModel.filter = filter
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
+
+                    if viewModel.filteredSummaries.isEmpty {
+                        AppEmptyState(
+                            icon: "book.closed",
+                            title: "Belum ada riwayat",
+                            message: "Data yang sudah dikonfirmasi akan dikelompokkan per orang."
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 30)
+                    } else {
+                        LazyVStack(spacing: 12) {
+                            ForEach(viewModel.filteredSummaries) { person in
+                                NavigationLink(value: person) {
+                                    PersonCardRow(person: person)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
                 }
-
-                // Bottom Search Bar Floating
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(Color.secondary)
-
-                    TextField("Cari nama orang", text: $viewModel.searchQuery)
-                        .font(.body)
-
-                    Image(systemName: "mic")
-                        .foregroundStyle(Color.secondary)
-                }
-                .padding(.horizontal, 16)
-                .frame(minHeight: 48)
-                .background(Color(.systemBackground))
-                .clipShape(Capsule())
-                .overlay(
-                    Capsule().stroke(Color(.separator), lineWidth: 1)
-                )
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .background(Color(.systemBackground))
+                .padding(.bottom, 24)
             }
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(
+                text: $viewModel.searchQuery,
+                placement: .navigationBarDrawer(displayMode: .automatic),
+                prompt: "Cari nama orang"
+            )
             .navigationDestination(for: PersonLedgerSummary.self) { person in
-                PersonLedgerDetailView(person: person, entries: viewModel.entries(for: person), repository: repository, contacts: contacts)
+                PersonLedgerDetailView(
+                    person: person,
+                    entries: viewModel.entries(for: person),
+                    repository: repository,
+                    contacts: contacts
+                )
             }
             .task { await viewModel.load() }
             .refreshable { await viewModel.load() }
@@ -150,5 +91,45 @@ struct LedgerListView: View {
                 Task { await viewModel.load() }
             }
         }
+    }
+
+    private var receivableCard: some View {
+        summaryCard(
+            title: "Piutang",
+            systemImage: "arrow.down.left",
+            amount: viewModel.totalReceivable,
+            caption: "\(viewModel.receivableCount) orang berutang",
+            tint: AppColors.receivable
+        )
+    }
+
+    private var debtCard: some View {
+        summaryCard(
+            title: "Utang",
+            systemImage: "arrow.up.right",
+            amount: viewModel.totalDebt,
+            caption: "\(viewModel.debtCount) tanggungan aktif",
+            tint: AppColors.debt
+        )
+    }
+
+    private func summaryCard(title: String, systemImage: String, amount: Int64, caption: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(title, systemImage: systemImage)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(tint)
+
+            Text(amount.rupiahFormatted)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(.primary)
+
+            Text(caption)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(tint.opacity(0.08), in: .rect(cornerRadius: 16, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 }

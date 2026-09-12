@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PaymentView: View {
+    @Environment(\.dismiss) private var dismiss
     let person: PersonLedgerSummary
     let repository: any TransactionRepository
     let onSaved: () -> Void
@@ -18,21 +19,41 @@ struct PaymentView: View {
                     Label("Pembayaran dilakukan di luar aplikasi. UcapHutang hanya mencatat pelunasan.", systemImage: "info.circle")
                 }
                 Section("Pembayaran") {
-                    TextField("Nominal", value: $amount, format: .number).keyboardType(.numberPad)
+                    TextField("Nominal", value: $amount, format: .number)
+                        .keyboardType(.numberPad)
                     DatePicker("Tanggal & Waktu", selection: $date)
                     TextField("Catatan (opsional)", text: $notes)
                 }
                 Section {
-                    Button("Simpan Log Bayar") { save() }
-                        .buttonStyle(AppPrimaryButtonStyle())
-                        .disabled(amount <= 0 || amount > abs(person.balance) || isSaving)
+                    Button {
+                        save()
+                    } label: {
+                        Text("Simpan Log Bayar")
+                            .font(.headline)
+                            .foregroundStyle(Color(.systemBackground))
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .tint(.primary)
+                    .disabled(amount <= 0 || amount > abs(person.balance) || isSaving)
                 }
             }
             .navigationTitle("Catat Pembayaran")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Batal") { dismiss() }
+                }
+            }
             .alert("Tidak Dapat Menyimpan", isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
-            )) { Button("OK", role: .cancel) {} } message: { Text(errorMessage ?? "Terjadi kesalahan.") }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage ?? "Terjadi kesalahan.")
+            }
         }
     }
 
@@ -40,14 +61,12 @@ struct PaymentView: View {
         guard !isSaving else { return }
         isSaving = true
         Task {
-            defer {
-                Task { @MainActor in isSaving = false }
-            }
+            defer { isSaving = false }
             do {
                 try await repository.recordPayment(for: person, amount: amount, date: date, notes: notes.isEmpty ? nil : notes)
-                await MainActor.run { onSaved() }
+                onSaved()
             } catch {
-                await MainActor.run { errorMessage = error.localizedDescription }
+                errorMessage = error.localizedDescription
             }
         }
     }

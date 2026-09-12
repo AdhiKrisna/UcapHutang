@@ -3,47 +3,47 @@ import SwiftUI
 struct DetailEntryCardRow: View {
     let entry: LedgerEntry
 
+    @ScaledMetric(relativeTo: .body) private var bubbleSize: CGFloat = 40
+
     var body: some View {
         HStack(spacing: 12) {
-            // Icon Bubble
             ZStack {
                 Circle()
                     .fill(bubbleColor.opacity(0.15))
-                    .frame(width: 40, height: 40)
+                    .frame(width: bubbleSize, height: bubbleSize)
 
                 Image(systemName: bubbleIcon)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.body.weight(.bold))
                     .foregroundStyle(bubbleColor)
             }
+            .accessibilityElement()
+            .accessibilityLabel(kindLabel)
 
-            // Title & Date
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.title)
                     .font(.body.weight(.bold))
-                    .foregroundStyle(Color.primary)
-                    .lineLimit(1)
+                    .foregroundStyle(.primary)
 
                 Text(formatDate(entry.date))
                     .font(.caption)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(.secondary)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            // Amount
             Text(abs(entry.balanceDelta).rupiahFormatted)
                 .font(.body.weight(.bold))
-                .foregroundStyle(bubbleColor)
+                .foregroundStyle(.primary)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Color(.systemBackground), in: .rect(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Color(.separator), lineWidth: 1)
         )
+        .accessibilityElement(children: .combine)
     }
 
     private var isPayment: Bool {
@@ -52,11 +52,11 @@ struct DetailEntryCardRow: View {
 
     private var bubbleColor: Color {
         if isPayment {
-            return Color.blue
+            return AppColors.accent
         } else if entry.balanceDelta >= 0 {
-            return Color.green
+            return AppColors.receivable
         } else {
-            return Color.red
+            return AppColors.debt
         }
     }
 
@@ -67,6 +67,16 @@ struct DetailEntryCardRow: View {
             return "arrow.down.left"
         } else {
             return "arrow.up.right"
+        }
+    }
+
+    private var kindLabel: String {
+        if isPayment {
+            return "Bayar"
+        } else if entry.balanceDelta >= 0 {
+            return "Piutang"
+        } else {
+            return "Utang"
         }
     }
 

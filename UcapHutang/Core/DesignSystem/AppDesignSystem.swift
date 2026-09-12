@@ -31,17 +31,6 @@ enum AppRadius {
     static let large: CGFloat = 24
 }
 
-struct AppPrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .frame(maxWidth: .infinity, minHeight: 52)
-            .foregroundStyle(.white)
-            .background(AppColors.accent.opacity(configuration.isPressed ? 0.72 : 1))
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
-    }
-}
-
 struct AppSectionCard<Content: View>: View {
     @ViewBuilder let content: Content
 

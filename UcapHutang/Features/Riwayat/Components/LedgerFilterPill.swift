@@ -6,32 +6,15 @@ struct LedgerFilterPill: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                if filter == .receivable {
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: 8, height: 8)
-                } else if filter == .debt {
-                    Circle()
-                        .fill(Color.red)
-                        .frame(width: 8, height: 8)
-                }
+        FilterPillLabel(title: filter.rawValue, dotColor: dotColor, isSelected: isSelected, action: action)
+    }
 
-                Text(filter.rawValue)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.primary)
-            }
-            .padding(.horizontal, 14)
-            .frame(minHeight: 36)
-            .background(isSelected ? Color(.systemGray5) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(Color(.separator), lineWidth: 1)
-            )
+    private var dotColor: Color? {
+        switch filter {
+        case .all: return nil
+        case .receivable: return AppColors.receivable
+        case .debt: return AppColors.debt
         }
-        .buttonStyle(.plain)
     }
 }
 
@@ -41,29 +24,49 @@ struct DetailFilterPill: View {
     let action: () -> Void
 
     var body: some View {
+        FilterPillLabel(title: filter.rawValue, dotColor: dotColor, isSelected: isSelected, action: action)
+    }
+
+    private var dotColor: Color? {
+        switch filter {
+        case .all: return nil
+        case .piutang: return AppColors.receivable
+        case .utang: return AppColors.debt
+        case .bayar: return AppColors.accent
+        }
+    }
+}
+
+private struct FilterPillLabel: View {
+    let title: String
+    let dotColor: Color?
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                if filter == .piutang {
-                    Circle().fill(Color.green).frame(width: 8, height: 8)
-                } else if filter == .utang {
-                    Circle().fill(Color.red).frame(width: 8, height: 8)
-                } else if filter == .bayar {
-                    Circle().fill(Color.blue).frame(width: 8, height: 8)
+                if let dotColor {
+                    Circle()
+                        .fill(dotColor)
+                        .frame(width: 8, height: 8)
+                        .accessibilityHidden(true)
                 }
 
-                Text(filter.rawValue)
+                Text(title)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(.primary)
             }
             .padding(.horizontal, 14)
-            .frame(minHeight: 36)
-            .background(isSelected ? Color(.systemGray5) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .frame(minHeight: 44)
+            .background(isSelected ? Color(.systemGray5) : Color.clear, in: .rect(cornerRadius: 10, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .stroke(Color(.separator), lineWidth: 1)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
