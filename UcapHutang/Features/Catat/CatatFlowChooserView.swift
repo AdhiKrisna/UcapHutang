@@ -7,20 +7,6 @@ struct CatatFlowChooserView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: AppSpacing.large) {
-                Label {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(readiness.title).font(.subheadline.weight(.semibold))
-                        Text(readiness.detail).font(.caption).foregroundStyle(AppColors.textSecondary)
-                    }
-                } icon: {
-                    Image(systemName: readiness == .ready ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                        .foregroundStyle(readiness == .ready ? Color.green : Color.orange)
-                }
-                .padding(AppSpacing.medium)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(AppColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium))
-
                 ForEach(CaptureFlow.allCases) { flow in
                     Button { onSelect(flow) } label: {
                         HStack {

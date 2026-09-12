@@ -24,15 +24,6 @@ struct CatatView: View {
                     .disabled(viewModel.isProcessing)
 
                     if isListening {
-                        Button("Ulangi") { viewModel.restartRecording() }
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 10)
-                            .background(AppColors.surface)
-                            .clipShape(Capsule())
-                            .overlay(Capsule().stroke(AppColors.border))
-
                         Text(viewModel.liveTranscript.isEmpty ? viewModel.stageHeadline : viewModel.liveTranscript)
                             .font(viewModel.liveTranscript.isEmpty ? .body : .body.weight(.medium))
                             .foregroundStyle(viewModel.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
@@ -51,6 +42,20 @@ struct CatatView: View {
                 Spacer()
             }
             .padding(.horizontal, 24)
+            .overlay(alignment: .bottom) {
+                if isListening {
+                    Button("Ulangi") { viewModel.restartRecording() }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 12)
+                        .background(AppColors.surface)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(AppColors.border))
+                        .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
+                        .padding(.bottom, 20)
+                }
+            }
             .navigationTitle(flow.title)
             .navigationBarTitleDisplayMode(.inline)
             .onDisappear { viewModel.cancel() }
@@ -102,7 +107,7 @@ struct CatatView: View {
                     if isListening {
                         SpeakingMicIcon(reduceMotion: reduceMotion)
                     } else {
-                        Image(systemName: "play.fill")
+                        Image(systemName: "mic.fill")
                             .font(.system(size: 34, weight: .bold))
                     }
                     Text(isListening ? "Tekan untuk\nberhenti" : "Tekan untuk catat\nvia suara")
@@ -133,7 +138,7 @@ private struct ListeningMicAura: View {
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [AppColors.accent.opacity(0.30), Color.purple.opacity(0.14), .clear],
+                        colors: [AppColors.accent.opacity(0.24), Color.purple.opacity(0.10), .clear],
                         center: .center,
                         startRadius: 30,
                         endRadius: 82
@@ -155,15 +160,15 @@ private struct ListeningMicAura: View {
                         ),
                         lineWidth: 2.5
                     )
-                    .frame(width: 102, height: 102)
-                    .scaleEffect(reduceMotion ? 1.18 : (isRinging ? 1.62 : 0.96))
-                    .opacity(reduceMotion ? 0.55 : (isRinging ? 0 : 0.78))
+                    .frame(width: 108, height: 108)
+                    .scaleEffect(reduceMotion ? 1.12 : (isRinging ? 1.72 : 0.92))
+                    .opacity(reduceMotion ? 0.42 : (isRinging ? 0 : 0.68))
                     .animation(
                         reduceMotion
                             ? nil
-                            : .easeOut(duration: 1.35)
+                            : .easeOut(duration: 1.6)
                                 .repeatForever(autoreverses: false)
-                                .delay(Double(index) * 0.34),
+                                .delay(Double(index) * 0.4),
                         value: isRinging
                     )
             }
