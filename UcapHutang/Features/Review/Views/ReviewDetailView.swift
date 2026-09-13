@@ -93,6 +93,8 @@ struct ReviewDetailView: View {
     private func form(_ draft: TransactionDraft) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                autosaveStatus
+
                 field("Waktu") {
                     DatePicker(
                         "Waktu",
@@ -170,6 +172,19 @@ struct ReviewDetailView: View {
 
                 peopleSection(draft)
 
+                field("Catatan Opsional") {
+                    TextField(
+                        "Tambahkan catatan jika diperlukan",
+                        text: Binding(
+                            get: { viewModel.draft?.notes ?? "" },
+                            set: { viewModel.setNotes($0) }
+                        ),
+                        axis: .vertical
+                    )
+                    .lineLimit(1...3)
+                    .frame(minHeight: 44)
+                }
+
                 if draft.flow == .splitBill {
                     splitSummary(draft)
                 }
@@ -180,6 +195,44 @@ struct ReviewDetailView: View {
             .padding(.vertical, 16)
         }
         .scrollDismissesKeyboard(.interactively)
+    }
+
+    private var autosaveStatus: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Group {
+                if viewModel.isAutosaving {
+                    ProgressView()
+                } else if viewModel.autosaveErrorMessage != nil {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(AppColors.destructive)
+                } else {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(AppColors.receivable)
+                }
+            }
+            .accessibilityHidden(true)
+
+            if viewModel.isAutosaving {
+                Text("Menyimpan perubahan…")
+                    .font(.subheadline.weight(.semibold))
+            } else if let errorMessage = viewModel.autosaveErrorMessage {
+                Text(errorMessage)
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.destructive)
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Tersimpan otomatis sebagai draft")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Kamu bisa menutup halaman ini dan melanjutkan nanti dari tab Review.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
     }
 
     private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
@@ -214,10 +267,12 @@ struct ReviewDetailView: View {
             }
 
             if draft.flow == .splitBill {
+                addByNameRow
+
                 Button {
                     Task { await viewModel.requestPicker(.addParticipants) }
                 } label: {
-                    Text("+ Tambah orang")
+                    Text("+ Pilih dari kontak")
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
@@ -225,6 +280,27 @@ struct ReviewDetailView: View {
                 .tint(.secondary)
             }
         }
+    }
+
+    private var addByNameRow: some View {
+        HStack(spacing: 8) {
+            TextField("Nama orang baru", text: $viewModel.newParticipantName)
+                .textInputAutocapitalization(.words)
+                .submitLabel(.done)
+                .onSubmit {
+                    Task { await viewModel.addParticipantFromName() }
+                }
+                .frame(minHeight: 44)
+
+            Button("Tambah") {
+                Task { await viewModel.addParticipantFromName() }
+            }
+            .font(.subheadline.weight(.semibold))
+            .frame(minHeight: 44)
+            .disabled(viewModel.newParticipantName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .padding(.horizontal, 14)
+        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 12))
     }
 
     private func participantBlock(_ participant: TransactionParticipant, in draft: TransactionDraft) -> some View {
@@ -281,6 +357,11 @@ struct ReviewDetailView: View {
 
     private var actions: some View {
         VStack(spacing: 12) {
+            Text(viewModel.saveStatusMessage)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
             Button {
                 Task { await viewModel.save() }
             } label: {
