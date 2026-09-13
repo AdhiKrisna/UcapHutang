@@ -81,6 +81,28 @@ final class DraftValidatorIssuesTests: XCTestCase {
         XCTAssertEqual(DraftValidationIssue.participantNameMissing(participantID: id).message, "Ada nama orang yang masih kosong.")
     }
 
+    func testGenericPersonalNameIsRejected() {
+        var draft = linkedPersonalDraft()
+        draft.participants[0].name = "Teman"
+        let id = draft.participants[0].id
+        XCTAssertEqual(DraftValidator.issues(for: draft), [.participantNameGeneric(participantID: id, label: "orang terkait")])
+        XCTAssertEqual(
+            DraftValidationIssue.participantNameGeneric(participantID: id, label: "orang terkait").message,
+            "Ganti nama orang terkait dengan nama yang bisa kamu kenali."
+        )
+    }
+
+    func testGenericSplitNameUsesParticipantPosition() {
+        var draft = linkedSplitDraft()
+        draft.participants[1].name = " orang B "
+        let id = draft.participants[1].id
+        XCTAssertEqual(DraftValidator.issues(for: draft), [.participantNameGeneric(participantID: id, label: "peserta ke-2")])
+        XCTAssertEqual(
+            DraftValidationIssue.participantNameGeneric(participantID: id, label: "peserta ke-2").message,
+            "Ganti nama peserta ke-2 dengan nama yang bisa kamu kenali."
+        )
+    }
+
     func testEveryUnlinkedParticipantIsReported() {
         var draft = linkedSplitDraft()
         draft.participants[0].contactIdentifier = nil

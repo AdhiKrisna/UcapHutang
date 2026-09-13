@@ -16,6 +16,7 @@ enum DraftValidationIssue: Equatable, Sendable {
     case directionMissing
     case participantsMissing(flow: CaptureFlow)
     case participantNameMissing(participantID: UUID)
+    case participantNameGeneric(participantID: UUID, label: String)
     case participantNotLinked(participantID: UUID)
     case duplicateParticipant
     case personalRequiresExactlyOne
@@ -38,6 +39,8 @@ enum DraftValidationIssue: Equatable, Sendable {
                 : "Tambahkan minimal satu teman yang ikut split bill."
         case .participantNameMissing:
             "Ada nama orang yang masih kosong."
+        case .participantNameGeneric(_, let label):
+            "Ganti nama \(label) dengan nama yang bisa kamu kenali."
         case .participantNotLinked:
             "Hubungkan setiap orang ke kontak sebelum menyimpan."
         case .duplicateParticipant:
@@ -80,6 +83,10 @@ enum DraftValidator {
         for participant in draft.participants
         where participant.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             issues.append(.participantNameMissing(participantID: participant.id))
+        }
+        for (index, participant) in draft.participants.enumerated() where isGenericName(participant.name) {
+            let label = draft.flow == .personal ? "orang terkait" : "peserta ke-\(index + 1)"
+            issues.append(.participantNameGeneric(participantID: participant.id, label: label))
         }
         for participant in draft.participants where !isLinked(participant) {
             issues.append(.participantNotLinked(participantID: participant.id))
@@ -136,6 +143,13 @@ enum DraftValidator {
         }
 
         return issues
+    }
+
+    /// Placeholder names that do not identify a real person (from PR #3).
+    private static let genericNames: Set<String> = ["teman", "teman 1", "teman 2", "orang", "orang a", "orang b"]
+
+    private static func isGenericName(_ name: String) -> Bool {
+        genericNames.contains(name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
     }
 
     private static func isLinked(_ participant: TransactionParticipant) -> Bool {
