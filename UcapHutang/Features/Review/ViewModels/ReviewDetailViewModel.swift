@@ -26,6 +26,8 @@ final class ReviewDetailViewModel {
     var alert: ReviewAlert?
     var pickerRequest: ContactPickerRequest?
     var isConfirmingDelete = false
+    /// Text of the "Nama orang baru" field (Split Bill).
+    var newParticipantName = ""
 
     @ObservationIgnored private var savedSnapshot: TransactionDraft?
     @ObservationIgnored private var autosaveTask: Task<Void, Never>?
@@ -61,6 +63,13 @@ final class ReviewDetailViewModel {
     var userShare: Int64 {
         guard let draft, draft.flow == .splitBill, !isCustomSplit, draft.includesUser else { return 0 }
         return max(0, draft.totalAmount - friendsTotal)
+    }
+
+    var saveStatusMessage: String {
+        guard let draft, !draft.participants.isEmpty, draft.participants.allSatisfy(Self.isLinked) else {
+            return "Hubungkan setiap orang ke kontak agar catatan dapat disimpan ke Riwayat."
+        }
+        return "Semua orang sudah terhubung. Catatan siap disimpan ke Riwayat."
     }
 
     func cardState(for participant: TransactionParticipant) -> ContactCardState {
@@ -114,6 +123,10 @@ final class ReviewDetailViewModel {
         mutate { $0.type = type }
     }
 
+    func setNotes(_ notes: String) {
+        mutate { $0.notes = notes.isEmpty ? nil : notes }
+    }
+
     func setSplitMethod(_ method: SplitMethod) {
         mutate { $0.splitMethod = method }
     }
@@ -135,6 +148,23 @@ final class ReviewDetailViewModel {
             draft.participants.removeAll { $0.id == id }
         }
         suggestions[id] = nil
+    }
+
+    /// Split Bill: adds a person typed by name. They stay unlinked until connected to a contact.
+    func addParticipantFromName() async {
+        guard let current = draft, current.flow == .splitBill else { return }
+        let name = newParticipantName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        let alreadyAdded = current.participants.contains {
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(name) == .orderedSame
+        }
+        guard !alreadyAdded else {
+            alert = .duplicateContact
+            return
+        }
+        mutate { $0.participants.append(TransactionParticipant(name: name, shareAmount: 0)) }
+        newParticipantName = ""
+        await refreshSuggestions()
     }
 
     // MARK: - Contacts

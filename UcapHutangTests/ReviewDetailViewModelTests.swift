@@ -265,4 +265,57 @@ final class ReviewDetailViewModelTests: XCTestCase {
         let stored = try await spy.draft(id: draft.id)
         XCTAssertNil(stored)
     }
+
+    func testAddingAPersonByNameAddsAnUnlinkedParticipantAndRecomputesShares() async throws {
+        let (viewModel, spy) = try await makeViewModel(seed: splitDraft(friends: [("Satria", "contact-satria")]))
+        XCTAssertEqual(viewModel.draft!.participants.map(\.shareAmount), [45_000])
+
+        viewModel.newParticipantName = "  Ari "
+        await viewModel.addParticipantFromName()
+
+        XCTAssertEqual(viewModel.draft!.participants.map(\.name), ["Satria", "Ari"])
+        XCTAssertNil(viewModel.draft!.participants[1].contactIdentifier)
+        XCTAssertEqual(viewModel.draft!.participants.map(\.shareAmount), [30_000, 30_000])
+        XCTAssertEqual(viewModel.newParticipantName, "")
+        await viewModel.awaitPendingAutosave()
+        XCTAssertEqual(spy.saveDraftCallCount, 1)
+    }
+
+    func testAddingANameAlreadyInTheNoteShowsDuplicateAlert() async throws {
+        let (viewModel, spy) = try await makeViewModel(seed: splitDraft(friends: [("Satria", "contact-satria")]))
+
+        viewModel.newParticipantName = "satria"
+        await viewModel.addParticipantFromName()
+
+        XCTAssertEqual(viewModel.alert, .duplicateContact)
+        XCTAssertEqual(viewModel.draft!.participants.count, 1)
+        XCTAssertEqual(viewModel.newParticipantName, "satria")
+        await viewModel.awaitPendingAutosave()
+        XCTAssertEqual(spy.saveDraftCallCount, 0)
+    }
+
+    func testNotesAreSavedAndClearedWhenEmpty() async throws {
+        let draft = personalDraft()
+        let (viewModel, spy) = try await makeViewModel(seed: draft)
+
+        viewModel.setNotes("Bayar minggu depan")
+        await viewModel.awaitPendingAutosave()
+        var stored = try await spy.draft(id: draft.id)
+        XCTAssertEqual(stored?.notes, "Bayar minggu depan")
+
+        viewModel.setNotes("")
+        await viewModel.awaitPendingAutosave()
+        stored = try await spy.draft(id: draft.id)
+        XCTAssertNil(stored?.notes)
+    }
+
+    func testSaveStatusMessageFollowsContactLinks() async throws {
+        let (viewModel, _) = try await makeViewModel(seed: personalDraft())
+        XCTAssertEqual(viewModel.saveStatusMessage, "Hubungkan setiap orang ke kontak agar catatan dapat disimpan ke Riwayat.")
+
+        let participantID = viewModel.draft!.participants[0].id
+        viewModel.handlePicked([satria], for: .link(participantID: participantID, prefill: "Satria"))
+
+        XCTAssertEqual(viewModel.saveStatusMessage, "Semua orang sudah terhubung. Catatan siap disimpan ke Riwayat.")
+    }
 }
