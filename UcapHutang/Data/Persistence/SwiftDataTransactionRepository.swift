@@ -181,10 +181,25 @@ final class SwiftDataTransactionRepository: TransactionRepository {
         entity.rawTranscript = draft.rawTranscript
         entity.rawModelResponse = draft.rawModelResponse
         entity.reviewWarningsRaw = draft.reviewWarnings
-        for participant in entity.participants {
-            context.delete(participant)
+
+        // Update rows in place: autosave calls this on every edit and participant ids are unique.
+        let storedByID = Dictionary(entity.participants.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let incomingIDs = Set(draft.participants.map(\.id))
+        let removed = entity.participants.filter { !incomingIDs.contains($0.id) }
+
+        entity.participants = draft.participants.map { participant in
+            let row = storedByID[participant.id] ?? SDTransactionParticipant(id: participant.id, name: participant.name)
+            row.name = participant.name
+            row.contactIdentifier = participant.contactIdentifier
+            row.shareAmount = participant.shareAmount
+            row.itemTitle = participant.itemTitle
+            row.notes = participant.notes
+            return row
         }
-        entity.participants = makeParticipantEntities(from: draft)
+
+        for row in removed {
+            context.delete(row)
+        }
     }
 
     private func makeDraftEntity(from draft: TransactionDraft) -> SDTransactionDraft {
