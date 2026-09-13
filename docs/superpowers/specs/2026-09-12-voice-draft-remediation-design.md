@@ -697,3 +697,18 @@ One implementation plan per phase, executed in order. Each phase ends with a gre
 11. All screens pass the HIG checks in §11 (with the accepted colored-label contrast exception in §3).
 12. `xcodebuild test` passes after every phase.
 13. Closing Review without saving keeps the user's edits in the draft and never writes to Riwayat.
+
+## 16. Addendum — merge with main (PR #3 `feature/catat`), approved 2026-09-13
+
+Where this addendum conflicts with earlier sections, the addendum wins.
+
+- **Merge:** `origin/main` merged into `fix/all`; `fix/all` code is the base. PR #3's `ReviewView`, `ReviewViewModel`, `ContactPickerSheet`, `userShareAmount` and its Split Bill rules are not used. Split Bill rules stay as in §6.6.
+- **Schema:** no new version. Stores created by PR #3 builds are not migrated (not needed).
+- **Widget:** the "Catat Cepat" widget (`UcapHutangWidget` target) and `ucaphutang://catat` stay. The link selects the Catat tab and closes open sheets. The alert "Catat lebih cepat dengan Widget?" is shown once (`@AppStorage("hasAskedAboutCatatWidget")`), only when the notification primer (§10.4) is not on screen; "Ya, Mau" opens the widget instructions.
+- **Wording:** UI uses "Utang"; the Catat flow title is "Utang / Piutang".
+- **Catat (§7.4):** the record control uses `mic.fill`, an audio-reactive glow, three rings and a wobbling mic while listening, with "Ulangi" pinned at the bottom. Reduce Motion stops the motion. The flow chooser keeps the `fix/all` design.
+- **Review fields (§8.2):** add "Catatan Opsional" under the people list. Split Bill can add a person by typing a name ("Nama orang baru" + "Tambah"); that person must still be linked before saving. The contact picker button is "+ Pilih dari kontak".
+- **Review save (§8.5):** every edit is saved to the draft automatically (never confirmed). A status card shows "Tersimpan otomatis sebagai draft" / "Kamu bisa menutup halaman ini dan melanjutkan nanti dari tab Review.", "Menyimpan perubahan…", or "Perubahan belum berhasil disimpan otomatis. Coba ubah kembali atau buka ulang halaman ini.". Above "Simpan Catatan": "Semua orang sudah terhubung. Catatan siap disimpan ke Riwayat." or "Hubungkan setiap orang ke kontak agar catatan dapat disimpan ke Riwayat.".
+- **Validation (§6):** `DraftValidator` rejects the names `teman`, `teman 1`, `teman 2`, `orang`, `orang a`, `orang b` with "Ganti nama orang terkait / peserta ke-N dengan nama yang bisa kamu kenali.".
+- **Linking (§8.4, §9):** the contact picker offers "Buat Kontak Baru", which opens the system New Contact form prefilled with the searched name. In single selection the new contact is linked immediately; in multiple selection it is selected and the picker stays open.
+- **Repository:** saving a draft updates participant rows in place and deletes removed ones.
