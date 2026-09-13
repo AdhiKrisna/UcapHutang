@@ -3,6 +3,8 @@ import SwiftUI
 struct ReviewContactPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: ReviewContactPickerViewModel
+    @State private var isCreatingContact = false
+    @State private var createdContact: ContactRef?
     private let onPick: ([ContactRef]) -> Void
 
     init(
@@ -39,6 +41,17 @@ struct ReviewContactPickerSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                if !viewModel.hasNoResults {
+                    Section {
+                        Button {
+                            isCreatingContact = true
+                        } label: {
+                            createContactRow
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
                 if !viewModel.filteredRecentContacts.isEmpty {
                     Section("Kontak yang pernah dicatat") {
                         ForEach(viewModel.filteredRecentContacts, id: \.identifier) { contact in
@@ -57,7 +70,16 @@ struct ReviewContactPickerSheet: View {
             .listStyle(.insetGrouped)
             .overlay {
                 if viewModel.hasNoResults {
-                    ContentUnavailableView.search(text: viewModel.searchQuery)
+                    ContentUnavailableView {
+                        Label("Tidak menemukan kontak?", systemImage: "person.crop.circle.badge.questionmark")
+                    } description: {
+                        Text("Kamu tetap bisa membuat kontak baru dari nama yang sedang dicari.")
+                    } actions: {
+                        Button("Buat Kontak") {
+                            isCreatingContact = true
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
                 }
             }
             .navigationTitle("Hubungkan ke kontak")
@@ -83,7 +105,33 @@ struct ReviewContactPickerSheet: View {
             }
             .task { await viewModel.load() }
             .task(id: viewModel.searchQuery) { await viewModel.search() }
+            .sheet(isPresented: $isCreatingContact, onDismiss: finishContactCreation) {
+                NewContactView(suggestedName: viewModel.newContactName) { contact in
+                    createdContact = contact
+                    isCreatingContact = false
+                }
+            }
         }
+    }
+
+    private var createContactRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "person.crop.circle.badge.plus")
+                .foregroundStyle(Color.accentColor)
+                .accessibilityHidden(true)
+            Text("Buat Kontak Baru")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.accentColor)
+            Spacer(minLength: 8)
+            if !viewModel.newContactName.isEmpty {
+                Text(viewModel.newContactName)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 
     private func row(_ contact: ContactRef) -> some View {
@@ -119,5 +167,17 @@ struct ReviewContactPickerSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(viewModel.allowsMultipleSelection && viewModel.isSelected(contact) ? .isSelected : [])
+    }
+
+    /// Runs after the New Contact sheet is fully dismissed, so this sheet can close safely.
+    private func finishContactCreation() {
+        guard let contact = createdContact else { return }
+        createdContact = nil
+        Task {
+            if await viewModel.didCreateContact(contact) {
+                onPick([contact])
+                dismiss()
+            }
+        }
     }
 }
