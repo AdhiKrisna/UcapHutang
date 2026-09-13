@@ -8,11 +8,14 @@ struct IdentifiableUUID: Identifiable, Equatable {
 struct RootTabView: View {
     @Environment(AppContainer.self) private var container
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(WidgetPrompt.hasAskedKey) private var hasAskedAboutCatatWidget = false
     @State private var reviewDraftItem: IdentifiableUUID?
     @State private var selectedCaptureFlow: CaptureFlow?
     @State private var pendingReviewCount = 0
     @State private var isShowingSettings = false
     @State private var isShowingNotificationPrimer = false
+    @State private var isShowingWidgetPrompt = false
+    @State private var isShowingWidgetInstructions = false
 
     var body: some View {
         @Bindable var router = container.router
@@ -46,6 +49,7 @@ struct RootTabView: View {
                 scheduler: container.reminderScheduler,
                 settingsStore: container.reminderSettings
             )
+            presentWidgetPromptIfNeeded()
             await container.reminderScheduler.sync()
         }
         .onReceive(NotificationCenter.default.publisher(for: .transactionRepositoryDidChange)) { _ in
@@ -59,6 +63,14 @@ struct RootTabView: View {
                 Task { await container.reminderScheduler.sync() }
             }
         }
+        .onOpenURL { url in
+            guard let link = AppDeepLink(url: url) else { return }
+            // Close anything covering the tabs so the Catat chooser is actually visible.
+            reviewDraftItem = nil
+            selectedCaptureFlow = nil
+            isShowingSettings = false
+            container.router.open(link)
+        }
         .sheet(item: $reviewDraftItem) { item in
             NavigationStack {
                 ReviewDetailView(draftID: item.id, repository: container.repository, contacts: container.contacts)
@@ -70,12 +82,34 @@ struct RootTabView: View {
         .sheet(isPresented: $isShowingSettings) {
             PengaturanView(scheduler: container.reminderScheduler, settingsStore: container.reminderSettings)
         }
-        .fullScreenCover(isPresented: $isShowingNotificationPrimer) {
+        .sheet(isPresented: $isShowingWidgetInstructions) {
+            WidgetSetupInstructionsView()
+        }
+        .fullScreenCover(isPresented: $isShowingNotificationPrimer, onDismiss: presentWidgetPromptIfNeeded) {
             NotificationPrimerView(scheduler: container.reminderScheduler, settingsStore: container.reminderSettings)
+        }
+        .alert("Catat lebih cepat dengan Widget?", isPresented: $isShowingWidgetPrompt) {
+            Button("Ya, Mau") {
+                hasAskedAboutCatatWidget = true
+                isShowingWidgetInstructions = true
+            }
+            Button("Nanti Saja", role: .cancel) {
+                hasAskedAboutCatatWidget = true
+            }
+        } message: {
+            Text("Apakah kamu mau memakai widget untuk mencatat utang, piutang, atau Split Bill secara instan dari Home Screen?")
         }
     }
 
     private func refreshPendingReviewCount() async {
         pendingReviewCount = (try? await container.repository.pendingDraftCount()) ?? 0
+    }
+
+    /// Called at launch and again when the notification primer closes.
+    private func presentWidgetPromptIfNeeded() {
+        isShowingWidgetPrompt = WidgetPrompt.shouldPresent(
+            hasAsked: hasAskedAboutCatatWidget,
+            isShowingNotificationPrimer: isShowingNotificationPrimer
+        )
     }
 }

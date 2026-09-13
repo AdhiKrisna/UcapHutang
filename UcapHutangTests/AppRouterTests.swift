@@ -19,4 +19,13 @@ final class AppRouterTests: XCTestCase {
         XCTAssertNil(router.savedBannerID)
         XCTAssertEqual(router.selectedTab, .review)
     }
+
+    func testCatatDeepLinkSelectsTheCaptureTab() {
+        let router = AppRouter()
+        router.selectedTab = .ledger
+
+        router.open(.catatChooser)
+
+        XCTAssertEqual(router.selectedTab, .capture)
+    }
 }

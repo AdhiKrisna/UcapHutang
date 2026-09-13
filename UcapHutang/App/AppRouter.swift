@@ -25,4 +25,12 @@ final class AppRouter {
         selectedTab = .review
         savedBannerID = nil
     }
+
+    /// Handles `ucaphutang://` links opened from the Catat Cepat widget.
+    func open(_ link: AppDeepLink) {
+        switch link {
+        case .catatChooser:
+            selectedTab = .capture
+        }
+    }
 }
