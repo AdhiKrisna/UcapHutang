@@ -5,6 +5,7 @@ import Foundation
 final class FakeSpeechTranscriber: SpeechTranscribing {
     var state: SpeechRecognizerState = .idle
     var liveTranscript: String
+    var audioLevel: Float = 0
     var usesOnDeviceRecognition = true
     var startError: Error?
     var finalTranscript: String

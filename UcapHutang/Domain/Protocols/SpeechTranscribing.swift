@@ -5,6 +5,8 @@ import Foundation
 protocol SpeechTranscribing: AnyObject {
     var state: SpeechRecognizerState { get }
     var liveTranscript: String { get }
+    /// Smoothed microphone loudness from 0 (silent) to 1 while listening; 0 otherwise.
+    var audioLevel: Float { get }
     /// True when the device can recognize `id-ID` speech without sending audio to Apple's servers.
     var usesOnDeviceRecognition: Bool { get }
     /// Requests microphone + speech permission when needed, then starts listening.
