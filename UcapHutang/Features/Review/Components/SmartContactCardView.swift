@@ -37,12 +37,12 @@ struct SmartContactCardView: View {
             if showsRequiredMarker {
                 Label("Wajib dihubungkan", systemImage: "exclamationmark.circle")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppColors.warning)
             }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 12))
+        .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
     }
 
     private var displayName: String {

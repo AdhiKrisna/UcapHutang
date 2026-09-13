@@ -129,7 +129,7 @@ struct LedgerListView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(tint.opacity(0.08), in: .rect(cornerRadius: 16, style: .continuous))
+        .background(tint.opacity(0.08), in: .rect(cornerRadius: AppRadius.medium, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }

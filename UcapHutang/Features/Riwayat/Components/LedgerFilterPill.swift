@@ -44,7 +44,9 @@ private struct FilterPillLabel: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            action()
+        } label: {
             HStack(spacing: 6) {
                 if let dotColor {
                     Circle()
@@ -59,14 +61,15 @@ private struct FilterPillLabel: View {
             }
             .padding(.horizontal, 14)
             .frame(minHeight: 44)
-            .background(isSelected ? Color(.systemGray5) : Color.clear, in: .rect(cornerRadius: 10, style: .continuous))
+            .background(isSelected ? AppColors.surface : Color.clear, in: .rect(cornerRadius: AppRadius.small, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(Color(.separator), lineWidth: 1)
+                RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+                    .stroke(AppColors.border, lineWidth: 1)
             )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: isSelected)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

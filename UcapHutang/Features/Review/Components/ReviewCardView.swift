@@ -10,23 +10,21 @@ struct ReviewCardView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Baris 1: Tipe & Waktu Relatif
+        VStack(alignment: .leading, spacing: AppSpacing.small + 2) {
+            // Baris 1: Tipe (berwarna + ikon) & Waktu Relatif
             HStack(alignment: .firstTextBaseline) {
-                Text(typeLabel)
-                    .font(.body)
-                    .foregroundStyle(.primary)
+                typeBadge
 
                 Spacer(minLength: 8)
 
                 Text(item.relativeTime)
-                    .font(.subheadline)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
             }
 
-            // Baris 2: Subjek & Nominal
-            HStack(alignment: .center, spacing: 6) {
+            // Baris 2: Subjek / Nama Orang (Lebar Penuh)
+            HStack(alignment: .center, spacing: 8) {
                 if !item.avatarInitials.isEmpty {
                     stackedAvatarsView
                         .accessibilityHidden(true)
@@ -35,35 +33,44 @@ struct ReviewCardView: View {
                 if !item.prefix.isEmpty {
                     Text(item.prefix)
                         .font(.body)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Text(item.personName)
-                    .font(.body.weight(.bold))
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
 
-                Spacer(minLength: 8)
+            // Baris 3: Deskripsi & Nominal (Nominal di kanan bawah yang menonjol)
+            HStack(alignment: .bottom, spacing: 12) {
+                Group {
+                    if item.description.isEmpty {
+                        Text("Tidak ada deskripsi")
+                            .foregroundStyle(.tertiary)
+                            .italic()
+                    } else {
+                        Text(item.description)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .font(.subheadline)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Text(item.amount.rupiahFormatted)
                     .font(.headline.weight(.bold))
                     .foregroundStyle(.primary)
+                    .multilineTextAlignment(.trailing)
+                    .layoutPriority(1)
             }
-
-            // Baris 3: Deskripsi / Quotes
-            Text(item.description)
-                .font(.body)
-                .foregroundStyle(.primary)
-                .lineLimit(3)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.medium + 2)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color(.separator), lineWidth: 1)
-        )
+        .background(AppColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 
@@ -78,20 +85,57 @@ struct ReviewCardView: View {
         }
     }
 
+    /// Direction is never carried by color alone: an icon and this text always accompany `typeColor`.
+    private var typeIcon: String {
+        switch item.type {
+        case .piutang:
+            return "arrow.down.left"
+        case .hutang, .unknown:
+            return "arrow.up.right"
+        case .splitBill:
+            return "person.3.fill"
+        }
+    }
+
+    private var typeColor: Color {
+        switch item.type {
+        case .piutang:
+            return AppColors.receivable
+        case .hutang, .unknown:
+            return AppColors.debt
+        case .splitBill:
+            return AppColors.split
+        }
+    }
+
+    private var typeBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: typeIcon)
+                .font(.caption.weight(.bold))
+                .accessibilityHidden(true)
+            Text(typeLabel)
+                .font(.subheadline.weight(.semibold))
+        }
+        .foregroundStyle(typeColor)
+        .padding(.horizontal, AppSpacing.small)
+        .padding(.vertical, 4)
+        .background(typeColor.opacity(0.14), in: Capsule())
+    }
+
     private var stackedAvatarsView: some View {
         HStack(spacing: -6) {
             ForEach(Array(item.avatarInitials.enumerated()), id: \.offset) { index, initial in
                 Circle()
-                    .fill(Color(.systemGray4))
+                    .fill(typeColor.opacity(0.16))
                     .frame(width: avatarSize, height: avatarSize)
                     .overlay(
                         Text(initial)
                             .font(.caption2.weight(.bold))
-                            .foregroundStyle(Color(.label))
+                            .foregroundStyle(typeColor)
                     )
                     .overlay(
                         Circle()
-                            .stroke(Color(.systemBackground), lineWidth: 1.5)
+                            .stroke(AppColors.surface, lineWidth: 1.5)
                     )
                     .zIndex(Double(item.avatarInitials.count - index))
             }

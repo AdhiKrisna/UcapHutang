@@ -44,7 +44,7 @@ struct WidgetSetupInstructionsView: View {
                 } label: {
                     Text("Mengerti")
                         .font(.headline)
-                        .foregroundStyle(Color(.systemBackground))
+                        .foregroundStyle(AppColors.background)
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.borderedProminent)

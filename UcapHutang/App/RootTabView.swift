@@ -9,8 +9,6 @@ struct RootTabView: View {
     @Environment(AppContainer.self) private var container
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(WidgetPrompt.hasAskedKey) private var hasAskedAboutCatatWidget = false
-    @State private var reviewDraftItem: IdentifiableUUID?
-    @State private var selectedCaptureFlow: CaptureFlow?
     @State private var pendingReviewCount = 0
     @State private var isShowingSettings = false
     @State private var isShowingNotificationPrimer = false
@@ -24,16 +22,14 @@ struct RootTabView: View {
             Tab("Review", systemImage: "doc.badge.clock", value: AppTab.review) {
                 ReviewListView(
                     repository: container.repository,
-                    onSelect: { draftID in reviewDraftItem = IdentifiableUUID(draftID) },
+                    contacts: container.contacts,
                     onOpenSettings: { isShowingSettings = true }
                 )
             }
             .badge(pendingReviewCount)
 
             Tab("Catat", systemImage: "mic.fill", value: AppTab.capture) {
-                CatatFlowChooserView(router: container.router) { flow in
-                    selectedCaptureFlow = flow
-                }
+                CatatFlowChooserView(router: container.router, container: container)
             }
 
             Tab("Riwayat", systemImage: "book.closed", value: AppTab.ledger) {
@@ -66,18 +62,8 @@ struct RootTabView: View {
         .onOpenURL { url in
             guard let link = AppDeepLink(url: url) else { return }
             // Close anything covering the tabs so the Catat chooser is actually visible.
-            reviewDraftItem = nil
-            selectedCaptureFlow = nil
             isShowingSettings = false
             container.router.open(link)
-        }
-        .sheet(item: $reviewDraftItem) { item in
-            NavigationStack {
-                ReviewDetailView(draftID: item.id, repository: container.repository, contacts: container.contacts)
-            }
-        }
-        .sheet(item: $selectedCaptureFlow) { flow in
-            CatatView(flow: flow, container: container)
         }
         .sheet(isPresented: $isShowingSettings) {
             PengaturanView(scheduler: container.reminderScheduler, settingsStore: container.reminderSettings)

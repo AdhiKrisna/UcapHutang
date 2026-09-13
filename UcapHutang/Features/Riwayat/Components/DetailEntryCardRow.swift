@@ -38,10 +38,10 @@ struct DetailEntryCardRow: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemBackground), in: .rect(cornerRadius: 14, style: .continuous))
+        .background(AppColors.background, in: .rect(cornerRadius: AppRadius.small, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color(.separator), lineWidth: 1)
+            RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+                .stroke(AppColors.border, lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
     }

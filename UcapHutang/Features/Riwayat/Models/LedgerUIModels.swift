@@ -3,8 +3,8 @@ import Foundation
 // MARK: - Filter Enums
 enum LedgerFilter: String, CaseIterable, Identifiable, Sendable {
     case all = "Semua"
-    case receivable = "Berutang ke kamu"
-    case debt = "Kamu berutang"
+    case receivable = "Piutang"
+    case debt = "Utang"
 
     var id: String { rawValue }
 }

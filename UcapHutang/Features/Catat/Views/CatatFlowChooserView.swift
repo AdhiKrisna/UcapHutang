@@ -2,10 +2,16 @@ import SwiftUI
 
 struct CatatFlowChooserView: View {
     let router: AppRouter
-    let onSelect: (CaptureFlow) -> Void
+    let container: AppContainer
+    @State private var selectedFlow: CaptureFlow?
     private let readiness = MLXQwenClient.readiness()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(router: AppRouter, container: AppContainer) {
+        self.router = router
+        self.container = container
+    }
 
     var body: some View {
         NavigationStack {
@@ -28,7 +34,7 @@ struct CatatFlowChooserView: View {
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium))
 
                 ForEach(CaptureFlow.allCases) { flow in
-                    Button { onSelect(flow) } label: {
+                    Button { selectedFlow = flow } label: {
                         HStack {
                             Image(systemName: flow == .personal ? "person.fill" : "person.3.fill")
                                 .frame(width: 32)
@@ -48,6 +54,9 @@ struct CatatFlowChooserView: View {
                 Spacer()
             }
             .padding()
+            .navigationDestination(item: $selectedFlow) { flow in
+                CatatView(flow: flow, container: container)
+            }
             .navigationTitle("Catat")
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .top) {

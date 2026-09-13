@@ -6,6 +6,7 @@ struct PaymentView: View {
     let repository: any TransactionRepository
     let onSaved: () -> Void
 
+    @FocusState private var isAmountFocused: Bool
     @State private var amount: Int64 = 0
     @State private var date = Date()
     @State private var notes = ""
@@ -21,6 +22,7 @@ struct PaymentView: View {
                 Section("Pembayaran") {
                     TextField("Nominal", value: $amount, format: .number)
                         .keyboardType(.numberPad)
+                        .focused($isAmountFocused)
                     DatePicker("Tanggal & Waktu", selection: $date)
                     TextField("Catatan (opsional)", text: $notes)
                 }
@@ -30,7 +32,7 @@ struct PaymentView: View {
                     } label: {
                         Text("Simpan Log Bayar")
                             .font(.headline)
-                            .foregroundStyle(Color(.systemBackground))
+                            .foregroundStyle(AppColors.background)
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.borderedProminent)
@@ -41,6 +43,9 @@ struct PaymentView: View {
             }
             .navigationTitle("Catat Pembayaran")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                isAmountFocused = true
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Batal") { dismiss() }

@@ -62,13 +62,22 @@ final class ReviewListViewModel {
             prefix = draft.type == .piutang ? "ke" : "dari"
             let name = draft.participants.first?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             personName = name.isEmpty ? "Belum ada nama" : name
+            if !name.isEmpty {
+                avatarInitials = [String(name.prefix(1)).uppercased()]
+            }
         }
 
+        let notes = draft.notes?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let description: String
-        if let notes = draft.notes, !notes.isEmpty {
+        if !notes.isEmpty {
             description = "“\(notes)”"
+        } else if !title.isEmpty {
+            description = "“\(title)”"
         } else {
-            description = "“\(draft.title)”"
+            // No notes and no title: leave blank so the card can show a dedicated placeholder
+            // instead of an empty pair of quotation marks.
+            description = ""
         }
 
         let formatter = RelativeDateTimeFormatter()

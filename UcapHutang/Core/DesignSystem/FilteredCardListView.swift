@@ -30,23 +30,25 @@ struct FilterSegmentBar<T: Identifiable & RawRepresentable & CaseIterable & Equa
     }
 
     private func segment(_ filter: T) -> some View {
-        Button {
+        let isSelected = selection == filter
+        return Button {
             onSelect(filter)
         } label: {
             Text(filter.rawValue)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color.primary)
-                .padding(.horizontal, 12)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(isSelected ? AppColors.background : AppColors.textPrimary)
+                .padding(.horizontal, AppSpacing.medium)
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .background(selection == filter ? Color(.systemGray5) : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(isSelected ? AppColors.textPrimary : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(Color(.separator), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+                        .stroke(isSelected ? Color.clear : AppColors.border, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(selection == filter ? .isSelected : [])
+        .sensoryFeedback(.selection, trigger: isSelected)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -79,30 +81,30 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
                 // Header Title
                 Text(title)
-                    .font(.title.bold())
+                    .font(.title2.weight(.bold))
                     .accessibilityAddTraits(.isHeader)
                     .foregroundStyle(Color.primary)
-                    .lineSpacing(4)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
+                    .lineSpacing(2)
+                    .padding(.horizontal, AppSpacing.xLarge)
+                    .padding(.top, AppSpacing.small)
 
                 // Filter Bar
                 FilterSegmentBar(
                     selection: selectedFilter,
                     onSelect: onSelectFilter
                 )
-                .padding(.horizontal, 20)
+                .padding(.horizontal, AppSpacing.xLarge)
 
                 // List / Empty State
                 if items.isEmpty {
                     emptyState()
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 40)
+                        .padding(.top, AppSpacing.xxLarge + 8)
                 } else {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: AppSpacing.medium) {
                         ForEach(items) { item in
                             Button {
                                 onSelectItem(item.id)
@@ -112,12 +114,12 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, AppSpacing.xLarge)
                 }
             }
-            .padding(.bottom, 24)
+            .padding(.bottom, AppSpacing.xLarge)
         }
-        .background(Color(.systemBackground))
+        .background(AppColors.background)
     }
 }
 
@@ -214,9 +216,9 @@ private struct FilteredCardListViewPreviewContainer: View {
                             .font(.callout.weight(.bold))
                             .foregroundStyle(Color.accentColor)
                     }
-                    .padding(16)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .padding(AppSpacing.large)
+                    .background(AppColors.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
                 })
             .navigationTitle("Preview List")
             .navigationBarTitleDisplayMode(.inline)

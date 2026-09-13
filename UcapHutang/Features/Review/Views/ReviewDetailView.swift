@@ -21,11 +21,6 @@ struct ReviewDetailView: View {
         content
             .navigationTitle("Review Catatan")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Tutup") { dismiss() }
-                }
-            }
             .task { await viewModel.load() }
             .onDisappear {
                 Task { await viewModel.flushPendingEdits() }
@@ -231,7 +226,7 @@ struct ReviewDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 12))
+        .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
         .accessibilityElement(children: .combine)
     }
 
@@ -300,7 +295,7 @@ struct ReviewDetailView: View {
             .disabled(viewModel.newParticipantName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding(.horizontal, 14)
-        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 12))
+        .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
     }
 
     private func participantBlock(_ participant: TransactionParticipant, in draft: TransactionDraft) -> some View {
@@ -342,7 +337,7 @@ struct ReviewDetailView: View {
                 .font(.body.weight(.semibold))
         }
         .padding(14)
-        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 12))
+        .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
     }
 
     private func summaryRow(_ label: String, _ amount: Int64) -> some View {
@@ -368,13 +363,13 @@ struct ReviewDetailView: View {
                 Group {
                     if viewModel.isSaving {
                         ProgressView()
-                            .tint(Color(.systemBackground))
+                            .tint(AppColors.background)
                     } else {
                         Text("Simpan Catatan")
                             .font(.headline)
                     }
                 }
-                .foregroundStyle(Color(.systemBackground))
+                .foregroundStyle(AppColors.background)
                 .frame(maxWidth: .infinity, minHeight: 44)
             }
             .buttonStyle(.borderedProminent)

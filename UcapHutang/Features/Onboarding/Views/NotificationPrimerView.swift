@@ -39,7 +39,7 @@ struct NotificationPrimerView: View {
                 } label: {
                     Text("Izinkan Notifikasi")
                         .font(.headline)
-                        .foregroundStyle(Color(.systemBackground))
+                        .foregroundStyle(AppColors.background)
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.borderedProminent)

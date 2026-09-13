@@ -48,10 +48,10 @@ struct PersonCardRow: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemBackground), in: .rect(cornerRadius: 16, style: .continuous))
+        .background(AppColors.background, in: .rect(cornerRadius: AppRadius.medium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color(.separator), lineWidth: 1)
+            RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                .stroke(AppColors.border, lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
     }

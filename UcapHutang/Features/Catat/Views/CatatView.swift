@@ -26,100 +26,93 @@ struct CatatView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    Button {
-                        Task { await viewModel.handleMicTap() }
-                    } label: {
-                        recordingControl
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(viewModel.isProcessing)
-                    .accessibilityLabel(viewModel.recordButtonLabel)
-                    .accessibilityValue(viewModel.stageHeadline)
+        ScrollView {
+            VStack(spacing: 24) {
+                Button {
+                    Task { await viewModel.handleMicTap() }
+                } label: {
+                    recordingControl
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isProcessing)
+                .accessibilityLabel(viewModel.recordButtonLabel)
+                .accessibilityValue(viewModel.stageHeadline)
 
-                    if viewModel.isListening {
-                        Text(viewModel.speech.liveTranscript.isEmpty ? viewModel.stageHeadline : viewModel.speech.liveTranscript)
-                            .font(viewModel.speech.liveTranscript.isEmpty ? .body : .body.weight(.medium))
-                            .foregroundStyle(viewModel.speech.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 300)
-                            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.speech.liveTranscript)
-                    } else if !viewModel.isProcessing {
-                        Text("Tip: \(tipText)")
-                            .font(.body)
-                            .foregroundStyle(AppColors.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 300)
-                    }
-
-                    if let permissionMessage = viewModel.permissionMessage {
-                        VStack(spacing: 8) {
-                            Text(permissionMessage)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                            Button("Buka Pengaturan") {
-                                if let url = URL(string: UIApplication.openSettingsURLString) {
-                                    openURL(url)
-                                }
-                            }
-                            .buttonStyle(.bordered)
-                            .frame(minHeight: 44)
-                        }
+                if viewModel.isListening {
+                    Text(viewModel.speech.liveTranscript.isEmpty ? viewModel.stageHeadline : viewModel.speech.liveTranscript)
+                        .font(viewModel.speech.liveTranscript.isEmpty ? .body : .body.weight(.medium))
+                        .foregroundStyle(viewModel.speech.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
+                        .multilineTextAlignment(.center)
                         .frame(maxWidth: 300)
-                    }
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.speech.liveTranscript)
+                } else if !viewModel.isProcessing {
+                    Text("Tip: \(tipText)")
+                        .font(.body)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 300)
+                }
 
-                    if !viewModel.speech.usesOnDeviceRecognition {
-                        Text("Ucapan diproses oleh server Apple.")
-                            .font(.footnote)
+                if let permissionMessage = viewModel.permissionMessage {
+                    VStack(spacing: 8) {
+                        Text(permissionMessage)
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
+                        Button("Buka Pengaturan") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                openURL(url)
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .frame(minHeight: 44)
                     }
+                    .frame(maxWidth: 300)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 32)
-            }
-            .safeAreaInset(edge: .bottom) {
-                if viewModel.isListening {
-                    Button("Ulangi") {
-                        Task { await viewModel.restartRecording() }
-                    }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppColors.textPrimary)
-                    .padding(.horizontal, 28)
-                    .frame(minHeight: 44)
-                    .background(AppColors.surface, in: Capsule())
-                    .overlay(Capsule().stroke(AppColors.border))
-                    .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
-                    .padding(.bottom, 20)
+
+                if !viewModel.speech.usesOnDeviceRecognition {
+                    Text("Ucapan diproses oleh server Apple.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 }
             }
-            .navigationTitle(flow.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .onDisappear { viewModel.cancel() }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Tutup") { viewModel.cancel(); dismiss() }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 32)
+        }
+        .safeAreaInset(edge: .bottom) {
+            if viewModel.isListening {
+                Button("Ulangi") {
+                    Task { await viewModel.restartRecording() }
                 }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppColors.textPrimary)
+                .padding(.horizontal, 28)
+                .frame(minHeight: 44)
+                .background(AppColors.surface, in: Capsule())
+                .overlay(Capsule().stroke(AppColors.border))
+                .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
+                .padding(.bottom, 20)
             }
-            .alert("Gagal Memproses", isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            )) { Button("OK", role: .cancel) {} } message: {
-                Text(viewModel.errorMessage ?? "Terjadi kesalahan.")
-            }
-            .onChange(of: viewModel.speech.state) { _, state in
-                viewModel.handleSpeechStateChange(state)
-            }
-            .onChange(of: viewModel.savedDraftID) { _, draftID in
-                guard draftID != nil else { return }
-                router.showSavedToReviewBanner()
-                AccessibilityNotification.Announcement("Tersimpan ke Review").post()
-                dismiss()
-            }
+        }
+        .navigationTitle(flow.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .onDisappear { viewModel.cancel() }
+        .alert("Gagal Memproses", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) { Button("OK", role: .cancel) {} } message: {
+            Text(viewModel.errorMessage ?? "Terjadi kesalahan.")
+        }
+        .onChange(of: viewModel.speech.state) { _, state in
+            viewModel.handleSpeechStateChange(state)
+        }
+        .onChange(of: viewModel.savedDraftID) { _, draftID in
+            guard draftID != nil else { return }
+            router.showSavedToReviewBanner()
+            AccessibilityNotification.Announcement("Tersimpan ke Review").post()
+            dismiss()
         }
     }
 

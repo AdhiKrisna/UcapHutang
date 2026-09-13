@@ -69,7 +69,7 @@ struct PersonLedgerDetailView: View {
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity, minHeight: 46)
-                            .background(AppColors.reminderButtonBackground, in: .rect(cornerRadius: 12, style: .continuous))
+                            .background(AppColors.reminderButtonBackground, in: .rect(cornerRadius: AppRadius.small, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .disabled(!viewModel.canRecordPaymentOrRemind)
@@ -77,10 +77,10 @@ struct PersonLedgerDetailView: View {
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemBackground), in: .rect(cornerRadius: 16, style: .continuous))
+                .background(AppColors.background, in: .rect(cornerRadius: AppRadius.medium, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color(.separator), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                        .stroke(AppColors.border, lineWidth: 1)
                 )
                 .padding(.horizontal, 20)
 
@@ -114,7 +114,7 @@ struct PersonLedgerDetailView: View {
                 .padding(.bottom, 24)
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppColors.background)
         .navigationTitle(viewModel.person.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -207,8 +207,8 @@ struct PersonLedgerDetailView: View {
             .buttonStyle(.bordered)
             .tint(.primary)
         }
-        .padding(16)
+        .padding(AppSpacing.large)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16))
+        .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.medium))
     }
 }

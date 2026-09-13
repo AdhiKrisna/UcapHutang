@@ -19,6 +19,53 @@ final class ReviewListViewModelTests: XCTestCase {
         XCTAssertEqual(item.avatarInitials, [])
     }
 
+    func testPersonalDraftWithRealNameShowsSingleAvatarInitial() {
+        let draft = TransactionDraft(
+            flow: .personal,
+            type: .piutang,
+            title: "Makan siang",
+            totalAmount: 15_000,
+            participants: [TransactionParticipant(name: "dito", shareAmount: 15_000)],
+            rawTranscript: "Dito pinjam 15 ribu buat makan siang"
+        )
+
+        let item = ReviewListViewModel.makeItem(from: draft, now: draft.createdAt)
+
+        XCTAssertEqual(item.personName, "dito")
+        XCTAssertEqual(item.avatarInitials, ["D"])
+    }
+
+    func testMissingTitleAndNotesProducesEmptyDescriptionInsteadOfEmptyQuotes() {
+        let draft = TransactionDraft(
+            flow: .personal,
+            type: .hutang,
+            title: "   ",
+            totalAmount: 200_000,
+            participants: [TransactionParticipant(name: "Vito", shareAmount: 200_000)],
+            rawTranscript: ""
+        )
+
+        let item = ReviewListViewModel.makeItem(from: draft, now: draft.createdAt)
+
+        XCTAssertEqual(item.description, "")
+    }
+
+    func testNotesTakePriorityOverTitleInDescription() {
+        let draft = TransactionDraft(
+            flow: .personal,
+            type: .hutang,
+            title: "Nasi Padang",
+            totalAmount: 50_000,
+            participants: [TransactionParticipant(name: "Satria", shareAmount: 50_000)],
+            notes: "Bayar minggu depan",
+            rawTranscript: ""
+        )
+
+        let item = ReviewListViewModel.makeItem(from: draft, now: draft.createdAt)
+
+        XCTAssertEqual(item.description, "“Bayar minggu depan”")
+    }
+
     func testSplitDraftUsesRealCountAndInitialsFromRealNamesOnly() {
         let draft = TransactionDraft(
             flow: .splitBill,

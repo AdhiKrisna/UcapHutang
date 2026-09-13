@@ -2,17 +2,20 @@ import SwiftUI
 
 struct ReviewListView: View {
     @State private var viewModel: ReviewListViewModel
-    let onSelect: (UUID) -> Void
+    @State private var selectedDraftID: UUID?
+    private let repository: any TransactionRepository
+    private let contacts: any ContactsProviding
     let onOpenSettings: () -> Void
 
     init(
         repository: any TransactionRepository,
-        onSelect: @escaping (UUID) -> Void,
+        contacts: any ContactsProviding,
         onOpenSettings: @escaping () -> Void
     ) {
-        _viewModel = State(initialValue: ReviewListViewModel(repository: repository))
-        self.onSelect = onSelect
+        self.repository = repository
+        self.contacts = contacts
         self.onOpenSettings = onOpenSettings
+        _viewModel = State(initialValue: ReviewListViewModel(repository: repository))
     }
 
     var body: some View {
@@ -22,7 +25,7 @@ struct ReviewListView: View {
                 items: viewModel.filteredDrafts,
                 selectedFilter: viewModel.selectedFilter,
                 onSelectFilter: { viewModel.selectFilter($0) },
-                onSelectItem: { onSelect($0) },
+                onSelectItem: { id in selectedDraftID = id },
                 emptyState: {
                     AppEmptyState(
                         icon: "checkmark.circle",
@@ -34,6 +37,9 @@ struct ReviewListView: View {
                     ReviewCardView(item: item)
                 }
             )
+            .navigationDestination(item: $selectedDraftID) { draftID in
+                ReviewDetailView(draftID: draftID, repository: repository, contacts: contacts)
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -72,7 +78,7 @@ struct ReviewListView: View {
                 rawTranscript: "Dito pinjam 15 ribu buat makan siang"
             )
         ]),
-        onSelect: { _ in },
+        contacts: SystemContactsProvider(),
         onOpenSettings: {}
     )
 }
