@@ -9,6 +9,8 @@ final class SpyTransactionRepository: TransactionRepository {
     private(set) var saveDraftCallCount = 0
     private(set) var confirmDraftCallCount = 0
     private(set) var deleteDraftCallCount = 0
+    /// When set, `saveDraft` counts the call and throws this error.
+    var saveDraftError: Error?
 
     init(base: InMemoryTransactionRepository = InMemoryTransactionRepository()) {
         self.base = base
@@ -20,6 +22,7 @@ final class SpyTransactionRepository: TransactionRepository {
 
     func saveDraft(_ draft: TransactionDraft) async throws {
         saveDraftCallCount += 1
+        if let saveDraftError { throw saveDraftError }
         try await base.saveDraft(draft)
     }
 

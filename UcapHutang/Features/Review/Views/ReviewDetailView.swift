@@ -28,7 +28,7 @@ struct ReviewDetailView: View {
             }
             .task { await viewModel.load() }
             .onDisappear {
-                Task { await viewModel.persistEditsIfNeeded() }
+                Task { await viewModel.flushPendingEdits() }
             }
             .onChange(of: viewModel.didFinish) { _, finished in
                 if finished { dismiss() }

@@ -9,6 +9,8 @@ final class ReviewDetailViewModel {
         case notFound
     }
 
+    static let autosaveFailedMessage = "Perubahan belum berhasil disimpan otomatis. Coba ubah kembali atau buka ulang halaman ini."
+
     let draftID: UUID
     private(set) var loadState: LoadState = .loading
     private(set) var draft: TransactionDraft?
@@ -17,11 +19,16 @@ final class ReviewDetailViewModel {
     private(set) var isSaving = false
     private(set) var didSave = false
     private(set) var didFinish = false
+    /// True while an edit is being written back to the draft.
+    private(set) var isAutosaving = false
+    /// Set when the last automatic draft save failed. Shown inline, never as an alert.
+    private(set) var autosaveErrorMessage: String?
     var alert: ReviewAlert?
     var pickerRequest: ContactPickerRequest?
     var isConfirmingDelete = false
 
     @ObservationIgnored private var savedSnapshot: TransactionDraft?
+    @ObservationIgnored private var autosaveTask: Task<Void, Never>?
     private let repository: any TransactionRepository
     private let contacts: any ContactsProviding
 
@@ -166,15 +173,17 @@ final class ReviewDetailViewModel {
     // MARK: - Save / delete / close
 
     func save() async {
-        guard !isSaving, let current = draft else { return }
+        guard !isSaving, draft != nil else { return }
+        isSaving = true
+        defer { isSaving = false }
         hasAttemptedSave = true
+        await flushPendingEdits()
+        guard let current = draft else { return }
         let currentIssues = DraftValidator.issues(for: current)
         guard currentIssues.isEmpty else {
             alert = .incomplete(messages: Self.distinctMessages(currentIssues))
             return
         }
-        isSaving = true
-        defer { isSaving = false }
         do {
             try await repository.confirmDraft(current)
             savedSnapshot = current
@@ -186,6 +195,7 @@ final class ReviewDetailViewModel {
     }
 
     func delete() async {
+        await awaitPendingAutosave()
         do {
             try await repository.deleteDraft(id: draftID)
             didFinish = true
@@ -194,15 +204,16 @@ final class ReviewDetailViewModel {
         }
     }
 
-    /// Called when the screen disappears. Writes unsaved edits back to the draft (never to Riwayat).
-    func persistEditsIfNeeded() async {
-        guard !didFinish, loadState == .loaded, let current = draft, current != savedSnapshot else { return }
-        do {
-            try await repository.saveDraft(current)
-            savedSnapshot = current
-        } catch {
-            // The screen is already gone; the stored draft keeps its previous values.
-        }
+    /// Waits for queued automatic saves, then writes any edit that is still unsaved. Never confirms.
+    /// Called when the screen disappears.
+    func flushPendingEdits() async {
+        await awaitPendingAutosave()
+        await persistIfDirty()
+    }
+
+    /// Waits until every queued automatic save has finished.
+    func awaitPendingAutosave() async {
+        await autosaveTask?.value
     }
 
     // MARK: - Split math
@@ -238,6 +249,29 @@ final class ReviewDetailViewModel {
         change(&updated)
         Self.recalculate(&updated)
         draft = updated
+        scheduleAutosave()
+    }
+
+    /// Queues a save after any save already in flight, so writes never overlap.
+    private func scheduleAutosave() {
+        let previous = autosaveTask
+        autosaveTask = Task { [weak self] in
+            await previous?.value
+            await self?.persistIfDirty()
+        }
+    }
+
+    private func persistIfDirty() async {
+        guard !didFinish, loadState == .loaded, let current = draft, current != savedSnapshot else { return }
+        isAutosaving = true
+        defer { isAutosaving = false }
+        do {
+            try await repository.saveDraft(current)
+            savedSnapshot = current
+            autosaveErrorMessage = nil
+        } catch {
+            autosaveErrorMessage = Self.autosaveFailedMessage
+        }
     }
 
     private func link(participantID: UUID, to contact: ContactRef) {

@@ -166,12 +166,12 @@ final class ReviewDetailViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.draft!.totalAmount, 70_000, "Nominal is read-only in custom mode")
     }
 
-    func testPersistEditsSavesADirtyDraftWithoutConfirming() async throws {
+    func testFlushPendingEditsSavesADirtyDraftWithoutConfirming() async throws {
         let draft = personalDraft()
         let (viewModel, spy) = try await makeViewModel(seed: draft)
 
         viewModel.setTitle("Kopi susu")
-        await viewModel.persistEditsIfNeeded()
+        await viewModel.flushPendingEdits()
 
         XCTAssertEqual(spy.saveDraftCallCount, 1)
         XCTAssertEqual(spy.confirmDraftCallCount, 0)
@@ -180,10 +180,10 @@ final class ReviewDetailViewModelTests: XCTestCase {
         XCTAssertEqual(stored?.status, .needsReview)
     }
 
-    func testPersistEditsDoesNothingWhenClean() async throws {
+    func testFlushPendingEditsDoesNothingWhenClean() async throws {
         let (viewModel, spy) = try await makeViewModel(seed: personalDraft())
 
-        await viewModel.persistEditsIfNeeded()
+        await viewModel.flushPendingEdits()
 
         XCTAssertEqual(spy.saveDraftCallCount, 0)
     }
@@ -207,5 +207,62 @@ final class ReviewDetailViewModelTests: XCTestCase {
         viewModel.removeParticipant(id: viewModel.draft!.participants[2].id)
 
         XCTAssertEqual(viewModel.draft!.participants.map(\.shareAmount), [30_000, 30_000])
+    }
+
+    func testEditsAreSavedToTheDraftAutomaticallyWithoutConfirming() async throws {
+        let draft = personalDraft()
+        let (viewModel, spy) = try await makeViewModel(seed: draft)
+        let participantID = viewModel.draft!.participants[0].id
+        let newDate = draft.transactionDate.addingTimeInterval(3_600)
+
+        viewModel.setTotalAmount(35_000)
+        viewModel.setTitle("Bensin")
+        viewModel.setTransactionDate(newDate)
+        viewModel.handlePicked([satria], for: .link(participantID: participantID, prefill: "Satria"))
+        await viewModel.awaitPendingAutosave()
+
+        let stored = try await spy.draft(id: draft.id)
+        XCTAssertEqual(stored?.totalAmount, 35_000)
+        XCTAssertEqual(stored?.title, "Bensin")
+        XCTAssertEqual(stored?.transactionDate, newDate)
+        XCTAssertEqual(stored?.participants.first?.name, "Satria Kans")
+        XCTAssertEqual(stored?.participants.first?.contactIdentifier, "contact-satria")
+        XCTAssertEqual(stored?.participants.first?.shareAmount, 35_000)
+        XCTAssertEqual(stored?.status, .needsReview)
+        XCTAssertEqual(spy.confirmDraftCallCount, 0)
+        let entries = try await spy.ledgerEntries()
+        XCTAssertTrue(entries.isEmpty)
+        XCTAssertNil(viewModel.autosaveErrorMessage)
+    }
+
+    func testAutosaveFailureIsReportedWithoutAnAlert() async throws {
+        let draft = personalDraft()
+        let (viewModel, spy) = try await makeViewModel(seed: draft)
+        spy.saveDraftError = RepositoryError.invalidAmount
+
+        viewModel.setTitle("Bensin")
+        await viewModel.flushPendingEdits()
+
+        XCTAssertNil(viewModel.alert)
+        XCTAssertEqual(
+            viewModel.autosaveErrorMessage,
+            "Perubahan belum berhasil disimpan otomatis. Coba ubah kembali atau buka ulang halaman ini."
+        )
+        let stored = try await spy.draft(id: draft.id)
+        XCTAssertEqual(stored?.title, "Kopi")
+    }
+
+    func testDeleteWaitsForPendingAutosaveAndDoesNotRecreateTheDraft() async throws {
+        let draft = personalDraft()
+        let (viewModel, spy) = try await makeViewModel(seed: draft)
+
+        viewModel.setTitle("Kopi susu")
+        await viewModel.delete()
+        await viewModel.flushPendingEdits()
+
+        XCTAssertTrue(viewModel.didFinish)
+        XCTAssertEqual(spy.deleteDraftCallCount, 1)
+        let stored = try await spy.draft(id: draft.id)
+        XCTAssertNil(stored)
     }
 }

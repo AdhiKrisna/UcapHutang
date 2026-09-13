@@ -11,7 +11,7 @@ final class DraftValidatorShareRulesTests: XCTestCase {
             splitMethod: method,
             includesUser: includesUser,
             participants: shares.enumerated().map { index, share in
-                TransactionParticipant(name: "Teman \(index + 1)", contactIdentifier: "contact-\(index + 1)", shareAmount: share)
+                TransactionParticipant(name: "Satria \(index + 1)", contactIdentifier: "contact-\(index + 1)", shareAmount: share)
             },
             rawTranscript: "makan malam"
         )
