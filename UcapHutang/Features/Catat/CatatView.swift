@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CatatView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var viewModel: CatatViewModel
 
     let flow: CaptureFlow
@@ -23,15 +24,6 @@ struct CatatView: View {
                     .disabled(viewModel.isProcessing)
 
                     if isListening {
-                        Button("Ulangi") { viewModel.restartRecording() }
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 10)
-                            .background(AppColors.surface)
-                            .clipShape(Capsule())
-                            .overlay(Capsule().stroke(AppColors.border))
-
                         Text(viewModel.liveTranscript.isEmpty ? viewModel.stageHeadline : viewModel.liveTranscript)
                             .font(viewModel.liveTranscript.isEmpty ? .body : .body.weight(.medium))
                             .foregroundStyle(viewModel.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
@@ -50,6 +42,20 @@ struct CatatView: View {
                 Spacer()
             }
             .padding(.horizontal, 24)
+            .overlay(alignment: .bottom) {
+                if isListening {
+                    Button("Ulangi") { viewModel.restartRecording() }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 12)
+                        .background(AppColors.surface)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(AppColors.border))
+                        .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
+                        .padding(.bottom, 20)
+                }
+            }
             .navigationTitle(flow.title)
             .navigationBarTitleDisplayMode(.inline)
             .onDisappear { viewModel.cancel() }
@@ -71,7 +77,7 @@ struct CatatView: View {
                 viewModel.handleSpeechStateChange(state)
             }
             .navigationDestination(item: $viewModel.createdDraftID) { draftID in
-                ReviewDraftView(draftID: draftID, repository: viewModel.container.repository)
+                ReviewView(draftID: draftID, repository: viewModel.container.repository)
             }
         }
     }
@@ -82,6 +88,12 @@ struct CatatView: View {
 
     private var recordingControl: some View {
         ZStack {
+            if isListening {
+                ListeningMicAura(
+                    level: viewModel.speechRecognizer.audioLevel,
+                    reduceMotion: reduceMotion
+                )
+            }
             Circle()
                 .stroke(
                     AppColors.textSecondary.opacity(0.65),
@@ -92,8 +104,12 @@ struct CatatView: View {
                 ProgressView().tint(AppColors.textPrimary).scaleEffect(1.3)
             } else {
                 VStack(spacing: 12) {
-                    Image(systemName: isListening ? "stop.fill" : "play.fill")
-                        .font(.system(size: 34, weight: .bold))
+                    if isListening {
+                        SpeakingMicIcon(reduceMotion: reduceMotion)
+                    } else {
+                        Image(systemName: "mic.fill")
+                            .font(.system(size: 34, weight: .bold))
+                    }
                     Text(isListening ? "Tekan untuk\nberhenti" : "Tekan untuk catat\nvia suara")
                         .font(.title3.weight(.bold))
                         .multilineTextAlignment(.center)
@@ -108,5 +124,75 @@ struct CatatView: View {
         flow == .personal
             ? "Dito pinjam 50 ribu buat beli bensin"
             : "Split bill makan 100 ribu sama Satria dan Arif bagi rata"
+    }
+}
+
+private struct ListeningMicAura: View {
+    let level: Float
+    let reduceMotion: Bool
+
+    @State private var isRinging = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [AppColors.accent.opacity(0.24), Color.purple.opacity(0.10), .clear],
+                        center: .center,
+                        startRadius: 30,
+                        endRadius: 82
+                    )
+                )
+                .frame(width: 136 + CGFloat(level) * 46, height: 136 + CGFloat(level) * 46)
+                .animation(
+                    reduceMotion ? nil : .spring(response: 0.18, dampingFraction: 0.55),
+                    value: level
+                )
+
+            ForEach(0..<3, id: \.self) { index in
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [AppColors.accent.opacity(0.85), Color.purple.opacity(0.42)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2.5
+                    )
+                    .frame(width: 108, height: 108)
+                    .scaleEffect(reduceMotion ? 1.12 : (isRinging ? 1.72 : 0.92))
+                    .opacity(reduceMotion ? 0.42 : (isRinging ? 0 : 0.68))
+                    .animation(
+                        reduceMotion
+                            ? nil
+                            : .easeOut(duration: 1.6)
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(index) * 0.4),
+                        value: isRinging
+                    )
+            }
+        }
+        .frame(width: 176, height: 176)
+        .onAppear { isRinging = true }
+    }
+}
+
+private struct SpeakingMicIcon: View {
+    let reduceMotion: Bool
+
+    @State private var isSpeaking = false
+
+    var body: some View {
+        Image(systemName: "mic.fill")
+            .font(.system(size: 36, weight: .semibold))
+            .foregroundStyle(AppColors.textPrimary)
+            .rotationEffect(.degrees(reduceMotion ? 0 : (isSpeaking ? 4 : -4)))
+            .scaleEffect(reduceMotion ? 1 : (isSpeaking ? 1.08 : 0.96))
+            .animation(
+                reduceMotion ? nil : .easeInOut(duration: 0.16).repeatForever(autoreverses: true),
+                value: isSpeaking
+            )
+            .onAppear { isSpeaking = true }
     }
 }

@@ -13,6 +13,7 @@
 		A10000000000000000000004 /* MLXHuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000014 /* MLXHuggingFace */; };
 		A10000000000000000000005 /* HuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000015 /* HuggingFace */; };
 		A10000000000000000000006 /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000016 /* Tokenizers */; };
+		C30000000000000000000001 /* UcapHutangWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C30000000000000000000002 /* UcapHutangWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -23,22 +24,72 @@
 			remoteGlobalIDString = 6509AD993053F0AB00B67E93;
 			remoteInfo = UcapHutang;
 		};
+		C30000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6509AD923053F0AB00B67E93 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C30000000000000000000010;
+			remoteInfo = UcapHutangWidget;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C30000000000000000000004 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C30000000000000000000001 /* UcapHutangWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		6509AD9A3053F0AB00B67E93 /* UcapHutang.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UcapHutang.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B20000000000000000000001 /* UcapHutangTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UcapHutangTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C30000000000000000000002 /* UcapHutangWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UcapHutangWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C30000000000000000000030 /* Exceptions for "UcapHutang" folder in "UcapHutang" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 6509AD993053F0AB00B67E93 /* UcapHutang */;
+		};
+		C30000000000000000000031 /* Exceptions for "UcapHutangWidget" folder in "UcapHutangWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C30000000000000000000010 /* UcapHutangWidget */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6509AD9C3053F0AB00B67E93 /* UcapHutang */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C30000000000000000000030 /* Exceptions for "UcapHutang" folder in "UcapHutang" target */,
+			);
 			path = UcapHutang;
 			sourceTree = "<group>";
 		};
 		B20000000000000000000002 /* UcapHutangTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = UcapHutangTests;
+			sourceTree = "<group>";
+		};
+		C30000000000000000000005 /* UcapHutangWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C30000000000000000000031 /* Exceptions for "UcapHutangWidget" folder in "UcapHutangWidget" target */,
+			);
+			path = UcapHutangWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -64,6 +115,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C30000000000000000000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -72,6 +130,7 @@
 			children = (
 				6509AD9C3053F0AB00B67E93 /* UcapHutang */,
 				B20000000000000000000002 /* UcapHutangTests */,
+				C30000000000000000000005 /* UcapHutangWidget */,
 				6509AD9B3053F0AB00B67E93 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -81,6 +140,7 @@
 			children = (
 				6509AD9A3053F0AB00B67E93 /* UcapHutang.app */,
 				B20000000000000000000001 /* UcapHutangTests.xctest */,
+				C30000000000000000000002 /* UcapHutangWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,10 +155,12 @@
 				6509AD963053F0AB00B67E93 /* Sources */,
 				6509AD973053F0AB00B67E93 /* Frameworks */,
 				6509AD983053F0AB00B67E93 /* Resources */,
+				C30000000000000000000004 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C30000000000000000000011 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				6509AD9C3053F0AB00B67E93 /* UcapHutang */,
@@ -137,6 +199,26 @@
 			productReference = B20000000000000000000001 /* UcapHutangTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		C30000000000000000000010 /* UcapHutangWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C30000000000000000000020 /* Build configuration list for PBXNativeTarget "UcapHutangWidget" */;
+			buildPhases = (
+				C30000000000000000000007 /* Sources */,
+				C30000000000000000000006 /* Frameworks */,
+				C30000000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C30000000000000000000005 /* UcapHutangWidget */,
+			);
+			name = UcapHutangWidget;
+			productName = UcapHutangWidget;
+			productReference = C30000000000000000000002 /* UcapHutangWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -148,6 +230,9 @@
 				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					6509AD993053F0AB00B67E93 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					C30000000000000000000010 = {
 						CreatedOnToolsVersion = 26.6;
 					};
 				};
@@ -173,6 +258,7 @@
 			targets = (
 				6509AD993053F0AB00B67E93 /* UcapHutang */,
 				B20000000000000000000004 /* UcapHutangTests */,
+				C30000000000000000000010 /* UcapHutangWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -186,6 +272,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B20000000000000000000007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C30000000000000000000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -209,6 +302,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C30000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -216,6 +316,11 @@
 			isa = PBXTargetDependency;
 			target = 6509AD993053F0AB00B67E93 /* UcapHutang */;
 			targetProxy = B2000000000000000000000B /* PBXContainerItemProxy */;
+		};
+		C30000000000000000000011 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C30000000000000000000010 /* UcapHutangWidget */;
+			targetProxy = C30000000000000000000003 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -348,8 +453,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UXUX3MUJJF;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = UcapHutang;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = UcapHutang/Info.plist;
 				INFOPLIST_KEY_NSContactsUsageDescription = "Aplikasi memerlukan akses kontak untuk menghubungkan nama pada catatan dengan kontak kamu.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Aplikasi memerlukan akses mikrofon untuk input suara.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Aplikasi memerlukan izin speech recognition untuk mendengarkan pesan suara dan mengubahnya menjadi teks.";
@@ -384,8 +489,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UXUX3MUJJF;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = UcapHutang;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = UcapHutang/Info.plist;
 				INFOPLIST_KEY_NSContactsUsageDescription = "Aplikasi memerlukan akses kontak untuk menghubungkan nama pada catatan dengan kontak kamu.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Aplikasi memerlukan akses mikrofon untuk input suara.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Aplikasi memerlukan izin speech recognition untuk mendengarkan pesan suara dan mengubahnya menjadi teks.";
@@ -447,6 +552,48 @@
 			};
 			name = Release;
 		};
+		C30000000000000000000021 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3N3ZPJZ6BG;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = UcapHutangWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = AdhiKrisna.UcapHutang.Widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C30000000000000000000022 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3N3ZPJZ6BG;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = UcapHutangWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = AdhiKrisna.UcapHutang.Widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -473,6 +620,15 @@
 			buildConfigurations = (
 				B20000000000000000000008 /* Debug */,
 				B2000000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C30000000000000000000020 /* Build configuration list for PBXNativeTarget "UcapHutangWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C30000000000000000000021 /* Debug */,
+				C30000000000000000000022 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

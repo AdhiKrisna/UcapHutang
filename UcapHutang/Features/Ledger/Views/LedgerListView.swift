@@ -55,7 +55,7 @@ struct LedgerListView: View {
                                     Image(systemName: "arrow.up.right")
                                         .font(.subheadline.weight(.semibold))
                                         .foregroundStyle(Color.red)
-                                    Text("Utang")
+                                    Text("Hutang")
                                         .font(.subheadline.weight(.medium))
                                         .foregroundStyle(Color.red)
                                 }

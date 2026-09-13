@@ -1,14 +1,14 @@
 import SwiftUI
 import Combine
 
-struct ReviewDraftView: View {
+struct ReviewView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel: ReviewDraftViewModel
+    @StateObject private var viewModel: ReviewViewModel
     @State private var confirmsDeletion = false
     @State private var contactPickerIndex: Int?
 
     init(draftID: UUID, repository: any TransactionRepository) {
-        _viewModel = StateObject(wrappedValue: ReviewDraftViewModel(draftID: draftID, repository: repository))
+        _viewModel = StateObject(wrappedValue: ReviewViewModel(draftID: draftID, repository: repository))
     }
 
     var body: some View {
@@ -18,6 +18,7 @@ struct ReviewDraftView: View {
                 if let draft = viewModel.draft {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 28) {
+                        autosaveNotice
                         qwenResultSection(draft)
                         personSection(draft)
                         if draft.flow == .splitBill {
@@ -40,6 +41,9 @@ struct ReviewDraftView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .task { await viewModel.load() }
+        .onDisappear {
+            Task { await viewModel.flushPendingEdits() }
+        }
         .onChange(of: viewModel.didFinish) { _, finished in
             if finished { dismiss() }
         }
@@ -48,11 +52,7 @@ struct ReviewDraftView: View {
                 ContactPickerSheet(
                     targetName: participant.name,
                     onSelect: { candidate in
-                        viewModel.draft?.participants[index].name = candidate.fullName
-                        viewModel.draft?.participants[index].contactIdentifier = candidate.id
-                    },
-                    onKeepRaw: {
-                        viewModel.draft?.participants[index].contactIdentifier = nil
+                        viewModel.updateParticipantContact(index: index, candidate: candidate)
                     }
                 )
             }
@@ -76,7 +76,10 @@ struct ReviewDraftView: View {
     private var reviewHeader: some View {
         HStack {
             Button {
-                dismiss()
+                Task {
+                    await viewModel.flushPendingEdits()
+                    dismiss()
+                }
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.headline.weight(.semibold))
@@ -127,19 +130,28 @@ struct ReviewDraftView: View {
 
     private func qwenResultSection(_ draft: TransactionDraft) -> some View {
         VStack(alignment: .leading, spacing: 18) {
-            reviewValue(label: "Waktu", value: reviewDate(draft.transactionDate))
-            reviewValue(label: "Nominal", value: draft.totalAmount.rupiahFormatted)
-            reviewValue(label: "Deskripsi", value: draft.title)
+            editableDate(draft.transactionDate)
+            editableAmount(draft.totalAmount)
+            editableTitle(draft.title)
             if draft.flow == .personal {
                 Text("Jenis").font(.body).foregroundStyle(AppColors.textPrimary)
                 Picker("Jenis", selection: Binding(
                     get: { viewModel.draft?.type ?? .unknown },
-                    set: { viewModel.draft?.type = $0 }
+                    set: { viewModel.updateType($0) }
                 )) {
-                    Text("Utang").tag(TransactionType.hutang)
+                    Text("Hutang").tag(TransactionType.hutang)
                     Text("Piutang").tag(TransactionType.piutang)
                 }
                 .pickerStyle(.segmented)
+                .padding(2)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(draft.type == .unknown ? AppColors.warning.opacity(0.12) : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(draft.type == .unknown ? AppColors.warning : Color.clear)
+                )
             }
         }
     }
@@ -149,6 +161,63 @@ struct ReviewDraftView: View {
             Text(label).font(.body).foregroundStyle(AppColors.textPrimary)
             Text(value).font(.body.weight(.bold)).foregroundStyle(AppColors.textPrimary)
         }
+    }
+
+    private func editableDate(_ date: Date) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Waktu").font(.body).foregroundStyle(AppColors.textPrimary)
+            DatePicker(
+                "Waktu",
+                selection: Binding(
+                    get: { viewModel.draft?.transactionDate ?? date },
+                    set: { viewModel.updateTransactionDate($0) }
+                ),
+                displayedComponents: [.date, .hourAndMinute]
+            )
+            .labelsHidden()
+            .tint(AppColors.accent)
+        }
+    }
+
+    private func editableAmount(_ amount: Int64) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Nominal").font(.body).foregroundStyle(AppColors.textPrimary)
+            HStack(spacing: 4) {
+                Text("Rp.").font(.body.weight(.bold))
+                TextField("0", value: Binding(
+                    get: { viewModel.draft?.totalAmount ?? amount },
+                    set: { viewModel.updateTotalAmount($0) }
+                ), format: .number)
+                .font(.body.weight(.bold))
+                .keyboardType(.numberPad)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .background(fieldBackground(isInvalid: amount <= 0))
+        }
+    }
+
+    private func editableTitle(_ title: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Deskripsi").font(.body).foregroundStyle(AppColors.textPrimary)
+            TextField("Deskripsi transaksi", text: Binding(
+                get: { viewModel.draft?.title ?? title },
+                set: { viewModel.updateTitle($0) }
+            ))
+            .font(.body.weight(.bold))
+            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .background(fieldBackground(isInvalid: title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+        }
+    }
+
+    private func fieldBackground(isInvalid: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .fill(isInvalid ? AppColors.warning.opacity(0.12) : AppColors.surface)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(isInvalid ? AppColors.warning : AppColors.border)
+            )
     }
 
     private func reviewDate(_ date: Date) -> String {
@@ -163,77 +232,260 @@ struct ReviewDraftView: View {
             Text(draft.flow == .personal ? "Orang" : "Peserta")
                 .font(.body).foregroundStyle(AppColors.textPrimary)
             ForEach(Array(draft.participants.enumerated()), id: \.element.id) { index, participant in
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(participant.name).font(.body.weight(.bold))
-                            Text(participant.contactIdentifier == nil ? "Nama belum terhubung" : "Terhubung otomatis ke kontak")
-                                .font(.subheadline).foregroundStyle(AppColors.textSecondary)
-                        }
-                        Spacer()
-                        Button(participant.contactIdentifier == nil ? "Hubungkan" : "Bukan dia?") {
+                let isLinked = participant.contactIdentifier.map {
+                    !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                } ?? false
+                let isIncluded = draft.flow != .splitBill || participant.shareAmount > 0
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(participant.name).font(.body.weight(.bold))
+                        Text(isIncluded ? (isLinked ? "Sudah Terverifikasi" : "Belum Terverifikasi") : "Tidak ikut pembagian")
+                            .font(.subheadline)
+                            .foregroundStyle(isIncluded ? (isLinked ? Color.green : AppColors.destructive) : AppColors.textSecondary)
+                    }
+                    Spacer()
+                    if isIncluded {
+                        Button(isLinked ? "Bukan dia?" : "Hubungkan") {
                             contactPickerIndex = index
                         }
                         .underline()
                         .font(.subheadline)
                         .foregroundStyle(AppColors.textPrimary)
                     }
-                    TextField(
-                        "Optional Notes",
-                        text: Binding(
-                            get: { viewModel.draft?.participants[safe: index]?.notes ?? "" },
-                            set: { viewModel.updateParticipantNotes(index: index, notes: $0) }
-                        ),
-                        axis: .vertical
-                    )
-                    .lineLimit(1...3)
-                    .textFieldStyle(.plain)
-                    .font(.subheadline)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 10)
-                    .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
                 .padding(14)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppColors.border))
+                .background(isIncluded ? (isLinked ? Color.green.opacity(0.08) : AppColors.destructive.opacity(0.08)) : AppColors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isIncluded ? (isLinked ? Color.green.opacity(0.65) : AppColors.destructive) : AppColors.border)
+                )
             }
             if draft.flow == .splitBill {
-                Button("+ Tambah orang") { viewModel.newParticipantName = "" }
-                    .frame(maxWidth: .infinity, minHeight: 52)
-                    .background(AppColors.surface)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(AppColors.textSecondary))
-                    .foregroundStyle(AppColors.textPrimary)
+                HStack(spacing: AppSpacing.small) {
+                    TextField("Nama orang baru", text: $viewModel.newParticipantName)
+                        .textFieldStyle(.plain)
+                    Button("Tambah") { viewModel.addParticipant() }
+                        .font(.subheadline.weight(.semibold))
+                        .disabled(viewModel.newParticipantName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                .padding(.horizontal, 14)
+                .frame(minHeight: 52)
+                .background(AppColors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+                        .foregroundStyle(AppColors.textSecondary)
+                )
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Catatan Opsional")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textSecondary)
+                TextField("Tambahkan catatan jika diperlukan", text: Binding(
+                    get: { viewModel.draft?.notes ?? "" },
+                    set: { viewModel.updateNotes($0) }
+                ), axis: .vertical)
+                .lineLimit(1...3)
+                .textFieldStyle(.plain)
+                .font(.subheadline)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 10)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
         }
     }
 
     private func splitParticipantsSection(_ draft: TransactionDraft) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(draft.participants) { participant in
-                HStack {
-                    Text(participant.name)
-                    Spacer()
-                    Text(participant.shareAmount.rupiahFormatted).fontWeight(.semibold)
-                }
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Pembagian Nominal")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(AppColors.textPrimary)
+
+            Picker("Metode Pembagian", selection: Binding(
+                get: { viewModel.draft?.splitMethod ?? .equal },
+                set: { viewModel.updateSplitMethod($0) }
+            )) {
+                Text("Sama Rata").tag(SplitMethod.equal)
+                Text("Custom Nominal").tag(SplitMethod.custom)
             }
-            Divider()
-            HStack { Text("Total").fontWeight(.bold); Spacer(); Text(draft.totalAmount.rupiahFormatted).fontWeight(.bold) }
+            .pickerStyle(.segmented)
+
+            Text(draft.splitMethod == .custom
+                ? "Atur nominal setiap orang. Isi 0 jika tidak ikut."
+                : "Pilih siapa saja yang ikut dalam pembagian sama rata.")
+                .font(.caption)
+                .foregroundStyle(AppColors.textSecondary)
+
+            splitUserRow(draft)
+
+            ForEach(Array(draft.participants.enumerated()), id: \.element.id) { index, participant in
+                splitFriendRow(index: index, participant: participant, method: draft.splitMethod ?? .equal)
+            }
+
+            Divider().overlay(AppColors.border)
+
+            HStack {
+                Text("Total Pembagian")
+                    .fontWeight(.semibold)
+                Spacer()
+                Text(viewModel.splitAllocatedAmount.rupiahFormatted)
+                    .fontWeight(.bold)
+                    .foregroundStyle(viewModel.splitRemainingAmount == 0 ? Color.green : AppColors.destructive)
+            }
+
+            if viewModel.splitRemainingAmount == 0 {
+                Label("Sudah sesuai dengan total transaksi", systemImage: "checkmark.circle.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.green)
+            } else {
+                let difference = abs(viewModel.splitRemainingAmount)
+                Label(
+                    viewModel.splitRemainingAmount > 0
+                        ? "Masih ada \(difference.rupiahFormatted) yang belum dibagi"
+                        : "Pembagian melebihi total sebesar \(difference.rupiahFormatted)",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppColors.destructive)
+            }
+
+            HStack {
+                Text("Total Transaksi")
+                Spacer()
+                Text(draft.totalAmount.rupiahFormatted).fontWeight(.bold)
+            }
         }
         .padding(16)
         .background(AppColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
+    private func splitUserRow(_ draft: TransactionDraft) -> some View {
+        let method = draft.splitMethod ?? .equal
+        let isIncluded = viewModel.userShareAmount > 0
+        return HStack(spacing: AppSpacing.medium) {
+            if method == .equal {
+                Button { viewModel.toggleUserIncluded() } label: {
+                    Image(systemName: isIncluded ? "checkmark.circle.fill" : "circle")
+                        .font(.title3)
+                        .foregroundStyle(isIncluded ? AppColors.accent : AppColors.textSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text("Kamu").font(.body.weight(.bold))
+                    Text("PEMBAYAR")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(AppColors.accent)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(AppColors.accent.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                Text(isIncluded ? "Ikut pembagian" : "Tidak ikut pembagian")
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            Spacer()
+            splitAmountEditor(
+                amount: viewModel.userShareAmount,
+                isEditable: method == .custom,
+                onChange: viewModel.updateUserShare
+            )
+        }
+        .padding(12)
+        .background(AppColors.accent.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColors.accent.opacity(0.35)))
+    }
+
+    private func splitFriendRow(index: Int, participant: TransactionParticipant, method: SplitMethod) -> some View {
+        let isIncluded = participant.shareAmount > 0
+        return HStack(spacing: AppSpacing.medium) {
+            if method == .equal {
+                Button { viewModel.toggleParticipantIncluded(index: index) } label: {
+                    Image(systemName: isIncluded ? "checkmark.circle.fill" : "circle")
+                        .font(.title3)
+                        .foregroundStyle(isIncluded ? AppColors.accent : AppColors.textSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(participant.name).font(.body.weight(.semibold))
+                Text(isIncluded ? "Ikut pembagian" : "Tidak ikut pembagian")
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            Spacer()
+            splitAmountEditor(
+                amount: participant.shareAmount,
+                isEditable: method == .custom,
+                onChange: { viewModel.updateParticipantShare(index: index, amount: $0) }
+            )
+        }
+        .padding(.vertical, 8)
+        .opacity(isIncluded || method == .custom ? 1 : 0.55)
+    }
+
+    @ViewBuilder
+    private func splitAmountEditor(amount: Int64, isEditable: Bool, onChange: @escaping (Int64) -> Void) -> some View {
+        if isEditable {
+            HStack(spacing: 3) {
+                Text("Rp.").font(.caption.weight(.semibold))
+                TextField("0", value: Binding(get: { amount }, set: onChange), format: .number)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 92)
+            }
+            .font(.subheadline.weight(.semibold))
+            .padding(.horizontal, 8)
+            .frame(minHeight: 36)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        } else {
+            Text(amount.rupiahFormatted)
+                .font(.subheadline.weight(.semibold))
+        }
+    }
+
     private var actionSection: some View {
         VStack(spacing: 10) {
-            Button("Simpan Catatan") {
+            Button("Simpan ke Riwayat") {
                 if viewModel.isValid { Task { await viewModel.save() } } else { viewModel.showValidationMessage() }
             }
             .buttonStyle(AppPrimaryButtonStyle())
             .disabled(viewModel.isSaving)
-            Button("Hapus catatan ini", role: .destructive) { confirmsDeletion = true }
+            Button("Hapus Draf Review", role: .destructive) { confirmsDeletion = true }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private var autosaveNotice: some View {
+        HStack(alignment: .top, spacing: AppSpacing.small) {
+            Image(systemName: viewModel.autosaveErrorMessage == nil ? "checkmark.icloud.fill" : "exclamationmark.icloud.fill")
+                .foregroundStyle(viewModel.autosaveErrorMessage == nil ? Color.green : AppColors.destructive)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(viewModel.isAutosaving ? "Menyimpan perubahan..." : "Tersimpan otomatis sebagai draf")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(viewModel.autosaveErrorMessage == nil ? AppColors.textPrimary : AppColors.destructive)
+                Text(viewModel.autosaveErrorMessage
+                    ?? "Kamu bisa menutup aplikasi dan melanjutkan review ini nanti dari halaman Draf.")
+                    .font(.caption)
+                    .foregroundStyle(viewModel.autosaveErrorMessage == nil ? AppColors.textSecondary : AppColors.destructive)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            (viewModel.autosaveErrorMessage == nil ? Color.green : AppColors.destructive)
+                .opacity(0.08)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     @ViewBuilder

@@ -18,15 +18,24 @@ enum DraftValidator {
         guard !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DraftValidationError.invalid("Judul transaksi belum diisi.")
         }
-        guard !draft.participants.isEmpty else {
+        let relevantParticipants = draft.flow == .splitBill
+            ? draft.participants.filter { $0.shareAmount > 0 }
+            : draft.participants
+        guard !relevantParticipants.isEmpty else {
             throw DraftValidationError.invalid("Nama orang yang terkait belum diisi.")
         }
-        let names = draft.participants.map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let names = relevantParticipants.map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }
         guard names.allSatisfy({ !$0.isEmpty }) else {
             throw DraftValidationError.invalid("Ada nama orang yang masih kosong.")
         }
         guard Set(names.map { $0.lowercased() }).count == names.count else {
             throw DraftValidationError.invalid("Ada nama orang yang sama dalam satu transaksi.")
+        }
+        guard relevantParticipants.allSatisfy({
+            guard let identifier = $0.contactIdentifier else { return false }
+            return !identifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }) else {
+            throw DraftValidationError.invalid("Hubungkan setiap orang ke Kontak sebelum menyimpan.")
         }
 
         switch draft.flow {
@@ -41,15 +50,12 @@ enum DraftValidator {
             guard draft.type == .splitBill else {
                 throw DraftValidationError.invalid("Jenis transaksi split bill tidak valid.")
             }
-            guard draft.participants.allSatisfy({ $0.shareAmount > 0 }) else {
-                throw DraftValidationError.invalid("Nominal bagian setiap teman harus lebih dari Rp0.")
-            }
-            let allocated = draft.participants.reduce(Int64(0)) { partial, participant in
+            let allocated = relevantParticipants.reduce(max(0, draft.userShareAmount ?? 0)) { partial, participant in
                 let (sum, overflow) = partial.addingReportingOverflow(participant.shareAmount)
                 return overflow ? Int64.max : sum
             }
-            guard allocated <= draft.totalAmount else {
-                throw DraftValidationError.invalid("Total bagian teman melebihi nominal transaksi.")
+            guard allocated == draft.totalAmount else {
+                throw DraftValidationError.invalid("Jumlah pembagian harus sama dengan total transaksi.")
             }
         }
     }
