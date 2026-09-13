@@ -117,8 +117,8 @@ Requirements:
 
 Files:
 
-- `ReviewDraftView.swift`
-- `ReviewDraftViewModel.swift`
+- `ReviewView.swift`
+- `ReviewViewModel.swift`
 - `ParticipantEditor.swift`
 - contact picker/resolution service in a later slice
 
