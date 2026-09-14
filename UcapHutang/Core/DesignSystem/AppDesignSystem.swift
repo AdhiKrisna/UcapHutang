@@ -12,6 +12,8 @@ enum AppColors {
     static let warning = Color.orange
     static let destructive = Color.red
     static let border = Color.secondary.opacity(0.22)
+    /// Asset color: Light #FFF5E0, Dark #3A3222.
+    static let reminderButtonBackground = Color("ReminderButtonBackground")
 }
 
 enum AppSpacing {
@@ -27,17 +29,6 @@ enum AppRadius {
     static let small: CGFloat = 10
     static let medium: CGFloat = 16
     static let large: CGFloat = 24
-}
-
-struct AppPrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .frame(maxWidth: .infinity, minHeight: 52)
-            .foregroundStyle(.white)
-            .background(AppColors.accent.opacity(configuration.isPressed ? 0.72 : 1))
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
-    }
 }
 
 struct AppSectionCard<Content: View>: View {
@@ -76,5 +67,6 @@ struct AppFilterChip: View {
             .background(isSelected ? AppColors.surface : Color.clear)
             .clipShape(Capsule())
             .overlay(Capsule().stroke(AppColors.border))
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

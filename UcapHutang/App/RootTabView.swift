@@ -1,65 +1,83 @@
 import SwiftUI
-import Combine
 
 struct IdentifiableUUID: Identifiable, Equatable {
     let id: UUID
     init(_ id: UUID) { self.id = id }
 }
 
-enum AppTab: Hashable {
-    case draft
-    case capture
-    case ledger
-}
-
 struct RootTabView: View {
-    @EnvironmentObject private var container: AppContainer
-    @AppStorage("hasAskedAboutCatatWidget") private var hasAskedAboutCatatWidget = false
-    @State private var selectedTab: AppTab = .draft
-    @State private var reviewDraftItem: IdentifiableUUID?
-    @State private var selectedCaptureFlow: CaptureFlow?
-    @State private var showsWidgetPrompt = false
-    @State private var showsWidgetInstructions = false
+    @Environment(AppContainer.self) private var container
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(WidgetPrompt.hasAskedKey) private var hasAskedAboutCatatWidget = false
+    @State private var pendingReviewCount = 0
+    @State private var isShowingSettings = false
+    @State private var isShowingNotificationPrimer = false
+    @State private var isShowingWidgetPrompt = false
+    @State private var isShowingWidgetInstructions = false
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            DraftListView(repository: container.repository) { draftID in
-                reviewDraftItem = IdentifiableUUID(draftID)
-            }
-            .tabItem {
-                Label("Draft", systemImage: "exclamationmark.triangle")
-            }
-            .tag(AppTab.draft)
+        @Bindable var router = container.router
 
-            CatatFlowChooserView { flow in
-                selectedCaptureFlow = flow
+        TabView(selection: $router.selectedTab) {
+            Tab("Review", systemImage: "doc.badge.clock", value: AppTab.review) {
+                ReviewListView(
+                    repository: container.repository,
+                    contacts: container.contacts,
+                    onOpenSettings: { isShowingSettings = true }
+                )
             }
-            .tabItem {
-                Label("Catat", systemImage: "mic.fill")
-            }
-            .tag(AppTab.capture)
+            .badge(pendingReviewCount)
 
-            LedgerListView(repository: container.repository)
-                .tabItem {
-                    Label("Riwayat", systemImage: "book.closed")
-                }
-                .tag(AppTab.ledger)
-        }
-        .sheet(item: $reviewDraftItem) { item in
-            NavigationStack {
-                ReviewView(draftID: item.id, repository: container.repository)
+            Tab("Catat", systemImage: "mic.fill", value: AppTab.capture) {
+                CatatFlowChooserView(router: container.router, container: container)
+            }
+
+            Tab("Riwayat", systemImage: "book.closed", value: AppTab.ledger) {
+                LedgerListView(repository: container.repository, contacts: container.contacts)
             }
         }
-        .sheet(item: $selectedCaptureFlow) { flow in
-            CatatView(flow: flow, container: container)
+        .sensoryFeedback(.success, trigger: container.router.savedBannerID) { _, newValue in
+            newValue != nil
         }
-        .sheet(isPresented: $showsWidgetInstructions) {
+        .task {
+            await refreshPendingReviewCount()
+            isShowingNotificationPrimer = await NotificationPrimerViewModel.shouldShow(
+                scheduler: container.reminderScheduler,
+                settingsStore: container.reminderSettings
+            )
+            presentWidgetPromptIfNeeded()
+            await container.reminderScheduler.sync()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .transactionRepositoryDidChange)) { _ in
+            Task {
+                await refreshPendingReviewCount()
+                await container.reminderScheduler.sync()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                Task { await container.reminderScheduler.sync() }
+            }
+        }
+        .onOpenURL { url in
+            guard let link = AppDeepLink(url: url) else { return }
+            // Close anything covering the tabs so the Catat chooser is actually visible.
+            isShowingSettings = false
+            container.router.open(link)
+        }
+        .sheet(isPresented: $isShowingSettings) {
+            PengaturanView(scheduler: container.reminderScheduler, settingsStore: container.reminderSettings)
+        }
+        .sheet(isPresented: $isShowingWidgetInstructions) {
             WidgetSetupInstructionsView()
         }
-        .alert("Catat lebih cepat dengan Widget?", isPresented: $showsWidgetPrompt) {
+        .fullScreenCover(isPresented: $isShowingNotificationPrimer, onDismiss: presentWidgetPromptIfNeeded) {
+            NotificationPrimerView(scheduler: container.reminderScheduler, settingsStore: container.reminderSettings)
+        }
+        .alert("Catat lebih cepat dengan Widget?", isPresented: $isShowingWidgetPrompt) {
             Button("Ya, Mau") {
                 hasAskedAboutCatatWidget = true
-                showsWidgetInstructions = true
+                isShowingWidgetInstructions = true
             }
             Button("Nanti Saja", role: .cancel) {
                 hasAskedAboutCatatWidget = true
@@ -67,66 +85,17 @@ struct RootTabView: View {
         } message: {
             Text("Apakah kamu mau memakai widget untuk mencatat utang, piutang, atau Split Bill secara instan dari Home Screen?")
         }
-        .task {
-            guard !hasAskedAboutCatatWidget else { return }
-            showsWidgetPrompt = true
-        }
-        .onOpenURL { url in
-            guard AppDeepLink(url: url) == .catatChooser else { return }
-            selectedCaptureFlow = nil
-            selectedTab = .capture
-        }
-    }
-}
-
-private struct WidgetSetupInstructionsView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
-                Image(systemName: "rectangle.3.group.bubble.left.fill")
-                    .font(.system(size: 52))
-                    .foregroundStyle(AppColors.accent)
-
-                VStack(alignment: .leading, spacing: AppSpacing.small) {
-                    Text("Tambahkan Widget UcapHutang")
-                        .font(.title2.weight(.bold))
-                    Text("iOS mengharuskan widget ditambahkan sendiri dari Home Screen. Setelah dipasang, sekali tap akan langsung membuka tab Catat untuk memilih Utang/Piutang atau Split Bill.")
-                        .foregroundStyle(AppColors.textSecondary)
-                }
-
-                VStack(alignment: .leading, spacing: AppSpacing.medium) {
-                    instruction(number: 1, text: "Tekan dan tahan area kosong di Home Screen.")
-                    instruction(number: 2, text: "Pilih Edit, lalu Tambah Widget.")
-                    instruction(number: 3, text: "Cari UcapHutang dan pilih widget Catat Cepat.")
-                    instruction(number: 4, text: "Tambahkan widget ke Home Screen.")
-                }
-
-                Spacer()
-
-                Button("Mengerti") { dismiss() }
-                    .buttonStyle(AppPrimaryButtonStyle())
-            }
-            .padding(24)
-            .background(AppColors.background)
-            .navigationTitle("Widget Catat Cepat")
-            .navigationBarTitleDisplayMode(.inline)
-        }
-        .presentationDetents([.medium, .large])
     }
 
-    private func instruction(number: Int, text: String) -> some View {
-        HStack(alignment: .top, spacing: AppSpacing.medium) {
-            Text("\(number)")
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(.white)
-                .frame(width: 28, height: 28)
-                .background(AppColors.accent)
-                .clipShape(Circle())
-            Text(text)
-                .foregroundStyle(AppColors.textPrimary)
-                .padding(.top, 3)
-        }
+    private func refreshPendingReviewCount() async {
+        pendingReviewCount = (try? await container.repository.pendingDraftCount()) ?? 0
+    }
+
+    /// Called at launch and again when the notification primer closes.
+    private func presentWidgetPromptIfNeeded() {
+        isShowingWidgetPrompt = WidgetPrompt.shouldPresent(
+            hasAsked: hasAskedAboutCatatWidget,
+            isShowingNotificationPrimer: isShowingNotificationPrimer
+        )
     }
 }

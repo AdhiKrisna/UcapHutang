@@ -8,8 +8,32 @@ enum CaptureFlow: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .personal: "Hutang Personal"
+        case .personal: "Utang / Piutang"
         case .splitBill: "Split Bill"
+        }
+    }
+
+    /// SF Symbol shown on the flow-chooser tile.
+    var icon: String {
+        switch self {
+        case .personal: "person.2"
+        case .splitBill: "person.3.fill"
+        }
+    }
+
+    /// The recording screen's subtitle, directly under the flow title.
+    var subtitle: String {
+        switch self {
+        case .personal: "Catat utang atau piutang personal dengan satu orang"
+        case .splitBill: "Catat patungan/bagi rata makan atau belanja bareng"
+        }
+    }
+
+    /// Baked into the chooser tile, and shown as the recording screen's "Contoh Ucapan".
+    var exampleUcapan: String {
+        switch self {
+        case .personal: "Dito pinjam 50 ribu buat beli bensin"
+        case .splitBill: "Split bill makan 100 ribu sama Satria dan Arif bagi rata"
         }
     }
 }
@@ -33,7 +57,6 @@ enum TransactionType: String, Codable, CaseIterable, Sendable {
 enum DraftStatus: String, Codable, Sendable {
     case needsReview
     case confirmed
-    case discarded
 }
 
 enum SplitMethod: String, Codable, CaseIterable, Sendable {
@@ -61,8 +84,9 @@ struct TransactionDraft: Identifiable, Codable, Hashable, Sendable {
     var title: String
     var totalAmount: Int64
     var splitMethod: SplitMethod?
+    /// Split Bill + equal method only: whether the user also takes a share.
+    var includesUser: Bool = true
     var participants: [TransactionParticipant]
-    var userShareAmount: Int64? = nil
     var notes: String?
     var rawTranscript: String
     var rawModelResponse: String?
@@ -85,6 +109,8 @@ struct LedgerEntry: Identifiable, Codable, Hashable, Sendable {
     var title: String
     var notes: String?
     var sourceDraftID: UUID?
+    /// `nil` for legacy people that were saved before contact linking became mandatory.
+    var contactIdentifier: String?
 }
 
 struct PersonLedgerSummary: Identifiable, Hashable, Sendable {
@@ -93,10 +119,7 @@ struct PersonLedgerSummary: Identifiable, Hashable, Sendable {
     var balance: Int64
     var entryCount: Int
     var lastActivity: Date
-}
+    var contactIdentifier: String?
 
-extension Int64 {
-    var rupiahFormatted: String {
-        "Rp. " + formatted(.number.locale(Locale(identifier: "id_ID")).precision(.fractionLength(0)))
-    }
+    var isLinked: Bool { contactIdentifier != nil }
 }

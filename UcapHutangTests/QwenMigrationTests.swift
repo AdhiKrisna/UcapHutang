@@ -73,15 +73,12 @@ final class QwenMigrationTests: XCTestCase {
     }
 
     func testSplitDecoderExtractsAdjacentNamesAndEqualShares() async throws {
-        let service = HybridQwenExtractionService(
+        let service = QwenDraftExtractionService(
             llmClient: StubLLMClient(output: "{\"basis\":\"equal\",\"title\":\"tiket konser\",\"total_amount\":800000,\"split_count\":4,\"includes_user\":true,\"receivables\":[{\"person\":\"Satria\",\"item\":null,\"amount\":null},{\"person\":\"Arif\",\"item\":null,\"amount\":null},{\"person\":\"Ros\",\"item\":null,\"amount\":null}],\"notes\":null,\"transaction_time\":{\"day\":null,\"month\":null,\"year\":null,\"hour\":null,\"minute\":null}}")
         )
-        let draft = try await service.extract(
-            DraftExtractionRequest(
-                flow: .splitBill,
-                transcript: "Gua beli tiket konser nalangin Satria Arif dan Ros totalnya 800.000"
-            )
-        )
+        let transcript = "Gua beli tiket konser nalangin Satria Arif dan Ros totalnya 800.000"
+        let result = try await service.extract(flow: .splitBill, transcript: transcript, referenceDate: Date())
+        let draft = DraftMapper.makeDraft(flow: .splitBill, transcript: transcript, result: result, createdAt: Date())
         XCTAssertEqual(draft.type, .splitBill)
         XCTAssertEqual(draft.totalAmount, 800_000)
         XCTAssertEqual(draft.participants.map(\.name), ["Satria", "Arif", "Ros"])
@@ -89,10 +86,10 @@ final class QwenMigrationTests: XCTestCase {
     }
 
     func testInvalidModelOutputFallsBackToModePreservingDraftWithWarning() async throws {
-        let service = HybridQwenExtractionService(llmClient: StubLLMClient(output: "not json"))
-        let draft = try await service.extract(
-            DraftExtractionRequest(flow: .personal, transcript: "catat ini dulu")
-        )
+        let service = QwenDraftExtractionService(llmClient: StubLLMClient(output: "not json"))
+        let transcript = "catat ini dulu"
+        let result = try await service.extract(flow: .personal, transcript: transcript, referenceDate: Date())
+        let draft = DraftMapper.makeDraft(flow: .personal, transcript: transcript, result: result, createdAt: Date())
         XCTAssertEqual(draft.flow, .personal)
         XCTAssertEqual(draft.type, .unknown)
         XCTAssertEqual(draft.participants.first?.name, "")

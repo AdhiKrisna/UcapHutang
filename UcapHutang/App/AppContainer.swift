@@ -1,71 +1,85 @@
 import Foundation
-import Combine
+import Observation
 import SwiftData
 
-@MainActor
-final class AppContainer: ObservableObject {
+@Observable
+final class AppContainer {
     let repository: any TransactionRepository
-    let extractionService: any DraftExtractionService
+    let extraction: any DraftExtracting
+    let capture: any VoiceCapturing
+    let contacts: any ContactsProviding
+    let reminderSettings: any ReminderSettingsStore
+    let reminderScheduler: any ReminderScheduling
+    let router: AppRouter
+    let makeSpeechTranscriber: @MainActor () -> any SpeechTranscribing
     let storageErrorMessage: String?
 
     init(
         repository: any TransactionRepository,
-        extractionService: any DraftExtractionService,
+        extraction: any DraftExtracting,
+        contacts: any ContactsProviding,
+        reminderSettings: any ReminderSettingsStore,
+        reminderScheduler: any ReminderScheduling,
+        router: AppRouter = AppRouter(),
+        makeSpeechTranscriber: @escaping @MainActor () -> any SpeechTranscribing = { SpeechRecognizer() },
         storageErrorMessage: String? = nil
     ) {
         self.repository = repository
-        self.extractionService = extractionService
+        self.extraction = extraction
+        self.capture = VoiceCapturePipeline(extraction: extraction, repository: repository)
+        self.contacts = contacts
+        self.reminderSettings = reminderSettings
+        self.reminderScheduler = reminderScheduler
+        self.router = router
+        self.makeSpeechTranscriber = makeSpeechTranscriber
         self.storageErrorMessage = storageErrorMessage
     }
 
     static func makeDefault() -> AppContainer {
+        let schema = Schema(versionedSchema: SchemaV2.self)
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let contacts = SystemContactsProvider()
+        let extraction = QwenDraftExtractionService(llmClient: MLXQwenClient())
+        let reminderSettings = UserDefaultsReminderSettingsStore()
+        let notificationCenter = SystemNotificationCenterClient()
         do {
-            let schema = Schema([
-                SDTransactionParticipant.self,
-                SDTransactionDraft.self,
-                SDLedgerEntry.self
-            ])
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            let container = try ModelContainer(for: schema, configurations: config)
+            let container = try ModelContainer(
+                for: schema,
+                migrationPlan: UcapHutangMigrationPlan.self,
+                configurations: config
+            )
             let repo = SwiftDataTransactionRepository(modelContainer: container)
-            let extraction = HybridQwenExtractionService(llmClient: MLXQwenClient())
-            return AppContainer(repository: repo, extractionService: extraction)
+            return AppContainer(
+                repository: repo,
+                extraction: extraction,
+                contacts: contacts,
+                reminderSettings: reminderSettings,
+                reminderScheduler: ReviewReminderScheduler(
+                    center: notificationCenter,
+                    settingsStore: reminderSettings,
+                    repository: repo
+                )
+            )
         } catch {
             let fallbackRepo = InMemoryTransactionRepository()
-            let extraction = HybridQwenExtractionService(llmClient: MLXQwenClient())
-            let message = "Penyimpanan lokal tidak dapat dibuka. Demi mencegah kehilangan data, pencatatan dinonaktifkan sementara. Tutup lalu buka kembali aplikasi. Detail: \(error.localizedDescription)"
+            // SwiftData has no migration-specific error type. If a store file already exists,
+            // the failure happened while opening/migrating existing data.
+            let storeExists = FileManager.default.fileExists(atPath: config.url.path)
+            let message = storeExists
+                ? "Migrasi data ke versi terbaru gagal. Demi mencegah kehilangan data, pencatatan dinonaktifkan sementara. Tutup lalu buka kembali aplikasi. Detail: \(error.localizedDescription)"
+                : "Penyimpanan lokal tidak dapat dibuka. Demi mencegah kehilangan data, pencatatan dinonaktifkan sementara. Tutup lalu buka kembali aplikasi. Detail: \(error.localizedDescription)"
             return AppContainer(
                 repository: fallbackRepo,
-                extractionService: extraction,
+                extraction: extraction,
+                contacts: contacts,
+                reminderSettings: reminderSettings,
+                reminderScheduler: ReviewReminderScheduler(
+                    center: notificationCenter,
+                    settingsStore: reminderSettings,
+                    repository: fallbackRepo
+                ),
                 storageErrorMessage: message
             )
         }
     }
-}
-
-enum PreviewData {
-    static let drafts: [TransactionDraft] = [
-        TransactionDraft(
-            flow: .personal,
-            type: .piutang,
-            title: "Makan siang",
-            totalAmount: 150_000,
-            participants: [TransactionParticipant(name: "Dito", shareAmount: 150_000)],
-            notes: "Pinjam buat makan siang",
-            rawTranscript: "Dito pinjam seratus lima puluh ribu buat makan siang"
-        ),
-        TransactionDraft(
-            flow: .splitBill,
-            type: .splitBill,
-            title: "Makan malam",
-            totalAmount: 300_000,
-            splitMethod: .equal,
-            participants: [
-                TransactionParticipant(name: "Orang A", shareAmount: 100_000),
-                TransactionParticipant(name: "Orang B", shareAmount: 100_000)
-            ],
-            notes: "Bagi rata termasuk saya",
-            rawTranscript: "Aku bayarin makan malam bertiga sama Orang A dan Orang B total tiga ratus ribu"
-        )
-    ]
 }
