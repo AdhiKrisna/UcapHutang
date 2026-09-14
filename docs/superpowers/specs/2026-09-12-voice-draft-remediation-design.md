@@ -450,7 +450,7 @@ Re-entrancy and cancellation guards currently in `CatatViewModel` (active reques
 
 ### 7.4 Catat screen behavior
 
-- Model readiness gate on the flow chooser stays.
+- Model readiness gate on the flow chooser stays, but silently: disabled tiles show no status text, banner, or caption. Amended 2026-09-14 — see `docs/superpowers/specs/2026-09-14-catat-ui-ux-design.md` §7.
 - Recording screen: accessible record/stop `Button` (label "Mulai merekam"/"Berhenti merekam", value = state), "Ulangi", live transcript, progress while finalizing/processing.
 - If `usesOnDeviceRecognition == false`: footnote "Ucapan diproses oleh server Apple."
 - Permission denied: inline message + "Buka Pengaturan" (`UIApplication.openSettingsURLString`).

@@ -87,87 +87,119 @@ struct ReviewDetailView: View {
 
     private func form(_ draft: TransactionDraft) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: AppSpacing.large) {
                 autosaveStatus
 
-                field("Waktu") {
-                    DatePicker(
-                        "Waktu",
-                        selection: Binding(
-                            get: { viewModel.draft?.transactionDate ?? Date() },
-                            set: { viewModel.setTransactionDate($0) }
-                        ),
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
-                    .labelsHidden()
-                    .environment(\.locale, Locale(identifier: "id_ID"))
-                }
+                VStack(alignment: .leading, spacing: AppSpacing.medium) {
+                    field("Waktu Transaksi") {
+                        HStack {
+                            Image(systemName: "calendar")
+                                .foregroundStyle(AppColors.accent)
+                                .font(.body.weight(.medium))
 
-                field("Nominal") {
-                    if viewModel.isCustomSplit {
-                        Text(draft.totalAmount.rupiahFormatted)
-                            .font(.body.weight(.semibold))
-                    } else {
+                            DatePicker(
+                                "Waktu",
+                                selection: Binding(
+                                    get: { viewModel.draft?.transactionDate ?? Date() },
+                                    set: { viewModel.setTransactionDate($0) }
+                                ),
+                                displayedComponents: [.date, .hourAndMinute]
+                            )
+                            .labelsHidden()
+                            .environment(\.locale, Locale(identifier: "id_ID"))
+                        }
+                        .padding(.horizontal, AppSpacing.medium)
+                        .frame(minHeight: 48)
+                        .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
+                    }
+
+                    field("Nominal") {
+                        if viewModel.isCustomSplit {
+                            HStack {
+                                Text("Rp")
+                                    .font(.headline.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                                Text(draft.totalAmount.rupiahFormatted.replacingOccurrences(of: "Rp", with: "").trimmingCharacters(in: .whitespaces))
+                                    .font(.title3.weight(.bold))
+                                    .foregroundStyle(AppColors.textPrimary)
+                            }
+                            .padding(.horizontal, AppSpacing.large)
+                            .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+                            .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
+                        } else {
+                            HStack {
+                                Text("Rp")
+                                    .font(.headline.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                                TextField(
+                                    "0",
+                                    value: Binding(
+                                        get: { viewModel.draft?.totalAmount ?? 0 },
+                                        set: { viewModel.setTotalAmount($0) }
+                                    ),
+                                    format: .number
+                                )
+                                .keyboardType(.numberPad)
+                                .font(.title3.weight(.bold))
+                                .frame(minHeight: 52)
+                            }
+                            .padding(.horizontal, AppSpacing.large)
+                            .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
+                        }
+                    }
+
+                    field("Deskripsi") {
                         TextField(
-                            "Nominal",
-                            value: Binding(
-                                get: { viewModel.draft?.totalAmount ?? 0 },
-                                set: { viewModel.setTotalAmount($0) }
-                            ),
-                            format: .number
+                            "Deskripsi transaksi",
+                            text: Binding(
+                                get: { viewModel.draft?.title ?? "" },
+                                set: { viewModel.setTitle($0) }
+                            )
                         )
-                        .keyboardType(.numberPad)
-                        .font(.body.weight(.semibold))
-                        .frame(minHeight: 44)
+                        .font(.body.weight(.medium))
+                        .padding(.horizontal, AppSpacing.large)
+                        .frame(minHeight: 48)
+                        .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
                     }
-                }
 
-                field("Deskripsi") {
-                    TextField(
-                        "Deskripsi transaksi",
-                        text: Binding(
-                            get: { viewModel.draft?.title ?? "" },
-                            set: { viewModel.setTitle($0) }
-                        )
-                    )
-                    .font(.body.weight(.semibold))
-                    .frame(minHeight: 44)
-                }
-
-                if draft.flow == .personal {
-                    field("Jenis") {
-                        Picker("Jenis", selection: Binding(
-                            get: { viewModel.draft?.type ?? .unknown },
-                            set: { viewModel.setType($0) }
-                        )) {
-                            Text("Utang").tag(TransactionType.hutang)
-                            Text("Piutang").tag(TransactionType.piutang)
+                    if draft.flow == .personal {
+                        field("Jenis Transaksi") {
+                            Picker("Jenis", selection: Binding(
+                                get: { viewModel.draft?.type ?? .unknown },
+                                set: { viewModel.setType($0) }
+                            )) {
+                                Text("Utang").tag(TransactionType.hutang)
+                                Text("Piutang").tag(TransactionType.piutang)
+                            }
+                            .pickerStyle(.segmented)
                         }
-                        .pickerStyle(.segmented)
-                    }
-                } else {
-                    field("Metode bagi") {
-                        Picker("Metode bagi", selection: Binding(
-                            get: { viewModel.draft?.splitMethod ?? .equal },
-                            set: { viewModel.setSplitMethod($0) }
-                        )) {
-                            Text("Bagi Rata").tag(SplitMethod.equal)
-                            Text("Custom").tag(SplitMethod.custom)
+                    } else {
+                        field("Metode Bagi") {
+                            Picker("Metode bagi", selection: Binding(
+                                get: { viewModel.draft?.splitMethod ?? .equal },
+                                set: { viewModel.setSplitMethod($0) }
+                            )) {
+                                Text("Bagi Rata").tag(SplitMethod.equal)
+                                Text("Custom").tag(SplitMethod.custom)
+                            }
+                            .pickerStyle(.segmented)
                         }
-                        .pickerStyle(.segmented)
-                    }
-                    if !viewModel.isCustomSplit {
-                        Toggle("Saya ikut dihitung", isOn: Binding(
-                            get: { viewModel.draft?.includesUser ?? true },
-                            set: { viewModel.setIncludesUser($0) }
-                        ))
-                        .font(.body)
+                        if !viewModel.isCustomSplit {
+                            Toggle("Saya ikut dihitung", isOn: Binding(
+                                get: { viewModel.draft?.includesUser ?? true },
+                                set: { viewModel.setIncludesUser($0) }
+                            ))
+                            .font(.body.weight(.medium))
+                            .padding(.horizontal, AppSpacing.large)
+                            .frame(minHeight: 48)
+                            .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
+                        }
                     }
                 }
 
                 peopleSection(draft)
 
-                field("Catatan Opsional") {
+                field("Catatan Tambahan (Opsional)") {
                     TextField(
                         "Tambahkan catatan jika diperlukan",
                         text: Binding(
@@ -176,8 +208,11 @@ struct ReviewDetailView: View {
                         ),
                         axis: .vertical
                     )
+                    .font(.body)
                     .lineLimit(1...3)
-                    .frame(minHeight: 44)
+                    .padding(AppSpacing.medium)
+                    .frame(minHeight: 48)
+                    .background(AppColors.surface, in: .rect(cornerRadius: AppRadius.small))
                 }
 
                 if draft.flow == .splitBill {
@@ -186,9 +221,10 @@ struct ReviewDetailView: View {
 
                 actions
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
+            .padding(.horizontal, AppSpacing.xLarge)
+            .padding(.vertical, AppSpacing.large)
         }
+        .background(AppColors.background)
         .scrollDismissesKeyboard(.interactively)
     }
 
@@ -231,10 +267,11 @@ struct ReviewDetailView: View {
     }
 
     private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
             Text(label)
-                .font(.subheadline)
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
+                .textCase(.uppercase)
             content()
         }
     }

@@ -12,6 +12,30 @@ enum CaptureFlow: String, Codable, CaseIterable, Identifiable, Sendable {
         case .splitBill: "Split Bill"
         }
     }
+
+    /// SF Symbol shown on the flow-chooser tile.
+    var icon: String {
+        switch self {
+        case .personal: "person.2"
+        case .splitBill: "person.3.fill"
+        }
+    }
+
+    /// The recording screen's subtitle, directly under the flow title.
+    var subtitle: String {
+        switch self {
+        case .personal: "Catat utang atau piutang personal dengan satu orang"
+        case .splitBill: "Catat patungan/bagi rata makan atau belanja bareng"
+        }
+    }
+
+    /// Baked into the chooser tile, and shown as the recording screen's "Contoh Ucapan".
+    var exampleUcapan: String {
+        switch self {
+        case .personal: "Dito pinjam 50 ribu buat beli bensin"
+        case .splitBill: "Split bill makan 100 ribu sama Satria dan Arif bagi rata"
+        }
+    }
 }
 
 enum TransactionType: String, Codable, CaseIterable, Sendable {
