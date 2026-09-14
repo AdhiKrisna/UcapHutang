@@ -19,20 +19,6 @@ struct CatatFlowChooserView: View {
                 Text("Pilih jenis pencatatan")
                     .font(.largeTitle.weight(.semibold))
 
-                Label {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(readiness.title).font(.subheadline.weight(.semibold))
-                        Text(readiness.detail).font(.caption).foregroundStyle(AppColors.textSecondary)
-                    }
-                } icon: {
-                    Image(systemName: readiness == .ready ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                        .foregroundStyle(readiness == .ready ? Color.green : Color.orange)
-                }
-                .padding(AppSpacing.medium)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(AppColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium))
-
                 ForEach(CaptureFlow.allCases) { flow in
                     Button { selectedFlow = flow } label: {
                         HStack {
@@ -73,4 +59,20 @@ struct CatatFlowChooserView: View {
             .animation(reduceMotion ? nil : .default, value: router.savedBannerID)
         }
     }
+}
+
+#Preview("Catat Flow Chooser") {
+    let repo = InMemoryTransactionRepository()
+    let contacts = SystemContactsProvider()
+    let extraction = QwenDraftExtractionService()
+    let reminderSettings = UserDefaultsReminderSettingsStore()
+    let scheduler = ReviewReminderScheduler(center: SystemNotificationCenterClient(), settingsStore: reminderSettings, repository: repo)
+    let container = AppContainer(
+        repository: repo,
+        extraction: extraction,
+        contacts: contacts,
+        reminderSettings: reminderSettings,
+        reminderScheduler: scheduler
+    )
+    CatatFlowChooserView(router: container.router, container: container)
 }

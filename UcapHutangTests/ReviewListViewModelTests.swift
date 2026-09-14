@@ -19,7 +19,7 @@ final class ReviewListViewModelTests: XCTestCase {
         XCTAssertEqual(item.avatarInitials, [])
     }
 
-    func testPersonalDraftWithRealNameShowsSingleAvatarInitial() {
+    func testPersonalDraftWithRealNameShowsEmptyAvatarInitials() {
         let draft = TransactionDraft(
             flow: .personal,
             type: .piutang,
@@ -32,7 +32,7 @@ final class ReviewListViewModelTests: XCTestCase {
         let item = ReviewListViewModel.makeItem(from: draft, now: draft.createdAt)
 
         XCTAssertEqual(item.personName, "dito")
-        XCTAssertEqual(item.avatarInitials, ["D"])
+        XCTAssertEqual(item.avatarInitials, [])
     }
 
     func testMissingTitleAndNotesProducesEmptyDescriptionInsteadOfEmptyQuotes() {
@@ -63,7 +63,7 @@ final class ReviewListViewModelTests: XCTestCase {
 
         let item = ReviewListViewModel.makeItem(from: draft, now: draft.createdAt)
 
-        XCTAssertEqual(item.description, "“Bayar minggu depan”")
+        XCTAssertEqual(item.description, "Bayar minggu depan")
     }
 
     func testSplitDraftUsesRealCountAndInitialsFromRealNamesOnly() {

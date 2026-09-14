@@ -62,27 +62,26 @@ final class ReviewListViewModel {
             prefix = draft.type == .piutang ? "ke" : "dari"
             let name = draft.participants.first?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             personName = name.isEmpty ? "Belum ada nama" : name
-            if !name.isEmpty {
-                avatarInitials = [String(name.prefix(1)).uppercased()]
-            }
+            // Avatar initials are only shown for split bill; personal utang/piutang uses plain text name.
+            avatarInitials = []
         }
 
         let notes = draft.notes?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let description: String
         if !notes.isEmpty {
-            description = "“\(notes)”"
+            description = notes
         } else if !title.isEmpty {
-            description = "“\(title)”"
+            description = title
         } else {
             // No notes and no title: leave blank so the card can show a dedicated placeholder
-            // instead of an empty pair of quotation marks.
+            // instead of empty string.
             description = ""
         }
 
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
+        let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "id_ID")
+        formatter.dateFormat = "EEE, d MMM HH:mm"
 
         return ReviewItemUIModel(
             id: draft.id,
@@ -91,7 +90,7 @@ final class ReviewListViewModel {
             personName: personName,
             avatarInitials: avatarInitials,
             description: description,
-            relativeTime: formatter.localizedString(for: draft.createdAt, relativeTo: now),
+            relativeTime: formatter.string(from: draft.transactionDate),
             amount: draft.totalAmount,
             date: draft.transactionDate
         )

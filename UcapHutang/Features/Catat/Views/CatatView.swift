@@ -238,3 +238,39 @@ private struct SpeakingMicIcon: View {
             .onAppear { isSpeaking = true }
     }
 }
+
+#Preview("Catat View - Personal") {
+    let repo = InMemoryTransactionRepository()
+    let contacts = SystemContactsProvider()
+    let extraction = QwenDraftExtractionService()
+    let reminderSettings = UserDefaultsReminderSettingsStore()
+    let scheduler = ReviewReminderScheduler(center: SystemNotificationCenterClient(), settingsStore: reminderSettings, repository: repo)
+    let container = AppContainer(
+        repository: repo,
+        extraction: extraction,
+        contacts: contacts,
+        reminderSettings: reminderSettings,
+        reminderScheduler: scheduler
+    )
+    NavigationStack {
+        CatatView(flow: .personal, container: container)
+    }
+}
+
+#Preview("Catat View - Split Bill") {
+    let repo = InMemoryTransactionRepository()
+    let contacts = SystemContactsProvider()
+    let extraction = QwenDraftExtractionService()
+    let reminderSettings = UserDefaultsReminderSettingsStore()
+    let scheduler = ReviewReminderScheduler(center: SystemNotificationCenterClient(), settingsStore: reminderSettings, repository: repo)
+    let container = AppContainer(
+        repository: repo,
+        extraction: extraction,
+        contacts: contacts,
+        reminderSettings: reminderSettings,
+        reminderScheduler: scheduler
+    )
+    NavigationStack {
+        CatatView(flow: .splitBill, container: container)
+    }
+}

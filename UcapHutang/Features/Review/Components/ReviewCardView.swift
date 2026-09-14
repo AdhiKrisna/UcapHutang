@@ -10,21 +10,27 @@ struct ReviewCardView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.small + 2) {
-            // Baris 1: Tipe (berwarna + ikon) & Waktu Relatif
-            HStack(alignment: .firstTextBaseline) {
+        VStack(alignment: .leading, spacing: 10) {
+            // Baris 1: Badge Tipe & Waktu Relatif + Chevron
+            HStack(alignment: .center) {
                 typeBadge
 
                 Spacer(minLength: 8)
 
-                Text(item.relativeTime)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
+                HStack(spacing: 4) {
+                    Text(formatCardDate(item.relativeTime))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                        .accessibilityHidden(true)
+                }
             }
 
-            // Baris 2: Subjek / Nama Orang (Lebar Penuh)
-            HStack(alignment: .center, spacing: 8) {
+            // Baris 2: Subjek (ke Arif / ke 3 Orang) & Nominal (Rp. 15.000)
+            HStack(alignment: .center, spacing: 6) {
                 if !item.avatarInitials.isEmpty {
                     stackedAvatarsView
                         .accessibilityHidden(true)
@@ -37,40 +43,36 @@ struct ReviewCardView: View {
                 }
 
                 Text(item.personName)
-                    .font(.title3.weight(.bold))
+                    .font(.body.weight(.bold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
+
+                Spacer(minLength: 8)
+
+                Text(formatRupiahWithDot(item.amount))
+                    .font(.body.weight(.bold))
+                    .foregroundStyle(.primary)
             }
 
-            // Baris 3: Deskripsi & Nominal (Nominal di kanan bawah yang menonjol)
-            HStack(alignment: .bottom, spacing: 12) {
-                Group {
-                    if item.description.isEmpty {
-                        Text("Tidak ada deskripsi")
-                            .foregroundStyle(.tertiary)
-                            .italic()
-                    } else {
-                        Text(item.description)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .font(.subheadline)
-                .lineLimit(2)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text(item.amount.rupiahFormatted)
-                    .font(.headline.weight(.bold))
+            // Baris 3: Deskripsi
+            if !item.description.isEmpty {
+                Text(item.description)
+                    .font(.body)
                     .foregroundStyle(.primary)
-                    .multilineTextAlignment(.trailing)
-                    .layoutPriority(1)
+                    .lineLimit(2)
             }
         }
         .padding(.horizontal, AppSpacing.large)
-        .padding(.vertical, AppSpacing.medium + 2)
+        .padding(.vertical, AppSpacing.large)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColors.surface)
+        .background(AppColors.background)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                .stroke(AppColors.border, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
         .accessibilityElement(children: .combine)
     }
 
@@ -81,7 +83,7 @@ struct ReviewCardView: View {
         case .hutang, .unknown:
             return "Utang"
         case .splitBill:
-            return "Split"
+            return "Splitbill"
         }
     }
 
@@ -104,43 +106,58 @@ struct ReviewCardView: View {
         case .hutang, .unknown:
             return AppColors.debt
         case .splitBill:
-            return AppColors.split
+            return AppColors.accent
         }
     }
 
     private var typeBadge: some View {
         HStack(spacing: 4) {
             Image(systemName: typeIcon)
-                .font(.caption.weight(.bold))
+                .font(.caption2.weight(.bold))
                 .accessibilityHidden(true)
             Text(typeLabel)
-                .font(.subheadline.weight(.semibold))
+                .font(.caption.weight(.bold))
         }
         .foregroundStyle(typeColor)
-        .padding(.horizontal, AppSpacing.small)
+        .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(typeColor.opacity(0.14), in: Capsule())
+        .background(typeColor.opacity(0.18), in: Capsule())
     }
 
     private var stackedAvatarsView: some View {
         HStack(spacing: -6) {
             ForEach(Array(item.avatarInitials.enumerated()), id: \.offset) { index, initial in
                 Circle()
-                    .fill(typeColor.opacity(0.16))
+                    .fill(Color(.systemGray4))
                     .frame(width: avatarSize, height: avatarSize)
                     .overlay(
                         Text(initial)
                             .font(.caption2.weight(.bold))
-                            .foregroundStyle(typeColor)
+                            .foregroundStyle(AppColors.textPrimary)
                     )
                     .overlay(
                         Circle()
-                            .stroke(AppColors.surface, lineWidth: 1.5)
+                            .stroke(AppColors.background, lineWidth: 1.5)
                     )
                     .zIndex(Double(item.avatarInitials.count - index))
             }
         }
         .padding(.trailing, 2)
+    }
+
+    private func formatCardDate(_ timeString: String) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "id_ID")
+        formatter.dateFormat = "EEEE, d MMM HH:mm"
+        return formatter.string(from: item.date)
+    }
+
+    private func formatRupiahWithDot(_ amount: Int64) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = "."
+        let formatted = formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
+        return "Rp. \(formatted)"
     }
 }
 

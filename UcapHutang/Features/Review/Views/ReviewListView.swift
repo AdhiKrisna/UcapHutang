@@ -21,7 +21,7 @@ struct ReviewListView: View {
     var body: some View {
         NavigationStack {
             FilteredCardListView(
-                title: "Catatan hasil rekaman perlu dicek sebelum masuk buku",
+                title: "Tinjau Catatan Suara",
                 items: viewModel.filteredDrafts,
                 selectedFilter: viewModel.selectedFilter,
                 onSelectFilter: { viewModel.selectFilter($0) },

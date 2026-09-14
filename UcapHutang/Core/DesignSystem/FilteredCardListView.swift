@@ -35,15 +35,15 @@ struct FilterSegmentBar<T: Identifiable & RawRepresentable & CaseIterable & Equa
             onSelect(filter)
         } label: {
             Text(filter.rawValue)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(isSelected ? AppColors.background : AppColors.textPrimary)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(isSelected ? Color.white : AppColors.textPrimary)
                 .padding(.horizontal, AppSpacing.medium)
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .background(isSelected ? AppColors.textPrimary : Color.clear)
+                .frame(maxWidth: .infinity, minHeight: 40)
+                .background(isSelected ? Color(red: 0.25, green: 0.28, blue: 0.25) : AppColors.background)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                        .stroke(isSelected ? Color.clear : AppColors.border, lineWidth: 1)
+                        .stroke(isSelected ? Color.clear : Color(.separator), lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
