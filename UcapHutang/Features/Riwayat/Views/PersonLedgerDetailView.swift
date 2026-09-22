@@ -116,7 +116,7 @@ struct PersonLedgerDetailView: View {
         }
         .background(AppColors.background)
         .navigationTitle(viewModel.person.displayName)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Catat Bayar") {

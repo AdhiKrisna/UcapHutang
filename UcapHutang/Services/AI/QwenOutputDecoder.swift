@@ -139,6 +139,9 @@ enum QwenOutputDecoder {
         )
     }
 
+    // Swift 6.4's Release optimizer currently crashes in CopyPropagation for
+    // this parsing path. Keep this function unoptimized until the toolchain fix lands.
+    @_optimize(none)
     static func decodeSplit(_ text: String, transcript: String? = nil) throws -> SplitCaptureOutput {
         let object = try jsonObject(in: text, allowEmptyObject: true)
         try assertAllowedKeys(

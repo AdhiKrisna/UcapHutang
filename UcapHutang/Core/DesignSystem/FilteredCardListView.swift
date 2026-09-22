@@ -12,18 +12,10 @@ struct FilterSegmentBar<T: Identifiable & RawRepresentable & CaseIterable & Equa
     let onSelect: (T) -> Void
 
     var body: some View {
-        // Equal-width segments when they fit; horizontal scrolling at large Dynamic Type sizes.
-        ViewThatFits(in: .horizontal) {
+        ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(Array(T.allCases)) { filter in
                     segment(filter)
-                }
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(Array(T.allCases)) { filter in
-                        segment(filter)
-                    }
                 }
             }
         }
@@ -34,26 +26,45 @@ struct FilterSegmentBar<T: Identifiable & RawRepresentable & CaseIterable & Equa
         return Button {
             onSelect(filter)
         } label: {
-            Text(filter.rawValue)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(isSelected ? Color.white : AppColors.textPrimary)
+            Label(filter.rawValue, systemImage: icon(for: filter.rawValue))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(isSelected ? tint(for: filter.rawValue) : AppColors.textSecondary)
                 .padding(.horizontal, AppSpacing.medium)
-                .frame(maxWidth: .infinity, minHeight: 40)
-                .background(isSelected ? Color(red: 0.25, green: 0.28, blue: 0.25) : AppColors.background)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous))
+                .frame(minHeight: 42)
+                .background(isSelected ? tint(for: filter.rawValue).opacity(0.14) : AppColors.surface)
+                .clipShape(Capsule())
                 .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                        .stroke(isSelected ? Color.clear : Color(.separator), lineWidth: 1)
+                    Capsule().stroke(isSelected ? tint(for: filter.rawValue).opacity(0.45) : AppColors.border, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
+
+    private func icon(for title: String) -> String {
+        switch title {
+        case "Utang": "arrow.up.right"
+        case "Piutang": "arrow.down.left"
+        case "Split": "person.3.fill"
+        default: "square.grid.2x2"
+        }
+    }
+
+    private func tint(for title: String) -> Color {
+        switch title {
+        case "Utang": AppColors.debt
+        case "Piutang": AppColors.receivable
+        case "Split": AppColors.split
+        default: AppColors.accent
+        }
+    }
 }
 
 struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepresentable & CaseIterable & Equatable, CardContent: View, EmptyView: View>: View where Filter.RawValue == String, Filter.AllCases: RandomAccessCollection {
     let title: String
+    let subtitle: String?
+    let showsHeader: Bool
     let items: [Item]
     let selectedFilter: Filter
     let onSelectFilter: (Filter) -> Void
@@ -63,6 +74,8 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
 
     init(
         title: String,
+        subtitle: String? = nil,
+        showsHeader: Bool = true,
         items: [Item],
         selectedFilter: Filter,
         onSelectFilter: @escaping (Filter) -> Void,
@@ -71,6 +84,8 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
         @ViewBuilder cardContent: @escaping (Item) -> CardContent
     ) {
         self.title = title
+        self.subtitle = subtitle
+        self.showsHeader = showsHeader
         self.items = items
         self.selectedFilter = selectedFilter
         self.onSelectFilter = onSelectFilter
@@ -82,21 +97,29 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
-                // Header Title
-                Text(title)
-                    .font(.title2.weight(.bold))
-                    .accessibilityAddTraits(.isHeader)
-                    .foregroundStyle(Color.primary)
-                    .lineSpacing(2)
+                if showsHeader {
+                    VStack(alignment: .leading, spacing: AppSpacing.small) {
+                        Text(title)
+                            .font(.title.weight(.bold))
+                            .accessibilityAddTraits(.isHeader)
+                        if let subtitle {
+                            Label(subtitle, systemImage: "person.crop.circle.badge.checkmark")
+                                .font(.subheadline)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                    }
+                    .padding(AppSpacing.large)
+                    .background(AppColors.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: AppRadius.large, style: .continuous))
                     .padding(.horizontal, AppSpacing.xLarge)
                     .padding(.top, AppSpacing.small)
+                }
 
                 // Filter Bar
                 FilterSegmentBar(
                     selection: selectedFilter,
                     onSelect: onSelectFilter
                 )
-                .padding(.horizontal, AppSpacing.xLarge)
+                .contentMargins(.horizontal, AppSpacing.xLarge, for: .scrollContent)
 
                 // List / Empty State
                 if items.isEmpty {
@@ -221,7 +244,7 @@ private struct FilteredCardListViewPreviewContainer: View {
                     .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
                 })
             .navigationTitle("Preview List")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 }

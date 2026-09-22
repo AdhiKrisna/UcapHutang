@@ -83,7 +83,7 @@ struct ReviewContactPickerSheet: View {
                 }
             }
             .navigationTitle("Hubungkan ke kontak")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .searchable(
                 text: $viewModel.searchQuery,
                 placement: .navigationBarDrawer(displayMode: .always),

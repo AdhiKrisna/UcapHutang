@@ -4,7 +4,7 @@ struct CatatView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @ScaledMetric(relativeTo: .largeTitle) private var scaledControlDiameter: CGFloat = 250
+    @ScaledMetric(relativeTo: .largeTitle) private var scaledControlDiameter: CGFloat = 220
     @State private var viewModel: CatatViewModel
     private let router: AppRouter
 
@@ -26,110 +26,59 @@ struct CatatView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: AppSpacing.xLarge) {
-                // Header Flow Info
-                VStack(spacing: 6) {
-                    Text(flow.title)
-                        .font(.title2.weight(.bold))
-                        .foregroundStyle(AppColors.textPrimary)
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: AppSpacing.xLarge) {
+                    transcriptInput
 
-                    Text(flow.subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(AppColors.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, AppSpacing.small)
+                    Spacer(minLength: AppSpacing.small)
 
-                // Main Recording Button
-                Button {
-                    Task { await viewModel.handleMicTap() }
-                } label: {
-                    recordingControl
-                }
-                .buttonStyle(.plain)
-                .disabled(viewModel.isProcessing)
-                .accessibilityLabel(viewModel.recordButtonLabel)
-                .accessibilityValue(viewModel.stageHeadline)
-
-                // Status Transcript or Tips Container
-                VStack(spacing: AppSpacing.medium) {
-                    if viewModel.isListening {
-                        VStack(spacing: 8) {
-                            HStack(spacing: 6) {
-                                Circle()
-                                    .fill(flow.accentColor)
-                                    .frame(width: 8, height: 8)
-                                    .opacity(reduceMotion ? 1 : 0.8)
-                                Text("Mendengarkan...")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(flow.accentColor)
-                            }
-
-                            Text(viewModel.speech.liveTranscript.isEmpty ? "Mulai berbicara..." : viewModel.speech.liveTranscript)
-                                .font(.body.weight(.medium))
-                                .foregroundStyle(viewModel.speech.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
-                                .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.speech.liveTranscript)
-                        }
-                        .padding(AppSpacing.large)
-                        .frame(maxWidth: .infinity)
-                        .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                                .stroke(flow.accentColor.opacity(0.3), lineWidth: 1)
-                        )
-                    } else if !viewModel.isProcessing {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("Contoh Ucapan", systemImage: "lightbulb.fill")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(flow.accentColor)
-
-                            Text("“\(flow.exampleUcapan)”")
-                                .font(.subheadline)
-                                .foregroundStyle(AppColors.textPrimary)
-                                .italic()
-                        }
-                        .padding(AppSpacing.large)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                                .stroke(AppColors.border, lineWidth: 1)
-                        )
+                    Button {
+                        Task { await viewModel.handleMicTap() }
+                    } label: {
+                        recordingControl
                     }
+                    .buttonStyle(.plain)
+                    .disabled(viewModel.isProcessing)
+                    .accessibilityLabel(viewModel.recordButtonLabel)
+                    .accessibilityValue(viewModel.stageHeadline)
 
-                    if let permissionMessage = viewModel.permissionMessage {
-                        VStack(spacing: 8) {
-                            Text(permissionMessage)
-                                .font(.subheadline)
+                    Spacer(minLength: AppSpacing.small)
+
+                    speechHints
+
+                    VStack(spacing: AppSpacing.medium) {
+                        if let permissionMessage = viewModel.permissionMessage {
+                            VStack(spacing: 8) {
+                                Text(permissionMessage)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                Button("Buka Pengaturan") {
+                                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                                        openURL(url)
+                                    }
+                                }
+                                .buttonStyle(.bordered)
+                                .frame(minHeight: 44)
+                            }
+                            .padding(AppSpacing.medium)
+                            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
+                        }
+
+                        if !viewModel.speech.usesOnDeviceRecognition {
+                            Text("Ucapan diproses oleh server Apple.")
+                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
-                            Button("Buka Pengaturan") {
-                                if let url = URL(string: UIApplication.openSettingsURLString) {
-                                    openURL(url)
-                                }
-                            }
-                            .buttonStyle(.bordered)
-                            .frame(minHeight: 44)
                         }
-                        .padding(AppSpacing.medium)
-                        .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
                     }
-
-                    if !viewModel.speech.usesOnDeviceRecognition {
-                        Text("Ucapan diproses oleh server Apple.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
+                    .frame(maxWidth: 340)
                 }
-                .frame(maxWidth: 340)
+                .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
+                .padding(.horizontal, AppSpacing.xLarge)
+                .padding(.vertical, AppSpacing.large)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, AppSpacing.xLarge)
-            .padding(.vertical, AppSpacing.large)
         }
         .background(AppColors.background)
         .safeAreaInset(edge: .bottom) {
@@ -149,8 +98,11 @@ struct CatatView: View {
                 .padding(.bottom, AppSpacing.large)
             }
         }
-        .navigationTitle("")
+        .navigationTitle(flow == .personal ? "Catat Utang/Piutang" : "Catat Split Bill")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            AppStoreNavigationTitle(title: flow == .personal ? "Catat Utang/Piutang" : "Catat Split Bill")
+        }
         .onDisappear { viewModel.cancel() }
         .alert("Gagal Memproses", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
@@ -162,16 +114,97 @@ struct CatatView: View {
             viewModel.handleSpeechStateChange(state)
         }
         .onChange(of: viewModel.savedDraftID) { _, draftID in
-            guard draftID != nil else { return }
-            router.showSavedToReviewBanner()
-            AccessibilityNotification.Announcement("Tersimpan ke Review").post()
+            guard let draftID else { return }
+            router.openReview(draftID: draftID)
+            AccessibilityNotification.Announcement("Draft siap ditinjau").post()
             dismiss()
         }
+    }
+
+    private var transcriptInput: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            if !viewModel.isListening {
+                Text("KETIK MANUAL")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(flow.accentColor)
+            }
+
+            HStack(alignment: .bottom, spacing: AppSpacing.small) {
+                if viewModel.isListening {
+                    Text(viewModel.speech.liveTranscript.isEmpty ? "Mulai berbicara…" : viewModel.speech.liveTranscript)
+                        .font(.body)
+                        .foregroundStyle(viewModel.speech.liveTranscript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
+                        .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: viewModel.speech.liveTranscript)
+                } else {
+                    TextField(
+                        flow == .personal ? "Ceritakan utang atau piutangmu" : "Ceritakan pembagian tagihannya",
+                        text: $viewModel.manualTranscript,
+                        axis: .vertical
+                    )
+                    .lineLimit(2...4)
+                    .submitLabel(.send)
+                    .disabled(viewModel.isProcessing)
+                    .onSubmit { Task { await viewModel.submitManualTranscript() } }
+
+                    Button {
+                        Task { await viewModel.submitManualTranscript() }
+                    } label: {
+                        Image(systemName: "arrow.up")
+                            .font(.body.weight(.bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 40, height: 40)
+                            .background(flow.accentColor, in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!viewModel.canSubmitManualTranscript)
+                    .opacity(viewModel.canSubmitManualTranscript ? 1 : 0.35)
+                    .accessibilityLabel("Kirim catatan manual")
+                }
+            }
+            .padding(AppSpacing.medium)
+            .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                    .stroke(viewModel.isListening ? AppColors.border : flow.accentColor.opacity(0.32), lineWidth: 1)
+            )
+        }
+    }
+
+    private var speechHints: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            Label("Contoh ucapan", systemImage: "quote.bubble.fill")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(flow.accentColor)
+
+            ForEach(Array(flow.speechExamples.enumerated()), id: \.offset) { index, example in
+                VStack(alignment: .leading, spacing: 3) {
+                    if flow == .personal {
+                        Text(index == 0 ? "KAMU YANG BERUTANG" : "ORANG LAIN BERUTANG")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(index == 0 ? AppColors.debt : AppColors.receivable)
+                    }
+                    Text("“\(example)”")
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.textPrimary)
+                        .italic()
+                }
+                if index < flow.speechExamples.count - 1 { Divider() }
+            }
+        }
+        .padding(.horizontal, AppSpacing.small)
+        .frame(maxWidth: 340, alignment: .leading)
     }
 
     private var recordingControl: some View {
         ZStack {
             if viewModel.isListening {
+                ListeningMicAura(
+                    speech: viewModel.speech,
+                    accentColor: flow.accentColor,
+                    diameter: controlDiameter,
+                    reduceMotion: reduceMotion
+                )
                 SonarPingRing(
                     speech: viewModel.speech,
                     accentColor: flow.accentColor,
@@ -180,10 +213,9 @@ struct CatatView: View {
                 )
             }
             Circle()
-                .stroke(
-                    AppColors.textSecondary.opacity(0.65),
-                    style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 7])
-                )
+                .fill(flow.accentColor.opacity(viewModel.isListening ? 0.14 : 0.08))
+            Circle()
+                .stroke(flow.accentColor.opacity(0.7), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 7]))
             if viewModel.isProcessing || viewModel.speech.state == .finalizing {
                 ProgressView()
                     .controlSize(.large)
@@ -203,12 +235,35 @@ struct CatatView: View {
                         .font(.title3.weight(.bold))
                         .multilineTextAlignment(.center)
                 }
-                .foregroundStyle(AppColors.textPrimary)
+                .foregroundStyle(viewModel.isListening ? flow.accentColor : AppColors.textPrimary)
                 .padding(24)
             }
         }
         .frame(width: controlDiameter, height: controlDiameter)
         .contentShape(Circle())
+    }
+}
+
+private struct ListeningMicAura: View {
+    let speech: any SpeechTranscribing
+    let accentColor: Color
+    let diameter: CGFloat
+    let reduceMotion: Bool
+
+    var body: some View {
+        let level = CGFloat(speech.audioLevel)
+        Circle()
+            .fill(
+                RadialGradient(
+                    colors: [accentColor.opacity(0.30), accentColor.opacity(0.10), .clear],
+                    center: .center,
+                    startRadius: diameter * 0.12,
+                    endRadius: diameter * 0.46
+                )
+            )
+            .frame(width: diameter * (0.60 + level * 0.18), height: diameter * (0.60 + level * 0.18))
+            .animation(reduceMotion ? nil : .spring(response: 0.18, dampingFraction: 0.55), value: level)
+            .accessibilityHidden(true)
     }
 }
 

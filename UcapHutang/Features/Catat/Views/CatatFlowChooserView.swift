@@ -15,29 +15,35 @@ struct CatatFlowChooserView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.large) {
-                    Text("Pilih jenis pencatatan")
-                        .font(.largeTitle.weight(.semibold))
-                        .padding(.top, AppSpacing.small)
-
-                    ForEach(CaptureFlow.allCases) { flow in
-                        Button {
-                            selectedFlow = flow
-                        } label: {
-                            FlowTile(flow: flow)
+            GeometryReader { proxy in
+                ScrollView {
+                    VStack(spacing: AppSpacing.medium) {
+                        ForEach(CaptureFlow.allCases) { flow in
+                            Button {
+                                selectedFlow = flow
+                            } label: {
+                                FlowTile(
+                                    flow: flow,
+                                    minimumHeight: max(190, (proxy.size.height - AppSpacing.medium - AppSpacing.xLarge * 2) / 2)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(readiness != .ready)
                         }
-                        .buttonStyle(.plain)
-                        .disabled(readiness != .ready)
                     }
+                    .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
+                    .padding(.horizontal, AppSpacing.xLarge)
+                    .padding(.vertical, AppSpacing.large)
                 }
-                .padding(AppSpacing.xLarge)
             }
             .navigationDestination(item: $selectedFlow) { flow in
                 CatatView(flow: flow, container: container)
             }
-            .navigationTitle("")
+            .navigationTitle("Pilih Alur Pencatatan")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                AppStoreNavigationTitle(title: "Pilih Alur Pencatatan")
+            }
             .safeAreaInset(edge: .top) {
                 if let bannerID = router.savedBannerID {
                     SavedToReviewBanner(
@@ -60,34 +66,54 @@ struct CatatFlowChooserView: View {
 /// with no explanation. See §4 of the Catat UI/UX design spec.
 private struct FlowTile: View {
     let flow: CaptureFlow
+    let minimumHeight: CGFloat
 
     var body: some View {
-        HStack(alignment: .top, spacing: AppSpacing.medium) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(flow.accentColor.opacity(0.16))
+        VStack(alignment: .leading, spacing: AppSpacing.large) {
+            HStack(alignment: .top) {
                 Image(systemName: flow.icon)
-                    .font(.body.weight(.semibold))
+                    .font(.title2.weight(.semibold))
                     .foregroundStyle(flow.accentColor)
-            }
-            .frame(width: 32, height: 32)
+                    .frame(width: 52, height: 52)
+                    .background(flow.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(flow.accentColor)
+                    .frame(width: 34, height: 34)
+                    .background(AppColors.background.opacity(0.75), in: Circle())
+            }
+
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
                 Text(flow.title)
-                    .font(.headline)
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(AppColors.textPrimary)
-                Text("“\(flow.exampleUcapan)”")
+                Text(flow.subtitle)
                     .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("CONTOH")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(flow.accentColor)
+                Text("“\(flow.exampleUcapan)”")
+                    .font(.footnote)
                     .foregroundStyle(AppColors.textSecondary)
                     .italic()
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(AppSpacing.large)
-        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .topLeading)
         .background(
             LinearGradient(
-                colors: [flow.accentColor.opacity(0.10), flow.accentColor.opacity(0.02)],
+                colors: [flow.accentColor.opacity(0.20), flow.accentColor.opacity(0.04)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
@@ -95,8 +121,9 @@ private struct FlowTile: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                .stroke(flow.accentColor.opacity(0.18), lineWidth: 1)
+                .stroke(flow.accentColor.opacity(0.38), lineWidth: 1.25)
         )
+        .shadow(color: flow.accentColor.opacity(0.10), radius: 14, y: 7)
     }
 }
 

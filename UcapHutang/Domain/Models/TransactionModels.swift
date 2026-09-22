@@ -36,6 +36,18 @@ enum CaptureFlow: String, Codable, CaseIterable, Identifiable, Sendable {
         case .splitBill: "Split bill makan 100 ribu sama Satria dan Arif bagi rata"
         }
     }
+
+    var speechExamples: [String] {
+        switch self {
+        case .personal:
+            [
+                "Aku pinjam 50 ribu dari Dito buat beli bensin",
+                "Dito pinjam 50 ribu buat beli bensin"
+            ]
+        case .splitBill:
+            [exampleUcapan]
+        }
+    }
 }
 
 enum TransactionType: String, Codable, CaseIterable, Sendable {

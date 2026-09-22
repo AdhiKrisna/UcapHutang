@@ -28,4 +28,16 @@ final class AppRouterTests: XCTestCase {
 
         XCTAssertEqual(router.selectedTab, .capture)
     }
+
+    func testOpenReviewSelectsTabAndPublishesDraftOnce() {
+        let router = AppRouter()
+        let draftID = UUID()
+        router.selectedTab = .capture
+
+        router.openReview(draftID: draftID)
+
+        XCTAssertEqual(router.selectedTab, .review)
+        XCTAssertEqual(router.consumePendingReviewDraft(), draftID)
+        XCTAssertNil(router.consumePendingReviewDraft())
+    }
 }

@@ -42,7 +42,7 @@ struct PaymentView: View {
                 }
             }
             .navigationTitle("Catat Pembayaran")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 isAmountFocused = true
             }

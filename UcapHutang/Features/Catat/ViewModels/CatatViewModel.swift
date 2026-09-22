@@ -12,6 +12,7 @@ final class CatatViewModel {
     private(set) var savedDraftID: UUID?
     private(set) var permissionMessage: String?
     var errorMessage: String?
+    var manualTranscript = ""
 
     @ObservationIgnored private var processingTask: Task<Void, Never>?
 
@@ -36,6 +37,12 @@ final class CatatViewModel {
         isListening ? "Berhenti merekam" : "Mulai merekam"
     }
 
+    var canSubmitManualTranscript: Bool {
+        !manualTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !isListening
+            && !isProcessing
+    }
+
     func handleMicTap() async {
         guard !isProcessing, !isStartingRecording else { return }
         if speech.state == .listening {
@@ -43,6 +50,11 @@ final class CatatViewModel {
         } else {
             await startRecording()
         }
+    }
+
+    func submitManualTranscript() async {
+        guard canSubmitManualTranscript else { return }
+        await process(transcript: manualTranscript)
     }
 
     func restartRecording() async {
@@ -94,17 +106,26 @@ final class CatatViewModel {
                 return
             }
 
-            do {
-                let draftID = try await self.capture.process(flow: self.flow, transcript: transcript)
-                guard !Task.isCancelled else { return }
-                self.savedDraftID = draftID
-            } catch {
-                guard !Task.isCancelled else { return }
-                self.errorMessage = error.localizedDescription
-            }
+            await self.process(transcript: transcript)
         }
         processingTask = task
         await task.value
         processingTask = nil
+    }
+
+    private func process(transcript: String) async {
+        let trimmedTranscript = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTranscript.isEmpty, !Task.isCancelled else { return }
+
+        isProcessing = true
+        defer { isProcessing = false }
+        do {
+            let draftID = try await capture.process(flow: flow, transcript: trimmedTranscript)
+            guard !Task.isCancelled else { return }
+            savedDraftID = draftID
+        } catch {
+            guard !Task.isCancelled else { return }
+            errorMessage = error.localizedDescription
+        }
     }
 }
