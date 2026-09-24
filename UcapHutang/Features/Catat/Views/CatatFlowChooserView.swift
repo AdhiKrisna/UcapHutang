@@ -16,25 +16,23 @@ struct CatatFlowChooserView: View {
     var body: some View {
         NavigationStack {
             GeometryReader { proxy in
-                ScrollView {
-                    VStack(spacing: AppSpacing.medium) {
-                        ForEach(CaptureFlow.allCases) { flow in
-                            Button {
-                                selectedFlow = flow
-                            } label: {
-                                FlowTile(
-                                    flow: flow,
-                                    minimumHeight: max(190, (proxy.size.height - AppSpacing.medium - AppSpacing.xLarge * 2) / 2)
-                                )
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(readiness != .ready)
+                VStack(spacing: AppSpacing.medium) {
+                    ForEach(CaptureFlow.allCases) { flow in
+                        Button {
+                            selectedFlow = flow
+                        } label: {
+                            FlowTile(
+                                flow: flow,
+                                minimumHeight: max(160, (proxy.size.height - AppSpacing.medium - AppSpacing.large * 2) / 2)
+                            )
                         }
+                        .buttonStyle(.plain)
+                        .disabled(readiness != .ready)
                     }
-                    .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
-                    .padding(.horizontal, AppSpacing.xLarge)
-                    .padding(.vertical, AppSpacing.large)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, AppSpacing.xLarge)
+                .padding(.vertical, AppSpacing.large)
             }
             .navigationDestination(item: $selectedFlow) { flow in
                 CatatView(flow: flow, container: container)
@@ -69,7 +67,7 @@ private struct FlowTile: View {
     let minimumHeight: CGFloat
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.large) {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
             HStack(alignment: .top) {
                 Image(systemName: flow.icon)
                     .font(.title2.weight(.semibold))
@@ -95,8 +93,6 @@ private struct FlowTile: View {
                     .foregroundStyle(AppColors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-
-            Spacer(minLength: 0)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("CONTOH")

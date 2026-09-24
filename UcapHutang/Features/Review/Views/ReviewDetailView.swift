@@ -418,10 +418,9 @@ struct ReviewDetailView: View {
                     }
                 }
                 .foregroundStyle(AppColors.background)
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .frame(maxWidth: .infinity, minHeight: 52)
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.large)
             .tint(.primary)
             .disabled(viewModel.isSaving)
 
@@ -430,9 +429,9 @@ struct ReviewDetailView: View {
             } label: {
                 Label("Hapus Draft", systemImage: "trash")
                     .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
             .tint(AppColors.destructive)
         }
         .padding(.top, 12)

@@ -4,7 +4,7 @@ struct CatatView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @ScaledMetric(relativeTo: .largeTitle) private var scaledControlDiameter: CGFloat = 220
+    @ScaledMetric(relativeTo: .largeTitle) private var scaledControlDiameter: CGFloat = 184
     @State private var viewModel: CatatViewModel
     private let router: AppRouter
 
@@ -28,10 +28,8 @@ struct CatatView: View {
     var body: some View {
         GeometryReader { proxy in
             ScrollView {
-                VStack(spacing: AppSpacing.xLarge) {
+                VStack(spacing: AppSpacing.large) {
                     transcriptInput
-
-                    Spacer(minLength: AppSpacing.small)
 
                     Button {
                         Task { await viewModel.handleMicTap() }
@@ -42,8 +40,6 @@ struct CatatView: View {
                     .disabled(viewModel.isProcessing)
                     .accessibilityLabel(viewModel.recordButtonLabel)
                     .accessibilityValue(viewModel.stageHeadline)
-
-                    Spacer(minLength: AppSpacing.small)
 
                     speechHints
 
@@ -77,7 +73,7 @@ struct CatatView: View {
                 }
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
                 .padding(.horizontal, AppSpacing.xLarge)
-                .padding(.vertical, AppSpacing.large)
+                .padding(.vertical, AppSpacing.small)
             }
         }
         .background(AppColors.background)

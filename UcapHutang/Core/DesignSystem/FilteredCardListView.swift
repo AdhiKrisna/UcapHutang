@@ -69,6 +69,7 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
     let selectedFilter: Filter
     let onSelectFilter: (Filter) -> Void
     let onSelectItem: (Item.ID) -> Void
+    let onDeleteItem: ((Item.ID) -> Void)?
     let emptyState: () -> EmptyView
     let cardContent: (Item) -> CardContent
 
@@ -80,6 +81,7 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
         selectedFilter: Filter,
         onSelectFilter: @escaping (Filter) -> Void,
         onSelectItem: @escaping (Item.ID) -> Void,
+        onDeleteItem: ((Item.ID) -> Void)? = nil,
         @ViewBuilder emptyState: @escaping () -> EmptyView,
         @ViewBuilder cardContent: @escaping (Item) -> CardContent
     ) {
@@ -90,14 +92,15 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
         self.selectedFilter = selectedFilter
         self.onSelectFilter = onSelectFilter
         self.onSelectItem = onSelectItem
+        self.onDeleteItem = onDeleteItem
         self.emptyState = emptyState
         self.cardContent = cardContent
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
-                if showsHeader {
+        List {
+            if showsHeader {
+                Section {
                     VStack(alignment: .leading, spacing: AppSpacing.small) {
                         Text(title)
                             .font(.title.weight(.bold))
@@ -110,39 +113,62 @@ struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepres
                     }
                     .padding(AppSpacing.large)
                     .background(AppColors.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: AppRadius.large, style: .continuous))
-                    .padding(.horizontal, AppSpacing.xLarge)
-                    .padding(.top, AppSpacing.small)
                 }
+                .listRowInsets(EdgeInsets(top: AppSpacing.small, leading: AppSpacing.xLarge, bottom: 0, trailing: AppSpacing.xLarge))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
 
-                // Filter Bar
+            Section {
                 FilterSegmentBar(
                     selection: selectedFilter,
                     onSelect: onSelectFilter
                 )
-                .contentMargins(.horizontal, AppSpacing.xLarge, for: .scrollContent)
+            }
+            .listRowInsets(EdgeInsets(top: AppSpacing.medium, leading: AppSpacing.xLarge, bottom: AppSpacing.medium, trailing: 0))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
 
-                // List / Empty State
-                if items.isEmpty {
+            if items.isEmpty {
+                Section {
                     emptyState()
                         .frame(maxWidth: .infinity)
                         .padding(.top, AppSpacing.xxLarge + 8)
-                } else {
-                    LazyVStack(spacing: AppSpacing.medium) {
-                        ForEach(items) { item in
-                            Button {
-                                onSelectItem(item.id)
-                            } label: {
-                                cardContent(item)
+                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            } else {
+                Section {
+                    ForEach(items) { item in
+                        cardButton(item)
+                            .listRowInsets(EdgeInsets(top: AppSpacing.small, leading: AppSpacing.xLarge, bottom: AppSpacing.small, trailing: AppSpacing.xLarge))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                if let onDeleteItem {
+                                    Button(role: .destructive) {
+                                        onDeleteItem(item.id)
+                                    } label: {
+                                        Label("Hapus", systemImage: "trash")
+                                    }
+                                }
                             }
-                            .buttonStyle(.plain)
-                        }
                     }
-                    .padding(.horizontal, AppSpacing.xLarge)
                 }
             }
-            .padding(.bottom, AppSpacing.xLarge)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .background(AppColors.background)
+    }
+
+    private func cardButton(_ item: Item) -> some View {
+        Button {
+            onSelectItem(item.id)
+        } label: {
+            cardContent(item)
+        }
+        .buttonStyle(.plain)
     }
 }
 

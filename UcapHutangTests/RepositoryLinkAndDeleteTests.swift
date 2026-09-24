@@ -4,6 +4,16 @@ import SwiftData
 
 @MainActor
 final class RepositoryLinkAndDeleteTests: XCTestCase {
+    func testDeletingLedgerEntryOnlyRemovesRequestedEntry() async throws {
+        let retained = LedgerEntry(personID: "budi", personName: "Budi", kind: .charge, balanceDelta: 5_000, date: .now, title: "Retained")
+        let removed = LedgerEntry(personID: "budi", personName: "Budi", kind: .payment, balanceDelta: -2_000, date: .now, title: "Removed")
+        let repository = InMemoryTransactionRepository(seedEntries: [retained, removed])
+
+        try await repository.deleteLedgerEntry(id: removed.id)
+
+        let entries = await repository.ledgerEntries()
+        XCTAssertEqual(entries.map(\.id), [retained.id])
+    }
     private struct Subject {
         let label: String
         let repository: any TransactionRepository

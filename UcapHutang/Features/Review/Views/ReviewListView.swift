@@ -31,6 +31,9 @@ struct ReviewListView: View {
                 selectedFilter: viewModel.selectedFilter,
                 onSelectFilter: { viewModel.selectFilter($0) },
                 onSelectItem: { id in selectedDraftID = id },
+                onDeleteItem: { id in
+                    Task { await viewModel.deleteDraft(id: id) }
+                },
                 emptyState: {
                     AppEmptyState(
                         icon: "checkmark.circle",

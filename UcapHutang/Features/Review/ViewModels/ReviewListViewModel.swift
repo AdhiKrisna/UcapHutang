@@ -45,6 +45,15 @@ final class ReviewListViewModel {
         }
     }
 
+    func deleteDraft(id: UUID) async {
+        do {
+            try await repository.deleteDraft(id: id)
+            drafts.removeAll { $0.id == id }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     static func makeItem(from draft: TransactionDraft, now: Date) -> ReviewItemUIModel {
         let prefix: String
         let personName: String

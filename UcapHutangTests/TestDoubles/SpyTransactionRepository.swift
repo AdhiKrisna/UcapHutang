@@ -37,6 +37,7 @@ final class SpyTransactionRepository: TransactionRepository {
     }
 
     func ledgerEntries() async throws -> [LedgerEntry] { try await base.ledgerEntries() }
+    func deleteLedgerEntry(id: UUID) async throws { try await base.deleteLedgerEntry(id: id) }
     func linkedContactIdentifiers() async throws -> [String] { try await base.linkedContactIdentifiers() }
     func linkPerson(personID: String, to contact: ContactRef) async throws { try await base.linkPerson(personID: personID, to: contact) }
 

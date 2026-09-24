@@ -10,6 +10,7 @@ final class PersonLedgerDetailViewModel {
     var isShowingContactPicker = false
     var pendingMerge: ContactRef?
     var alert: RiwayatAlert?
+    private(set) var reminderPhoneNumber: String?
 
     private let repository: any TransactionRepository
     private let contacts: any ContactsProviding
@@ -41,9 +42,34 @@ final class PersonLedgerDetailViewModel {
         }
     }
 
-    /// Payments and reminders require a contact link (the repository enforces payments too).
-    var canRecordPaymentOrRemind: Bool {
-        person.isLinked
+    var canRecordPayment: Bool {
+        person.isLinked && person.balance != 0
+    }
+
+    var canRemind: Bool {
+        person.balance != 0 && reminderPhoneNumber != nil
+    }
+
+    var balanceStatusTitle: String {
+        if person.balance > 0 { return "Dia berutang padamu" }
+        if person.balance < 0 { return "Kamu berutang padanya" }
+        return "Saldo seimbang"
+    }
+
+    var balanceStatusDetail: String {
+        if person.balance > 0 { return "\(person.displayName) perlu membayarmu." }
+        if person.balance < 0 { return "Kamu perlu membayar \(person.displayName)." }
+        return "Tidak ada saldo tertunggak."
+    }
+
+    var paymentActionTitle: String {
+        person.balance > 0 ? "Catat Bayar dari \(person.displayName)" : "Catat Bayar ke \(person.displayName)"
+    }
+
+    var paymentDirectionDetail: String {
+        person.balance > 0
+            ? "\(person.displayName) membayar utangnya kepadamu."
+            : "Kamu membayar utangmu kepada \(person.displayName)."
     }
 
     /// Drives the merge confirmation dialog.
@@ -54,9 +80,15 @@ final class PersonLedgerDetailViewModel {
 
     /// The `sms:` URL the View opens with `openURL`. ViewModels never call UIKit directly.
     var reminderMessageURL: URL? {
+        guard canRemind, let reminderPhoneNumber else { return nil }
         let text = "Halo \(person.displayName), mengingatkan kembali ada catatan saldo \(abs(person.balance).rupiahFormatted) di UcapHutang ya."
-        guard let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return nil }
-        return URL(string: "sms:&body=\(encoded)")
+        let recipient = reminderPhoneNumber.filter { $0.isNumber || $0 == "+" }
+        guard !recipient.isEmpty else { return nil }
+        var components = URLComponents()
+        components.scheme = "sms"
+        components.path = recipient
+        components.queryItems = [URLQueryItem(name: "body", value: text)]
+        return components.url
     }
 
     func reload() async {
@@ -72,6 +104,16 @@ final class PersonLedgerDetailViewModel {
             lastActivity: currentEntries.first?.date ?? person.lastActivity,
             contactIdentifier: currentEntries.lazy.compactMap(\.contactIdentifier).first
         )
+        await refreshReminderRecipient()
+    }
+
+    func deleteEntry(id: UUID) async {
+        do {
+            try await repository.deleteLedgerEntry(id: id)
+            await reload()
+        } catch {
+            alert = .deleteFailed(message: error.localizedDescription)
+        }
     }
 
     // MARK: - Contact linking
@@ -129,5 +171,13 @@ final class PersonLedgerDetailViewModel {
         } catch {
             alert = .linkFailed(message: error.localizedDescription)
         }
+    }
+
+    private func refreshReminderRecipient() async {
+        guard person.balance != 0, let identifier = person.contactIdentifier else {
+            reminderPhoneNumber = nil
+            return
+        }
+        reminderPhoneNumber = await contacts.contacts(withIdentifiers: [identifier]).first?.phoneNumber
     }
 }
