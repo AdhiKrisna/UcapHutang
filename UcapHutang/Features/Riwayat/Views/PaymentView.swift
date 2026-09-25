@@ -3,6 +3,7 @@ import SwiftUI
 struct PaymentView: View {
     @Environment(\.dismiss) private var dismiss
     let person: PersonLedgerSummary
+    let directionDetail: String
     let repository: any TransactionRepository
     let onSaved: () -> Void
 
@@ -18,8 +19,13 @@ struct PaymentView: View {
             Form {
                 Section {
                     Label("Pembayaran dilakukan di luar aplikasi. UcapHutang hanya mencatat pelunasan.", systemImage: "info.circle")
+                        .font(.footnote)
+                        .foregroundStyle(AppColors.textSecondary)
                 }
                 Section("Pembayaran") {
+                    Label(directionDetail, systemImage: person.balance > 0 ? "arrow.down.left" : "arrow.up.right")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(person.balance > 0 ? AppColors.receivable : AppColors.debt)
                     TextField("Nominal", value: $amount, format: .number)
                         .keyboardType(.numberPad)
                         .focused($isAmountFocused)
@@ -42,7 +48,7 @@ struct PaymentView: View {
                 }
             }
             .navigationTitle("Catat Pembayaran")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 isAmountFocused = true
             }

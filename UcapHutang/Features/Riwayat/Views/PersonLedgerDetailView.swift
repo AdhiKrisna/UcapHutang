@@ -6,7 +6,6 @@ struct PersonLedgerDetailView: View {
     private let repository: any TransactionRepository
     private let contacts: any ContactsProviding
 
-    private let blockedActionHint = "Hubungkan orang ini ke kontak terlebih dahulu."
 
     init(
         person: PersonLedgerSummary,
@@ -24,20 +23,17 @@ struct PersonLedgerDetailView: View {
         ))
     }
 
-    private var isReceivable: Bool {
-        viewModel.person.balance >= 0
-    }
-
     private var statusTint: Color {
-        isReceivable ? AppColors.receivable : AppColors.debt
+        if viewModel.person.balance > 0 { return AppColors.receivable }
+        if viewModel.person.balance < 0 { return AppColors.debt }
+        return AppColors.textSecondary
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+        List {
+            Section {
                 if !viewModel.person.isLinked {
                     linkCard
-                        .padding(.horizontal, 20)
                 }
 
                 // Hero Saldo Card
@@ -48,7 +44,7 @@ struct PersonLedgerDetailView: View {
                             .frame(width: 8, height: 8)
                             .accessibilityHidden(true)
 
-                        Text(isReceivable ? "Dia berutang padamu" : "Kamu berutang padanya")
+                        Text(viewModel.balanceStatusTitle)
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(statusTint)
                     }
@@ -59,6 +55,10 @@ struct PersonLedgerDetailView: View {
                     Text(abs(viewModel.person.balance).rupiahFormatted)
                         .font(.largeTitle.bold())
                         .foregroundStyle(.primary)
+
+                    Text(viewModel.balanceStatusDetail)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
 
                     Button {
                         if let url = viewModel.reminderMessageURL {
@@ -72,8 +72,9 @@ struct PersonLedgerDetailView: View {
                             .background(AppColors.reminderButtonBackground, in: .rect(cornerRadius: AppRadius.small, style: .continuous))
                     }
                     .buttonStyle(.plain)
-                    .disabled(!viewModel.canRecordPaymentOrRemind)
-                    .accessibilityHint(viewModel.canRecordPaymentOrRemind ? "" : blockedActionHint)
+                    .disabled(!viewModel.canRemind)
+                    .opacity(viewModel.canRemind ? 1 : 0.45)
+                    .accessibilityHint(viewModel.canRemind ? "Pesan ditujukan ke nomor kontak yang terhubung." : "Tidak ada saldo aktif atau nomor kontak belum tersedia.")
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -82,8 +83,12 @@ struct PersonLedgerDetailView: View {
                     RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
                         .stroke(AppColors.border, lineWidth: 1)
                 )
-                .padding(.horizontal, 20)
+            }
+            .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
 
+            Section {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(DetailFilter.allCases) { filter in
@@ -95,39 +100,48 @@ struct PersonLedgerDetailView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 20)
                 }
-
-                Text("Riwayat Catatan")
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(.primary)
-                    .accessibilityAddTraits(.isHeader)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 4)
-
-                LazyVStack(spacing: 10) {
-                    ForEach(viewModel.filteredEntries) { entry in
-                        DetailEntryCardRow(entry: entry)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 24)
             }
+            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 0))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+
+            Section("Riwayat Catatan") {
+                ForEach(viewModel.filteredEntries) { entry in
+                    DetailEntryCardRow(entry: entry)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                Task { await viewModel.deleteEntry(id: entry.id) }
+                            } label: {
+                                Label("Hapus", systemImage: "trash")
+                            }
+                        }
+                    }
+            }
+            .listRowInsets(EdgeInsets(top: 5, leading: 20, bottom: 5, trailing: 20))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .background(AppColors.background)
         .navigationTitle(viewModel.person.displayName)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Catat Bayar") {
                     viewModel.showingPayment = true
                 }
-                .disabled(!viewModel.canRecordPaymentOrRemind)
-                .accessibilityHint(viewModel.canRecordPaymentOrRemind ? "" : blockedActionHint)
+                .disabled(!viewModel.canRecordPayment)
+                .accessibilityHint(viewModel.canRecordPayment ? viewModel.paymentDirectionDetail : "Tidak ada saldo aktif yang perlu dibayar.")
             }
         }
         .sheet(isPresented: $viewModel.showingPayment) {
-            PaymentView(person: viewModel.person, repository: repository) {
+            PaymentView(
+                person: viewModel.person,
+                directionDetail: viewModel.paymentDirectionDetail,
+                repository: repository
+            ) {
                 viewModel.showingPayment = false
                 Task { await viewModel.reload() }
             }
@@ -174,7 +188,7 @@ struct PersonLedgerDetailView: View {
                     }
                 }
                 Button("Nanti", role: .cancel) {}
-            case .linkFailed:
+            case .linkFailed, .deleteFailed:
                 Button("OK", role: .cancel) {}
             }
         } message: { alert in

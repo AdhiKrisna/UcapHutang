@@ -5,13 +5,16 @@ struct ReviewListView: View {
     @State private var selectedDraftID: UUID?
     private let repository: any TransactionRepository
     private let contacts: any ContactsProviding
+    private let router: AppRouter
     let onOpenSettings: () -> Void
 
     init(
+        router: AppRouter,
         repository: any TransactionRepository,
         contacts: any ContactsProviding,
         onOpenSettings: @escaping () -> Void
     ) {
+        self.router = router
         self.repository = repository
         self.contacts = contacts
         self.onOpenSettings = onOpenSettings
@@ -21,11 +24,16 @@ struct ReviewListView: View {
     var body: some View {
         NavigationStack {
             FilteredCardListView(
-                title: "Tinjau Catatan Suara",
+                title: "",
+                subtitle: nil,
+                showsHeader: false,
                 items: viewModel.filteredDrafts,
                 selectedFilter: viewModel.selectedFilter,
                 onSelectFilter: { viewModel.selectFilter($0) },
                 onSelectItem: { id in selectedDraftID = id },
+                onDeleteItem: { id in
+                    Task { await viewModel.deleteDraft(id: id) }
+                },
                 emptyState: {
                     AppEmptyState(
                         icon: "checkmark.circle",
@@ -40,8 +48,10 @@ struct ReviewListView: View {
             .navigationDestination(item: $selectedDraftID) { draftID in
                 ReviewDetailView(draftID: draftID, repository: repository, contacts: contacts)
             }
+            .navigationTitle("Review Draft")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                AppStoreNavigationTitle(title: "Review Draft")
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: onOpenSettings) {
                         Image(systemName: "gearshape")
@@ -50,6 +60,10 @@ struct ReviewListView: View {
                 }
             }
             .task { await viewModel.loadDrafts() }
+            .onAppear { openPendingDraftIfNeeded() }
+            .onChange(of: router.pendingReviewDraftID) { _, _ in
+                openPendingDraftIfNeeded()
+            }
             .refreshable { await viewModel.loadDrafts() }
             .onReceive(NotificationCenter.default.publisher(for: .transactionRepositoryDidChange)) { _ in
                 Task { await viewModel.loadDrafts() }
@@ -64,10 +78,17 @@ struct ReviewListView: View {
             }
         }
     }
+
+    private func openPendingDraftIfNeeded() {
+        if let draftID = router.consumePendingReviewDraft() {
+            selectedDraftID = draftID
+        }
+    }
 }
 
 #Preview {
     ReviewListView(
+        router: AppRouter(),
         repository: InMemoryTransactionRepository(seedDrafts: [
             TransactionDraft(
                 flow: .personal,

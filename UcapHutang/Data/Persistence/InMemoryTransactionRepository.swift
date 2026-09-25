@@ -60,6 +60,12 @@ actor InMemoryTransactionRepository: TransactionRepository {
 
     func ledgerEntries() -> [LedgerEntry] { entries.sorted { $0.date > $1.date } }
 
+    func deleteLedgerEntry(id: UUID) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        entries.remove(at: index)
+        notifyChange()
+    }
+
     func linkedContactIdentifiers() -> [String] {
         Array(Set(entries.compactMap(\.contactIdentifier))).sorted()
     }

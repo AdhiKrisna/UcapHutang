@@ -20,7 +20,7 @@ struct ReviewDetailView: View {
     var body: some View {
         content
             .navigationTitle("Review Catatan")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .task { await viewModel.load() }
             .onDisappear {
                 Task { await viewModel.flushPendingEdits() }
@@ -164,14 +164,25 @@ struct ReviewDetailView: View {
 
                     if draft.flow == .personal {
                         field("Jenis Transaksi") {
-                            Picker("Jenis", selection: Binding(
-                                get: { viewModel.draft?.type ?? .unknown },
-                                set: { viewModel.setType($0) }
-                            )) {
-                                Text("Utang").tag(TransactionType.hutang)
-                                Text("Piutang").tag(TransactionType.piutang)
+                            VStack(alignment: .leading, spacing: AppSpacing.small) {
+                                Picker("Jenis", selection: Binding(
+                                    get: { viewModel.draft?.type ?? .unknown },
+                                    set: { viewModel.setType($0) }
+                                )) {
+                                    Text("Utang").tag(TransactionType.hutang)
+                                    Text("Piutang").tag(TransactionType.piutang)
+                                }
+                                .pickerStyle(.segmented)
+
+                                Label(
+                                    draft.type == .hutang
+                                        ? "Utang: kamu yang perlu membayar orang ini."
+                                        : "Piutang: kamu meminjamkan uang dan orang ini perlu membayarmu.",
+                                    systemImage: "info.circle"
+                                )
+                                .font(.footnote)
+                                .foregroundStyle(draft.type == .hutang ? AppColors.debt : AppColors.receivable)
                             }
-                            .pickerStyle(.segmented)
                         }
                     } else {
                         field("Metode Bagi") {
@@ -402,23 +413,26 @@ struct ReviewDetailView: View {
                         ProgressView()
                             .tint(AppColors.background)
                     } else {
-                        Text("Simpan Catatan")
+                        Label("Simpan ke Riwayat", systemImage: "checkmark.circle.fill")
                             .font(.headline)
                     }
                 }
                 .foregroundStyle(AppColors.background)
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .frame(maxWidth: .infinity, minHeight: 52)
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.large)
             .tint(.primary)
             .disabled(viewModel.isSaving)
 
-            Button("Hapus catatan ini", role: .destructive) {
+            Button(role: .destructive) {
                 viewModel.isConfirmingDelete = true
+            } label: {
+                Label("Hapus Draft", systemImage: "trash")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .font(.subheadline.weight(.medium))
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .buttonStyle(.borderedProminent)
+            .tint(AppColors.destructive)
         }
         .padding(.top, 12)
     }

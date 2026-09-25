@@ -13,6 +13,8 @@ protocol TransactionRepository: Sendable {
     func deleteDraft(id: UUID) async throws
     func confirmDraft(_ draft: TransactionDraft) async throws
     func ledgerEntries() async throws -> [LedgerEntry]
+    /// Permanently deletes one ledger item. Unknown IDs are ignored.
+    func deleteLedgerEntry(id: UUID) async throws
     /// Distinct, sorted contact identifiers that already have ledger history.
     func linkedContactIdentifiers() async throws -> [String]
     /// Moves every entry of `personID` (and every entry already under the contact) to the contact identity.

@@ -1,6 +1,7 @@
 import XCTest
 @testable import UcapHutang
 
+@MainActor
 final class ReviewListViewModelTests: XCTestCase {
     func testPersonalDraftWithBlankNameShowsApprovedPlaceholder() {
         let draft = TransactionDraft(
@@ -102,5 +103,25 @@ final class ReviewListViewModelTests: XCTestCase {
 
         XCTAssertEqual(item.personName, "0 Orang")
         XCTAssertEqual(item.avatarInitials, [])
+    }
+
+    func testDeleteDraftRemovesItFromTheList() async throws {
+        let draft = TransactionDraft(
+            flow: .personal,
+            type: .piutang,
+            title: "Bensin",
+            totalAmount: 20_000,
+            participants: [TransactionParticipant(name: "Dito", shareAmount: 20_000)],
+            rawTranscript: "Dito pinjam 20 ribu"
+        )
+        let repository = InMemoryTransactionRepository(seedDrafts: [draft])
+        let viewModel = ReviewListViewModel(repository: repository)
+        await viewModel.loadDrafts()
+
+        await viewModel.deleteDraft(id: draft.id)
+
+        XCTAssertTrue(viewModel.drafts.isEmpty)
+        let storedDraft = await repository.draft(id: draft.id)
+        XCTAssertNil(storedDraft)
     }
 }

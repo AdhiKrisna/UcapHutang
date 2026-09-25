@@ -350,15 +350,35 @@ final class ReviewDetailViewModel {
             return
         }
         var result: [UUID: ContactRef] = [:]
+        var autoLinks: [(UUID, ContactRef)] = []
         for participant in current.participants where !Self.isLinked(participant) {
             let name = participant.name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else { continue }
             let matches = await contacts.search(name: name)
-            if matches.count == 1 {
+            if matches.count == 1, Self.isSafeAutomaticMatch(name: name, contact: matches[0]) {
+                autoLinks.append((participant.id, matches[0]))
+            } else if matches.count == 1 {
                 result[participant.id] = matches[0]
             }
         }
         suggestions = result
+        for (participantID, contact) in autoLinks {
+            link(participantID: participantID, to: contact)
+        }
+    }
+
+    private static func isSafeAutomaticMatch(name: String, contact: ContactRef) -> Bool {
+        let candidate = normalizedContactName(name)
+        let contactName = normalizedContactName(contact.displayName)
+        guard candidate.count >= 4 else { return false }
+        return contactName == candidate || contactName.hasPrefix(candidate + " ")
+    }
+
+    private static func normalizedContactName(_ value: String) -> String {
+        value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+            .map(String.init)
+            .joined(separator: " ")
     }
 
     private static func isLinked(_ participant: TransactionParticipant) -> Bool {

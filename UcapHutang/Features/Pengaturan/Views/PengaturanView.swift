@@ -56,7 +56,7 @@ struct PengaturanView: View {
                 }
             }
             .navigationTitle("Pengaturan")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Selesai") { dismiss() }

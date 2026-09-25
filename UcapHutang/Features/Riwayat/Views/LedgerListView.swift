@@ -15,23 +15,9 @@ struct LedgerListView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Text("Ringkasan Saldo")
-                        .font(.title.bold())
-                        .foregroundStyle(.primary)
-                        .accessibilityAddTraits(.isHeader)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
-
-                    // Side by side when they fit; stacked at large Dynamic Type sizes.
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .top, spacing: 12) {
-                            receivableCard
-                            debtCard
-                        }
-                        VStack(spacing: 12) {
-                            receivableCard
-                            debtCard
-                        }
+                    HStack(alignment: .top, spacing: 10) {
+                        receivableCard
+                        debtCard
                     }
                     .padding(.horizontal, 20)
 
@@ -71,10 +57,14 @@ struct LedgerListView: View {
                 }
                 .padding(.bottom, 24)
             }
+            .navigationTitle("Riwayat")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                AppStoreNavigationTitle(title: "Riwayat")
+            }
             .searchable(
                 text: $viewModel.searchQuery,
-                placement: .navigationBarDrawer(displayMode: .automatic),
+                placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Cari nama orang"
             )
             .navigationDestination(for: PersonLedgerSummary.self) { person in
@@ -98,7 +88,7 @@ struct LedgerListView: View {
             title: "Piutang",
             systemImage: "arrow.down.left",
             amount: viewModel.totalReceivable,
-            caption: "\(viewModel.receivableCount) orang berutang",
+            caption: "\(viewModel.receivableCount) orang perlu membayarmu",
             tint: AppColors.receivable
         )
     }
@@ -108,27 +98,35 @@ struct LedgerListView: View {
             title: "Utang",
             systemImage: "arrow.up.right",
             amount: viewModel.totalDebt,
-            caption: "\(viewModel.debtCount) tanggungan aktif",
+            caption: "Kamu perlu membayar \(viewModel.debtCount) orang",
             tint: AppColors.debt
         )
     }
 
     private func summaryCard(title: String, systemImage: String, amount: Int64, caption: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label(title, systemImage: systemImage)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(tint)
+            HStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(.caption.weight(.bold))
+                Text(title)
+                    .font(.caption.weight(.semibold))
+            }
+            .foregroundStyle(tint)
 
             Text(amount.rupiahFormatted)
-                .font(.headline.weight(.bold))
+                .font(.subheadline.weight(.bold))
                 .foregroundStyle(.primary)
+                .minimumScaleFactor(0.75)
+                .lineLimit(1)
 
             Text(caption)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
         .background(tint.opacity(0.08), in: .rect(cornerRadius: AppRadius.medium, style: .continuous))
         .accessibilityElement(children: .combine)
     }

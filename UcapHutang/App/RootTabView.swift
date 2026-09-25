@@ -21,6 +21,7 @@ struct RootTabView: View {
         TabView(selection: $router.selectedTab) {
             Tab("Review", systemImage: "doc.badge.clock", value: AppTab.review) {
                 ReviewListView(
+                    router: container.router,
                     repository: container.repository,
                     contacts: container.contacts,
                     onOpenSettings: { isShowingSettings = true }

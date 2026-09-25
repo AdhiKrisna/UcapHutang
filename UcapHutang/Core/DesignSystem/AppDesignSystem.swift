@@ -53,6 +53,21 @@ struct AppEmptyState: View {
     }
 }
 
+struct AppStoreNavigationTitle: ToolbarContent {
+    let title: String
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            Text(title)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(AppColors.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .accessibilityAddTraits(.isHeader)
+        }
+    }
+}
+
 struct AppFilterChip: View {
     let title: String
     let isSelected: Bool

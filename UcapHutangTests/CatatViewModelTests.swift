@@ -69,4 +69,28 @@ final class CatatViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.errorMessage, "Ekstraksi gagal: model error")
         XCTAssertNil(viewModel.savedDraftID)
     }
+
+    func testManualTranscriptCanBeSubmittedWithoutStartingMicrophone() async {
+        let capture = SpyVoiceCapture()
+        let savedID = UUID()
+        capture.result = .success(savedID)
+        let viewModel = CatatViewModel(flow: .splitBill, speech: FakeSpeechTranscriber(), capture: capture)
+        viewModel.manualTranscript = "  Split bill makan sama Satria dan Arif  "
+
+        await viewModel.submitManualTranscript()
+
+        XCTAssertEqual(viewModel.savedDraftID, savedID)
+        XCTAssertEqual(capture.calls, [SpyVoiceCapture.Call(flow: .splitBill, transcript: "Split bill makan sama Satria dan Arif")])
+    }
+
+    func testManualTranscriptCannotBeSubmittedWhileListening() async {
+        let capture = SpyVoiceCapture()
+        let viewModel = CatatViewModel(flow: .personal, speech: FakeSpeechTranscriber(), capture: capture)
+        viewModel.manualTranscript = "Aku pinjam dari Dito"
+
+        await viewModel.handleMicTap()
+        await viewModel.submitManualTranscript()
+
+        XCTAssertTrue(capture.calls.isEmpty)
+    }
 }

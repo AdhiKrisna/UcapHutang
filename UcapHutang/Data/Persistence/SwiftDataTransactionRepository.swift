@@ -107,6 +107,15 @@ final class SwiftDataTransactionRepository: TransactionRepository {
         return try context.fetch(descriptor).map(Self.toDomain)
     }
 
+    func deleteLedgerEntry(id: UUID) async throws {
+        let entryID = id
+        let descriptor = FetchDescriptor<SDLedgerEntry>(predicate: #Predicate { $0.id == entryID })
+        guard let entry = try context.fetch(descriptor).first else { return }
+        context.delete(entry)
+        try context.save()
+        notifyChange()
+    }
+
     func linkedContactIdentifiers() async throws -> [String] {
         let entries = try context.fetch(FetchDescriptor<SDLedgerEntry>())
         return Array(Set(entries.compactMap(\.contactIdentifier))).sorted()

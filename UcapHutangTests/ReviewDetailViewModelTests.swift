@@ -66,18 +66,28 @@ final class ReviewDetailViewModelTests: XCTestCase {
 
         let oneMatch = FakeContactsProvider(access: .authorized, contacts: [satria])
         let (vmOne, _) = try await makeViewModel(seed: draft, contacts: oneMatch)
-        XCTAssertEqual(vmOne.cardState(for: vmOne.draft!.participants[0]), .suggestion(satria))
+        XCTAssertEqual(vmOne.draft?.participants[0].contactIdentifier, satria.identifier)
+        XCTAssertEqual(vmOne.draft?.participants[0].name, satria.displayName)
 
         let twoMatches = FakeContactsProvider(access: .authorized, contacts: [
             satria,
             ContactRef(identifier: "contact-satria-2", displayName: "Satria Wijaya", phoneNumber: nil)
         ])
         let (vmTwo, _) = try await makeViewModel(seed: draft, contacts: twoMatches)
-        XCTAssertEqual(vmTwo.cardState(for: vmTwo.draft!.participants[0]), .unlinked)
+        XCTAssertNil(vmTwo.draft?.participants[0].contactIdentifier)
 
         let denied = FakeContactsProvider(access: .denied, contacts: [satria])
         let (vmDenied, _) = try await makeViewModel(seed: draft, contacts: denied)
         XCTAssertEqual(vmDenied.cardState(for: vmDenied.draft!.participants[0]), .unlinked)
+    }
+
+    func testPartialNameDoesNotAutoLinkWithoutAUniqueSafePrefix() async throws {
+        let draft = personalDraft(name: "Sat")
+        let provider = FakeContactsProvider(access: .authorized, contacts: [satria])
+
+        let (viewModel, _) = try await makeViewModel(seed: draft, contacts: provider)
+
+        XCTAssertNil(viewModel.draft?.participants.first?.contactIdentifier)
     }
 
     func testRequestingPickerWithDeniedAccessShowsContactsAlert() async throws {

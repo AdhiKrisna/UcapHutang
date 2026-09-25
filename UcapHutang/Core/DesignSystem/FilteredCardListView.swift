@@ -12,18 +12,10 @@ struct FilterSegmentBar<T: Identifiable & RawRepresentable & CaseIterable & Equa
     let onSelect: (T) -> Void
 
     var body: some View {
-        // Equal-width segments when they fit; horizontal scrolling at large Dynamic Type sizes.
-        ViewThatFits(in: .horizontal) {
+        ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(Array(T.allCases)) { filter in
                     segment(filter)
-                }
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(Array(T.allCases)) { filter in
-                        segment(filter)
-                    }
                 }
             }
         }
@@ -34,92 +26,149 @@ struct FilterSegmentBar<T: Identifiable & RawRepresentable & CaseIterable & Equa
         return Button {
             onSelect(filter)
         } label: {
-            Text(filter.rawValue)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(isSelected ? Color.white : AppColors.textPrimary)
+            Label(filter.rawValue, systemImage: icon(for: filter.rawValue))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(isSelected ? tint(for: filter.rawValue) : AppColors.textSecondary)
                 .padding(.horizontal, AppSpacing.medium)
-                .frame(maxWidth: .infinity, minHeight: 40)
-                .background(isSelected ? Color(red: 0.25, green: 0.28, blue: 0.25) : AppColors.background)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous))
+                .frame(minHeight: 42)
+                .background(isSelected ? tint(for: filter.rawValue).opacity(0.14) : AppColors.surface)
+                .clipShape(Capsule())
                 .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                        .stroke(isSelected ? Color.clear : Color(.separator), lineWidth: 1)
+                    Capsule().stroke(isSelected ? tint(for: filter.rawValue).opacity(0.45) : AppColors.border, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
+
+    private func icon(for title: String) -> String {
+        switch title {
+        case "Utang": "arrow.up.right"
+        case "Piutang": "arrow.down.left"
+        case "Split": "person.3.fill"
+        default: "square.grid.2x2"
+        }
+    }
+
+    private func tint(for title: String) -> Color {
+        switch title {
+        case "Utang": AppColors.debt
+        case "Piutang": AppColors.receivable
+        case "Split": AppColors.split
+        default: AppColors.accent
+        }
+    }
 }
 
 struct FilteredCardListView<Item: Identifiable, Filter: Identifiable & RawRepresentable & CaseIterable & Equatable, CardContent: View, EmptyView: View>: View where Filter.RawValue == String, Filter.AllCases: RandomAccessCollection {
     let title: String
+    let subtitle: String?
+    let showsHeader: Bool
     let items: [Item]
     let selectedFilter: Filter
     let onSelectFilter: (Filter) -> Void
     let onSelectItem: (Item.ID) -> Void
+    let onDeleteItem: ((Item.ID) -> Void)?
     let emptyState: () -> EmptyView
     let cardContent: (Item) -> CardContent
 
     init(
         title: String,
+        subtitle: String? = nil,
+        showsHeader: Bool = true,
         items: [Item],
         selectedFilter: Filter,
         onSelectFilter: @escaping (Filter) -> Void,
         onSelectItem: @escaping (Item.ID) -> Void,
+        onDeleteItem: ((Item.ID) -> Void)? = nil,
         @ViewBuilder emptyState: @escaping () -> EmptyView,
         @ViewBuilder cardContent: @escaping (Item) -> CardContent
     ) {
         self.title = title
+        self.subtitle = subtitle
+        self.showsHeader = showsHeader
         self.items = items
         self.selectedFilter = selectedFilter
         self.onSelectFilter = onSelectFilter
         self.onSelectItem = onSelectItem
+        self.onDeleteItem = onDeleteItem
         self.emptyState = emptyState
         self.cardContent = cardContent
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
-                // Header Title
-                Text(title)
-                    .font(.title2.weight(.bold))
-                    .accessibilityAddTraits(.isHeader)
-                    .foregroundStyle(Color.primary)
-                    .lineSpacing(2)
-                    .padding(.horizontal, AppSpacing.xLarge)
-                    .padding(.top, AppSpacing.small)
+        List {
+            if showsHeader {
+                Section {
+                    VStack(alignment: .leading, spacing: AppSpacing.small) {
+                        Text(title)
+                            .font(.title.weight(.bold))
+                            .accessibilityAddTraits(.isHeader)
+                        if let subtitle {
+                            Label(subtitle, systemImage: "person.crop.circle.badge.checkmark")
+                                .font(.subheadline)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                    }
+                    .padding(AppSpacing.large)
+                    .background(AppColors.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: AppRadius.large, style: .continuous))
+                }
+                .listRowInsets(EdgeInsets(top: AppSpacing.small, leading: AppSpacing.xLarge, bottom: 0, trailing: AppSpacing.xLarge))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
 
-                // Filter Bar
+            Section {
                 FilterSegmentBar(
                     selection: selectedFilter,
                     onSelect: onSelectFilter
                 )
-                .padding(.horizontal, AppSpacing.xLarge)
+            }
+            .listRowInsets(EdgeInsets(top: AppSpacing.medium, leading: AppSpacing.xLarge, bottom: AppSpacing.medium, trailing: 0))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
 
-                // List / Empty State
-                if items.isEmpty {
+            if items.isEmpty {
+                Section {
                     emptyState()
                         .frame(maxWidth: .infinity)
                         .padding(.top, AppSpacing.xxLarge + 8)
-                } else {
-                    LazyVStack(spacing: AppSpacing.medium) {
-                        ForEach(items) { item in
-                            Button {
-                                onSelectItem(item.id)
-                            } label: {
-                                cardContent(item)
+                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            } else {
+                Section {
+                    ForEach(items) { item in
+                        cardButton(item)
+                            .listRowInsets(EdgeInsets(top: AppSpacing.small, leading: AppSpacing.xLarge, bottom: AppSpacing.small, trailing: AppSpacing.xLarge))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                if let onDeleteItem {
+                                    Button(role: .destructive) {
+                                        onDeleteItem(item.id)
+                                    } label: {
+                                        Label("Hapus", systemImage: "trash")
+                                    }
+                                }
                             }
-                            .buttonStyle(.plain)
-                        }
                     }
-                    .padding(.horizontal, AppSpacing.xLarge)
                 }
             }
-            .padding(.bottom, AppSpacing.xLarge)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .background(AppColors.background)
+    }
+
+    private func cardButton(_ item: Item) -> some View {
+        Button {
+            onSelectItem(item.id)
+        } label: {
+            cardContent(item)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -221,7 +270,7 @@ private struct FilteredCardListViewPreviewContainer: View {
                     .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous))
                 })
             .navigationTitle("Preview List")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 }

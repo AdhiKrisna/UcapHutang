@@ -35,16 +35,95 @@ final class PersonLedgerDetailViewModelTests: XCTestCase {
         return (viewModel, repository)
     }
 
-    func testPaymentsAndRemindersAreBlockedOnlyForUnlinkedPeople() {
+    func testPaymentsAndRemindersRequireLinkedPersonWithOutstandingBalance() async {
         let (unlinked, _) = makeViewModel(seed: [entry("budi", "Budi", -10_000)])
-        XCTAssertFalse(unlinked.canRecordPaymentOrRemind)
+        XCTAssertFalse(unlinked.canRecordPayment)
+        XCTAssertFalse(unlinked.canRemind)
 
+        let contacts = FakeContactsProvider(access: .authorized, contacts: [
+            ContactRef(identifier: "contact-budi", displayName: "Budi Santoso", phoneNumber: "+628123")
+        ])
         let (linked, _) = makeViewModel(
             personID: "contact-budi",
             contactIdentifier: "contact-budi",
-            seed: [entry("contact-budi", "Budi Santoso", -10_000, contact: "contact-budi")]
+            seed: [entry("contact-budi", "Budi Santoso", -10_000, contact: "contact-budi")],
+            contacts: contacts
         )
-        XCTAssertTrue(linked.canRecordPaymentOrRemind)
+        await linked.reload()
+        XCTAssertTrue(linked.canRecordPayment)
+        XCTAssertTrue(linked.canRemind)
+
+        let (settled, _) = makeViewModel(
+            personID: "contact-budi",
+            balance: 0,
+            contactIdentifier: "contact-budi",
+            seed: [entry("contact-budi", "Budi Santoso", 0, contact: "contact-budi")]
+        )
+        XCTAssertFalse(settled.canRecordPayment)
+        XCTAssertFalse(settled.canRemind)
+        XCTAssertEqual(settled.balanceStatusTitle, "Saldo seimbang")
+        XCTAssertEqual(settled.balanceStatusDetail, "Tidak ada saldo tertunggak.")
+    }
+
+    func testPaymentDirectionCopyExplainsWhoPays() {
+        let (receivable, _) = makeViewModel(
+            personID: "contact-budi",
+            displayName: "Budi",
+            balance: 20_000,
+            contactIdentifier: "contact-budi",
+            seed: [entry("contact-budi", "Budi", 20_000, contact: "contact-budi")]
+        )
+        XCTAssertEqual(receivable.paymentActionTitle, "Catat Bayar dari Budi")
+        XCTAssertEqual(receivable.paymentDirectionDetail, "Budi membayar utangnya kepadamu.")
+
+        let (debt, _) = makeViewModel(
+            personID: "contact-budi",
+            displayName: "Budi",
+            balance: -20_000,
+            contactIdentifier: "contact-budi",
+            seed: [entry("contact-budi", "Budi", -20_000, contact: "contact-budi")]
+        )
+        XCTAssertEqual(debt.paymentActionTitle, "Catat Bayar ke Budi")
+        XCTAssertEqual(debt.paymentDirectionDetail, "Kamu membayar utangmu kepada Budi.")
+    }
+
+    func testDeletingLedgerEntryRemovesItAndRecalculatesBalance() async throws {
+        let first = entry("contact-budi", "Budi", 20_000, contact: "contact-budi")
+        let second = entry("contact-budi", "Budi", -5_000, contact: "contact-budi")
+        let (viewModel, repository) = makeViewModel(
+            personID: "contact-budi",
+            displayName: "Budi",
+            balance: 15_000,
+            contactIdentifier: "contact-budi",
+            seed: [first, second]
+        )
+
+        await viewModel.deleteEntry(id: first.id)
+
+        XCTAssertEqual(viewModel.entries.map(\.id), [second.id])
+        XCTAssertEqual(viewModel.person.balance, -5_000)
+        let stored = await repository.ledgerEntries()
+        XCTAssertEqual(stored.map(\.id), [second.id])
+        XCTAssertNil(viewModel.alert)
+    }
+
+    func testReminderURLTargetsLinkedContactsPhoneNumber() async {
+        let contact = ContactRef(identifier: "contact-budi", displayName: "Budi", phoneNumber: "+62 812-3456")
+        let contacts = FakeContactsProvider(access: .authorized, contacts: [contact])
+        let (viewModel, _) = makeViewModel(
+            personID: "contact-budi",
+            displayName: "Budi",
+            balance: 20_000,
+            contactIdentifier: "contact-budi",
+            seed: [entry("contact-budi", "Budi", 20_000, contact: "contact-budi")],
+            contacts: contacts
+        )
+
+        await viewModel.reload()
+
+        XCTAssertEqual(viewModel.reminderMessageURL?.scheme, "sms")
+        XCTAssertTrue(viewModel.reminderMessageURL?.absoluteString.contains("+628123456") == true)
+        XCTAssertTrue(viewModel.reminderMessageURL?.absoluteString.contains("body=") == true)
     }
 
     func testRequestLinkWithDeniedAccessShowsContactsAlert() async {

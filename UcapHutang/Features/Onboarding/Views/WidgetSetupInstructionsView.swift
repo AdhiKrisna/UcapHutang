@@ -55,7 +55,7 @@ struct WidgetSetupInstructionsView: View {
             }
             .background(AppColors.background)
             .navigationTitle("Widget Catat Cepat")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
         }
         .presentationDetents([.medium, .large])
     }
