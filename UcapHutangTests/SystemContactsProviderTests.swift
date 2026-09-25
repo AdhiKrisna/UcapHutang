@@ -8,6 +8,8 @@ final class SystemContactsProviderTests: XCTestCase {
         XCTAssertEqual(SystemContactsProvider.map(.notDetermined), .notDetermined)
         XCTAssertEqual(SystemContactsProvider.map(.denied), .denied)
         XCTAssertEqual(SystemContactsProvider.map(.restricted), .denied)
-        XCTAssertEqual(SystemContactsProvider.map(.limited), .denied)
+        if #available(iOS 18.0, *) {
+            XCTAssertEqual(SystemContactsProvider.map(.limited), .denied)
+        }
     }
 }

@@ -19,23 +19,23 @@ struct RootTabView: View {
         @Bindable var router = container.router
 
         TabView(selection: $router.selectedTab) {
-            Tab("Review", systemImage: "doc.badge.clock", value: AppTab.review) {
-                ReviewListView(
-                    router: container.router,
-                    repository: container.repository,
-                    contacts: container.contacts,
-                    onOpenSettings: { isShowingSettings = true }
-                )
-            }
+            ReviewListView(
+                router: container.router,
+                repository: container.repository,
+                contacts: container.contacts,
+                onOpenSettings: { isShowingSettings = true }
+            )
+            .tabItem { Label("Review", systemImage: "doc.badge.clock") }
+            .tag(AppTab.review)
             .badge(pendingReviewCount)
 
-            Tab("Catat", systemImage: "mic.fill", value: AppTab.capture) {
-                CatatFlowChooserView(router: container.router, container: container)
-            }
+            CatatFlowChooserView(router: container.router, container: container)
+                .tabItem { Label("Catat", systemImage: "mic.fill") }
+                .tag(AppTab.capture)
 
-            Tab("Riwayat", systemImage: "book.closed", value: AppTab.ledger) {
-                LedgerListView(repository: container.repository, contacts: container.contacts)
-            }
+            LedgerListView(repository: container.repository, contacts: container.contacts)
+                .tabItem { Label("Riwayat", systemImage: "book.closed") }
+                .tag(AppTab.ledger)
         }
         .sensoryFeedback(.success, trigger: container.router.savedBannerID) { _, newValue in
             newValue != nil

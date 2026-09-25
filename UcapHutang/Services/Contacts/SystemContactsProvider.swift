@@ -35,12 +35,16 @@ final class SystemContactsProvider: ContactsProviding {
     }
 
     static func map(_ status: CNAuthorizationStatus) -> ContactsAccess {
+        if #available(iOS 18.0, *), status == .limited {
+            return .denied
+        }
+
         switch status {
         case .authorized:
             return .authorized
         case .notDetermined:
             return .notDetermined
-        case .denied, .restricted, .limited:
+        case .denied, .restricted:
             return .denied
         @unknown default:
             return .denied
